@@ -114,13 +114,26 @@ make i18n-compile          # Compile .po files
 make mails-install && make mails-build   # Build MJML email templates
 ```
 
-## Commit Message Convention
+## Git Commit Rules
 
-Format: `<gitmoji>(type) title description`
+### Commit command (MANDATORY)
+This is a shared server. Always use this exact pattern for every commit:
+```bash
+GIT_COMMITTER_NAME="TheY4NN777" GIT_COMMITTER_EMAIL="yanisaxel.dabo@aiobi.world" \
+git commit --author="TheY4NN777 <yanisaxel.dabo@aiobi.world>" -m "message"
+```
+- NEVER modify `git config user.name` or `git config user.email`
+- NEVER use `-c user.name` or `-c user.email`
+- NEVER add `Co-Authored-By` or any Claude/AI mention in commit messages
 
-Example: `✨(frontend) add user authentication logic`
+### Commit message format
+Format: `type(scope) short description`
 
-Types: `backend`, `frontend`, `CI`, `docker`, etc. Use [gitmoji](https://gitmoji.dev/) prefixes.
+Example: `chore(branding) rebrand fork to Aïobi Meet`
+
+- No emojis in commit messages
+- Types: `chore`, `feat`, `fix`, `refactor`, `docs`, `ci`, `test`, etc.
+- Scopes: `backend`, `frontend`, `branding`, `CI`, `docker`, etc.
 
 Add a changelog entry in `CHANGELOG.md` under `[Unreleased]` for each PR.
 
