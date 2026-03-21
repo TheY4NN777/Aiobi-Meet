@@ -180,14 +180,14 @@ export const TermsOfServiceRoute = () => {
         </H>
         <P>
           {t('articles.article7.sections.section5.content')
-            .split('https://github.com/suitenumerique/meet')[0]
-            .replace('https://github.com/suitenumerique/meet', '')}{' '}
-          <A href="https://github.com/suitenumerique/meet" color="primary">
-            https://github.com/suitenumerique/meet
+            .split('https://github.com/TheY4NN777/Aiobi-Meet')[0]
+            .replace('https://github.com/TheY4NN777/Aiobi-Meet', '')}{' '}
+          <A href="https://github.com/TheY4NN777/Aiobi-Meet" color="primary">
+            https://github.com/TheY4NN777/Aiobi-Meet
           </A>
           {
             t('articles.article7.sections.section5.content').split(
-              'https://github.com/suitenumerique/meet'
+              'https://github.com/TheY4NN777/Aiobi-Meet'
             )[1]
           }
         </P>

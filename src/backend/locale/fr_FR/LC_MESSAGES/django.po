@@ -10,7 +10,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-12 13:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: antoine.lebaud@mail.numerique.gouv.fr\n"
+"Last-Translator: Aïobi <support@aiobi.world>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -299,12 +299,12 @@ msgstr ""
 "L'accès à la ressource avec cet utilisateur et cette ressource existe déjà."
 
 #: core/models.py:394
-msgid "Visio room configuration"
-msgstr "Configuration de la salle de visioconférence"
+msgid "Aïobi Meet room configuration"
+msgstr "Configuration de la salle Aïobi Meet"
 
 #: core/models.py:395
-msgid "Values for Visio parameters to configure the room."
-msgstr "Valeurs des paramètres de visioconférence pour configurer la salle."
+msgid "Values for Aïobi Meet parameters to configure the room."
+msgstr "Valeurs des paramètres Aïobi Meet pour configurer la salle."
 
 #: core/models.py:402
 msgid "Room PIN code"

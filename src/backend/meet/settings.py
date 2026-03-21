@@ -108,7 +108,7 @@ class Base(Configuration):
                 environ_prefix=None,
             ),
             "NAME": values.Value("meet", environ_name="DB_NAME", environ_prefix=None),
-            "USER": values.Value("dinum", environ_name="DB_USER", environ_prefix=None),
+            "USER": values.Value("meet", environ_name="DB_USER", environ_prefix=None),
             "PASSWORD": SecretFileValue(
                 "pass", environ_name="DB_PASSWORD", environ_prefix=None
             ),
@@ -729,7 +729,7 @@ class Base(Configuration):
         environ_prefix=None,
         converter=int,
     )
-    BREVO_API_CONTACT_ATTRIBUTES = values.DictValue({"VISIO_USER": True})
+    BREVO_API_CONTACT_ATTRIBUTES = values.DictValue({"AIOBI_MEET_USER": True})
     BREVO_API_TIMEOUT = values.PositiveIntegerValue(
         1, environ_name="BREVO_API_TIMEOUT", environ_prefix=None
     )
@@ -824,7 +824,7 @@ class Base(Configuration):
         environ_prefix=None,
     )
     APPLICATION_JWT_ISSUER = values.Value(
-        "lasuite-meet",
+        "aiobi-meet",
         environ_name="APPLICATION_JWT_ISSUER",
         environ_prefix=None,
     )

@@ -41,7 +41,7 @@ export const ScreenShareErrorModal = ({
               )}
               {t('helpLinkText')}{' '}
               <A
-                href="https://lasuite.crisp.help/fr/article/visio-probleme-de-presentation-1xkf799/"
+                href="https://github.com/TheY4NN777/Aiobi-Meet/issues"
                 aria-label={t('helpLinkLabel') + '-' + t('newTab')}
                 target="_blank"
                 color="primary"

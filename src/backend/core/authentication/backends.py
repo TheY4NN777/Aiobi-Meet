@@ -75,7 +75,7 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         ):
             marketing_service = get_marketing_service()
             contact_data = ContactData(
-                email=email, attributes={"VISIO_SOURCE": ["SIGNIN"]}
+                email=email, attributes={"AIOBI_MEET_SOURCE": ["SIGNIN"]}
             )
             marketing_service.create_contact(
                 contact_data, timeout=settings.BREVO_API_TIMEOUT

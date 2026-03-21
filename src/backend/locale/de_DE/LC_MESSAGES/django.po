@@ -297,12 +297,12 @@ msgstr ""
 "bereits."
 
 #: core/models.py:394
-msgid "Visio room configuration"
-msgstr "Visio-Raumkonfiguration"
+msgid "Aïobi Meet room configuration"
+msgstr "Aïobi Meet-Raumkonfiguration"
 
 #: core/models.py:395
-msgid "Values for Visio parameters to configure the room."
-msgstr "Werte für Visio-Parameter zur Konfiguration des Raums."
+msgid "Values for Aïobi Meet parameters to configure the room."
+msgstr "Werte für Aïobi Meet-Parameter zur Konfiguration des Raums."
 
 #: core/models.py:402
 msgid "Room PIN code"

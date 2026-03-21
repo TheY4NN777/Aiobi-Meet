@@ -7,7 +7,7 @@ STRINGS = LocaleStrings(
 **Er is geen audio-inhoud gedetecteerd in uw transcriptie.**
 
 *Als u denkt dat dit een fout is, aarzel dan niet om contact op te nemen
-met onze technische ondersteuning: visio@numerique.gouv.fr*
+met onze technische ondersteuning: support@aiobi.world*
 
 .
 

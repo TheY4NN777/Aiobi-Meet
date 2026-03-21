@@ -1,52 +1,52 @@
 {
-  "title": "Terms of Use for Visio",
+  "title": "Terms of Use for Aïobi Meet",
   "articles": {
     "article1": {
       "title": "1. Scope",
-      "content": "This document defines the terms of use of Visio (hereinafter “Visio” or “the application”), a videoconferencing application specifically designed for State administrations and the bodies under their supervision."
+      "content": "This document defines the terms of use of Aïobi Meet (hereinafter \"Aïobi Meet\" or \"the application\"), a videoconferencing application designed for Aïobi users."
     },
     "article2": {
       "title": "2. Purpose of the application",
-      "content": "Visio helps foster cooperation among teams of State administrations and bodies under their supervision, supports remote work, and facilitates the organization of meetings, conferences, or training sessions.",
+      "content": "Aïobi Meet helps foster cooperation among teams, supports remote work, and facilitates the organization of meetings, conferences, or training sessions.",
       "paragraphs": [
-        "Visio is developed and operated by the Interministerial Directorate for Digital Affairs (DINUM).",
-        "The application is made available by DINUM to State administrations and bodies under their supervision, for use by their staff members, partners, and invited service providers.",
-        "Any use of Visio must comply with these terms of use and, where applicable, the usage policy of the relevant supervising administration."
+        "Aïobi Meet is developed and operated by Aïobi.",
+        "The application is made available by Aïobi to its users, for use by their staff members, partners, and invited service providers.",
+        "Any use of Aïobi Meet must comply with these terms of use."
       ]
     },
     "article3": {
       "title": "3. Definitions",
       "paragraphs": [
-        "Visio is the product whose use is described in these terms and presented on the following page: https://visio.numerique.gouv.fr.",
-        "Users of Visio are any persons using Visio for videoconferencing communication purposes, whether they are staff members, partners, or service providers of the relevant administrations. The supervising administration is the State administration or body under its supervision that makes Visio available to its staff members, partners, or service providers.",
+        "Aïobi Meet is the product whose use is described in these terms and presented on the following page: https://meet.aiobi.world.",
+        "Users of Aïobi Meet are any persons using Aïobi Meet for videoconferencing communication purposes, whether they are staff members, partners, or service providers.",
         "Room organizers are users who are responsible for a videoconference room after logging in via ProConnect."
       ]
     },
     "article4": {
       "title": "4. Access to the application",
-      "definition": "Visio is made available to users by their supervising administration. Organizers may then share a link granting access to the room with any person, under their responsibility."
+      "definition": "Aïobi Meet is made available to users. Organizers may then share a link granting access to the room with any person, under their responsibility."
     },
     "article5": {
       "title": "5. Features",
       "sections": {
         "section1": {
           "title": "5.1. Features available to organizers",
-          "content": "Visio allows staff of State administrations and bodies under their supervision to create a videoconference room from a standard workstation, linked to their ProConnect account.",
-          "paragraph1": "Any State staff member or staff member of a body under State supervision, whose activities are compatible with the use of Visio or who is not subject to specific confidentiality or professional secrecy obligations, may create and organize a videoconference. They may then share the meeting link with other persons, users, whether or not they belong to the administration.",
+          "content": "Aïobi Meet allows users to create a videoconference room from a standard workstation, linked to their ProConnect account.",
+          "paragraph1": "Any user whose activities are compatible with the use of Aïobi Meet or who is not subject to specific confidentiality or professional secrecy obligations, may create and organize a videoconference. They may then share the meeting link with other persons, users, whether or not they belong to the organization.",
           "paragraph2": "For this purpose, each room organizer may:",
           "capabilities": [
             "Protect access to the room with a waiting room;",
-            "Authorize each user’s entry into the room;",
-            "Mute users’ microphones and cameras;",
+            "Authorize each user's entry into the room;",
+            "Mute users' microphones and cameras;",
             "Remove a user from the room;",
             "Use the meeting transcription tool after obtaining the consent of users, under their responsibility."
           ],
-          "paragraph3": "Only staff members whose ProConnect account belongs to a domain authorized to organize rooms on Visio or who are not subject to specific confidentiality or professional secrecy obligations may use or have control over the application and its features.",
-          "paragraph4": "The automatic transcription tool can be used by organizers from the room settings menu. Organizers are responsible for ensuring the consent of users participating in the transcribed meeting. The transcription language can be changed from the same menu. At the end of the meeting, a link is sent to the organizer to access the transcription stored in the tool called Docs operated by DINUM."
+          "paragraph3": "Only users whose ProConnect account belongs to a domain authorized to organize rooms on Aïobi Meet or who are not subject to specific confidentiality or professional secrecy obligations may use or have control over the application and its features.",
+          "paragraph4": "The automatic transcription tool can be used by organizers from the room settings menu. Organizers are responsible for ensuring the consent of users participating in the transcribed meeting. The transcription language can be changed from the same menu. At the end of the meeting, a link is sent to the organizer to access the transcription stored in the Docs tool operated by Aïobi."
         },
         "section2": {
           "title": "5.2. Features available to users",
-          "content": "Visio allows any user, whether a public official or not, to participate in any Visio room to which they are invited by an organizer and to benefit from its features.",
+          "content": "Aïobi Meet allows any user, to participate in any Aïobi Meet room to which they are invited by an organizer and to benefit from its features.",
           "paragraph": "For this purpose, each user may:",
           "capabilities": [
             "Provide a display name when entering the room;",
@@ -66,36 +66,36 @@
         "section1": {
           "title": "6.1 Permitted uses",
           "paragraphs": [
-            "Visio is provided to facilitate professional exchanges between staff of State administrations and bodies under their supervision and external collaborators.",
+            "Aïobi Meet is provided to facilitate professional exchanges between users and external collaborators.",
             "Users are responsible for the images and sounds they make accessible in the videoconference room. This responsibility applies both to what their camera or microphone may broadcast and to what their device may make accessible to third parties. To this end, users must use the application in a professional environment and must not disclose any information covered by professional confidentiality obligations to third parties (for example: use of privacy filters, headphones, etc.).",
-            "Users are responsible for the data or content they enter into the room’s messaging service. They must ensure that only appropriate messages are entered."
+            "Users are responsible for the data or content they enter into the room's messaging service. They must ensure that only appropriate messages are entered."
           ]
         },
         "section2": {
           "title": "6.2 Prohibited uses",
           "paragraphs": [
-            "Users undertake not to enter into the Visio room messaging service, or make accessible via image or sound, any content or information that violates applicable laws and regulations."
+            "Users undertake not to enter into the Aïobi Meet room messaging service, or make accessible via image or sound, any content or information that violates applicable laws and regulations."
           ]
         }
       }
     },
     "article7": {
-      "title": "7. Commitments and responsibilities of DINUM",
+      "title": "7. Commitments and responsibilities of Aïobi",
       "sections": {
         "section1": {
           "title": "7.1. Application security",
           "paragraphs": [
-            "DINUM undertakes to secure Visio, in particular by taking all necessary measures to ensure the security and confidentiality of exchanges.",
-            "The application is certified under the conditions provided for by amended Decree No. 2010-112."
+            "Aïobi undertakes to secure Aïobi Meet, in particular by taking all necessary measures to ensure the security and confidentiality of exchanges.",
+            "The application is certified under the conditions provided for by [APPLICABLE_LAW]."
           ]
         },
         "section2": {
           "title": "7.2. Access to the application",
           "paragraphs": [
-            "DINUM undertakes to provide the necessary and reasonable means to ensure continuous access to the application.",
+            "Aïobi undertakes to provide the necessary and reasonable means to ensure continuous access to the application.",
             "The application is available 24/7, except during maintenance downtime.",
-            "DINUM aims for an annual application availability rate of 99.5%, excluding planned downtime. In the event of an incident or maintenance, it aims for a restoration time of 72 hours outside business hours.",
-            "As part of maintenance of the application’s runtime environment, DINUM reserves the right to temporarily suspend the operation of the application. Whenever possible, users will be informed at least 48 hours in advance. In emergencies, such suspension may occur without prior notice.",
+            "Aïobi aims for an annual application availability rate of [AÏOBI_SLA], excluding planned downtime. In the event of an incident or maintenance, it aims for a restoration time of 72 hours outside business hours.",
+            "As part of maintenance of the application's runtime environment, Aïobi reserves the right to temporarily suspend the operation of the application. Whenever possible, users will be informed at least 48 hours in advance. In emergencies, such suspension may occur without prior notice.",
             "These exceptional outages may be required, for example, for data management operations, production releases, or architectural changes.",
             "Application unavailability does not entitle users to any form of compensation."
           ]
@@ -103,7 +103,7 @@
         "section3": {
           "title": "7.3. Support management",
           "paragraphs": [
-            "DINUM provides first-level support to users, exclusively on the technical aspects of the application.",
+            "Aïobi provides first-level support to users, exclusively on the technical aspects of the application.",
             "This support can be reached via the online contact form.",
             "The target response time to requests is two business days from the sending of the email; this timeframe may vary depending on the complexity and number of requests to be processed."
           ]
@@ -111,13 +111,13 @@
         "section4": {
           "title": "7.4. Monitoring application use",
           "paragraphs": [
-            "DINUM reserves the right to suspend or delete a user account that has failed to comply with these terms of use, without prejudice to any criminal or civil liability actions that may be brought against the person concerned. Information may be transmitted to the user’s supervising administration, which is responsible for making the application available.",
+            "Aïobi reserves the right to suspend or delete a user account that has failed to comply with these terms of use, without prejudice to any criminal or civil liability actions that may be brought against the person concerned.",
             "The suspension or revocation of one or more accounts does not give rise to any compensation of any kind."
           ]
         },
         "section5": {
           "title": "7.5. Open Source and Licenses",
-          "content": "The source code of the service is open and available here: https://github.com/suitenumerique/meet. Content provided by DINUM is licensed under the Open License 2.0, with the exception of logos and iconographic or photographic representations, which may be governed by their own licenses."
+          "content": "The source code of the service is open and available here: https://github.com/TheY4NN777/Aiobi-Meet. Content provided by Aïobi is licensed under the Open License 2.0, with the exception of logos and iconographic or photographic representations, which may be governed by their own licenses."
         }
       }
     },

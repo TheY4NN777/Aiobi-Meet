@@ -15,9 +15,9 @@ export const AccessibilityRoute = () => {
         </H>
         <Italic>{t('declaration.date')}</Italic>
         <P>
-          {t('scope').replace('visio.numerique.gouv.fr', '')}{' '}
-          <A href="https://visio.numerique.gouv.fr" color="primary">
-            visio.numerique.gouv.fr
+          {t('scope').replace('meet.aiobi.world', '')}{' '}
+          <A href="https://meet.aiobi.world" color="primary">
+            meet.aiobi.world
           </A>
           .
         </P>
@@ -26,10 +26,10 @@ export const AccessibilityRoute = () => {
           {t('complianceStatus.title')}
         </H>
         <P>
-          <A href="https://visio.numerique.gouv.fr" color="primary">
-            visio.numerique.gouv.fr
+          <A href="https://meet.aiobi.world" color="primary">
+            meet.aiobi.world
           </A>
-          {t('complianceStatus.body').replace('visio.numerique.gouv.fr', '')}
+          {t('complianceStatus.body').replace('meet.aiobi.world', '')}
         </P>
 
         <H lvl={2} bold>
@@ -44,11 +44,11 @@ export const AccessibilityRoute = () => {
         >
           <li>
             {t('improvement.contact.email').replace(
-              'visio@numerique.gouv.fr',
+              'support@aiobi.world',
               ''
             )}
-            <A href="mailto:lasuite@modernisation.gouv.fr" color="primary">
-              lasuite@modernisation.gouv.fr
+            <A href="mailto:support@aiobi.world" color="primary">
+              support@aiobi.world
             </A>
           </li>
           <li>{t('improvement.contact.address')}</li>

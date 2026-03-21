@@ -8,7 +8,7 @@ build-backend = "uv_build"
 [project]
 name = "meet"
 version = "1.11.0"
-authors = [{ "name" = "DINUM", "email" = "dev@mail.numerique.gouv.fr" }]
+authors = [{ "name" = "Aïobi", "email" = "support@aiobi.world" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: Django",
@@ -64,10 +64,10 @@ dependencies = [
 ]
 
 [project.urls]
-"Bug Tracker" = "https://github.com/suitenumerique/meet/issues/new"
-"Changelog" = "https://github.com/suitenumerique/meet/blob/main/CHANGELOG.md"
-"Homepage" = "https://github.com/suitenumerique/meet"
-"Repository" = "https://github.com/suitenumerique/meet"
+"Bug Tracker" = "https://github.com/TheY4NN777/Aiobi-Meet/issues/new"
+"Changelog" = "https://github.com/TheY4NN777/Aiobi-Meet/blob/main/CHANGELOG.md"
+"Homepage" = "https://github.com/TheY4NN777/Aiobi-Meet"
+"Repository" = "https://github.com/TheY4NN777/Aiobi-Meet"
 
 [dependency-groups]
 dev = [

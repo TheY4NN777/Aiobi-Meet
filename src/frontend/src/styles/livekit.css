@@ -1,6 +1,6 @@
 /* based on https://github.com/livekit/components-js/blob/main/packages/styles/scss/themes/default.scss
 */
-[data-lk-theme='visio-light'] {
+[data-lk-theme='aiobi-light'] {
   color-scheme: light;
   --lk-bg: var(--colors-white);
   --lk-room-bg: var(--colors-default-bg);
@@ -103,24 +103,24 @@
   background-color: var(--lk-danger-active-bg);
 }
 
-[data-lk-theme='visio-light'] .lk-close-button path {
+[data-lk-theme='aiobi-light'] .lk-close-button path {
   fill: var(--lk-fg);
 }
 
-[data-lk-theme='visio-light'] .lk-participant-metadata-item,
-[data-lk-theme='visio-light']
+[data-lk-theme='aiobi-light'] .lk-participant-metadata-item,
+[data-lk-theme='aiobi-light']
   .lk-participant-tile
   .lk-focus-toggle-button:not(:hover) {
   color: white;
 }
 
-[data-lk-theme='visio-light']
+[data-lk-theme='aiobi-light']
   .lk-chat-entry[data-lk-message-origin='local']
   .lk-message-body {
   align-self: flex-end;
   background-color: var(--colors-primary-subtle);
 }
-[data-lk-theme='visio-light']
+[data-lk-theme='aiobi-light']
   .lk-chat-entry[data-lk-message-origin='remote']
   .lk-message-body {
   background-color: var(--colors-blue-300);

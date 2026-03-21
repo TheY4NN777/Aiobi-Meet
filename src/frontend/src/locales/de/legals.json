@@ -2,23 +2,23 @@
   "title": "Rechtliche Hinweise",
   "creator": {
     "title": "Herausgebende",
-    "body": "Der Visio-Dienst wird herausgegeben von der Interministeriellen Digitaldirektion Frankreichs (DINUM) mit Sitz:",
+    "body": "Der Aïobi Meet-Dienst wird herausgegeben von Aïobi mit Sitz:",
     "contact": {
       "title": "Kontaktdaten",
-      "address": "20 avenue de Ségur",
-      "city": "75007 Paris",
-      "phone": "Tel. Zentrale: 01.71.21.01.70",
-      "siret": "SIRET: 12000101100010 (Generalsekretariat der Regierung)",
-      "siren": "SIREN: 120 001 011"
+      "address": "[AÏOBI_ADDRESS]",
+      "city": "[AÏOBI_ADDRESS]",
+      "phone": "[AÏOBI_PHONE]",
+      "siret": "SIRET: [AÏOBI_SIRET]",
+      "siren": "SIREN: [AÏOBI_SIREN]"
     }
   },
   "director": {
     "title": "Verantwortliche für die Veröffentlichung",
-    "body": "Die Verantwortliche für die Veröffentlichung ist Frau Stéphanie Schaer, Interministerielle Direktorin für Digitalisierung."
+    "body": "Die verantwortliche Person für die Veröffentlichung ist [AÏOBI_DIRECTOR]."
   },
   "hosting": {
     "title": "Hosting",
-    "body": "Der Dienst wird gehostet von Outscale West-1 CloudGouv SecNumCloud mit Standort in Frankreich."
+    "body": "Der Dienst wird gehostet von [AÏOBI_HOSTING_PROVIDER]."
   },
   "accessibility": {
     "title": "Barrierefreiheit",

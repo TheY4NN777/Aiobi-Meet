@@ -4,9 +4,9 @@
 
 Security is very important to us.
 
-If you have any issue regarding security, please disclose the information responsibly submiting [this form](https://vdp.numerique.gouv.fr/p/Send-a-report?lang=en) and not by creating an issue on the repository. You can also email us at visio@numerique.gouv.fr
+If you have any issue regarding security, please disclose the information responsibly by emailing us at support@aiobi.world and not by creating an issue on the repository.
 
-We appreciate your effort to make Visio more secure.
+We appreciate your effort to make Aïobi Meet more secure.
 
 ## Vulnerability disclosure policy
 

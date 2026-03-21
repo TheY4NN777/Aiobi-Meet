@@ -1,7 +1,7 @@
 {
   "createMeeting": {
-    "createButton": "Créer un lien Visio",
-    "joinButton": "Participer avec Visio",
+    "createButton": "Créer un lien Aïobi Meet",
+    "joinButton": "Participer avec Aïobi Meet",
     "copyLinkTooltip": "Copier le lien",
     "resetLabel": "Réinitialiser",
     "participantLimit": "Jusqu'à 150 participants.",

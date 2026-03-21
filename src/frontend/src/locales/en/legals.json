@@ -2,27 +2,27 @@
   "title": "Legal Notice",
   "creator": {
     "title": "Publisher",
-    "body": "The Visio service is published by the Interministerial Digital Division of the State (DINUM) located at:",
+    "body": "The Aïobi Meet service is published by Aïobi located at:",
     "contact": {
       "title": "Contact Information",
-      "address": "20 avenue de Ségur",
-      "city": "75007 Paris",
-      "phone": "Reception Tel.: 01.71.21.01.70",
-      "siret": "SIRET: 12000101100010 (government general secretariat)",
-      "siren": "SIREN: 120 001 011"
+      "address": "[AÏOBI_ADDRESS]",
+      "city": "",
+      "phone": "[AÏOBI_PHONE]",
+      "siret": "SIRET: [AÏOBI_SIRET]",
+      "siren": "SIREN: [AÏOBI_SIREN]"
     }
   },
   "director": {
     "title": "Publication Director",
-    "body": "The publication director is Madame Stéphanie Schaer, Interministerial Digital Director."
+    "body": "The publication director is [AÏOBI_DIRECTOR]."
   },
   "hosting": {
     "title": "Hosting",
-    "body": "The service is hosted by Outscale West-1 CloudGouv SecNumCloud located in France."
+    "body": "The service is hosted by [AÏOBI_HOSTING_PROVIDER]."
   },
   "accessibility": {
     "title": "Accessibility",
-    "body": "Compliance with digital accessibility standards is a future objective. The site has not yet been audited. However, the team strives to create a site accessible to all by following RGAA recommendations.",
+    "body": "Compliance with digital accessibility standards is a future objective. The site has not yet been audited. However, the team strives to create a site accessible to all.",
     "more": "For more information: ",
     "link": "link to accessibility page",
     "status": "Accessibility status: non-compliant"

@@ -293,12 +293,12 @@ msgid "Resource access with this User and Resource already exists."
 msgstr "Resource access with this User and Resource already exists."
 
 #: core/models.py:394
-msgid "Visio room configuration"
-msgstr "Visio room configuration"
+msgid "Aïobi Meet room configuration"
+msgstr "Aïobi Meet room configuration"
 
 #: core/models.py:395
-msgid "Values for Visio parameters to configure the room."
-msgstr "Values for Visio parameters to configure the room."
+msgid "Values for Aïobi Meet parameters to configure the room."
+msgstr "Values for Aïobi Meet parameters to configure the room."
 
 #: core/models.py:402
 msgid "Room PIN code"

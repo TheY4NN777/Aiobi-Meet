@@ -7,7 +7,7 @@ STRINGS = LocaleStrings(
 **Aucun contenu audio n'a été détecté dans votre transcription.**
 
 *Si vous pensez qu'il s'agit d'une erreur, n'hésitez pas à contacter
-notre support technique : visio@numerique.gouv.fr*
+notre support technique : support@aiobi.world*
 
 .
 

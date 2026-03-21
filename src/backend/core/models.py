@@ -391,8 +391,8 @@ class Room(Resource):
     configuration = models.JSONField(
         blank=True,
         default=dict,
-        verbose_name=_("Visio room configuration"),
-        help_text=_("Values for Visio parameters to configure the room."),
+        verbose_name=_("Aïobi Meet room configuration"),
+        help_text=_("Values for Aïobi Meet parameters to configure the room."),
     )
     pin_code = models.CharField(
         max_length=None,

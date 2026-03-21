@@ -2,27 +2,27 @@
   "title": "Mentions Légales",
   "creator": {
     "title": "Éditeur",
-    "body": "Le service Visio est édité par la Direction interministérielle du numérique de l'Etat (DINUM) située :",
+    "body": "Le service Aïobi Meet est édité par Aïobi située :",
     "contact": {
       "title": "Coordonnées",
-      "address": "20 avenue de Ségur",
-      "city": "75007 Paris",
-      "phone": "Tel. Accueil : 01.71.21.01.70",
-      "siret": "SIRET : 12000101100010 (secrétariat général du gouvernement)",
-      "siren": "SIREN : 120 001 011"
+      "address": "[AÏOBI_ADDRESS]",
+      "city": "",
+      "phone": "[AÏOBI_PHONE]",
+      "siret": "SIRET : [AÏOBI_SIRET]",
+      "siren": "SIREN : [AÏOBI_SIREN]"
     }
   },
   "director": {
     "title": "Directeur de la publication",
-    "body": "La directrice de la publication est Madame Stéphanie Schaer, Directrice interministérielle du numérique."
+    "body": "Le directeur de la publication est [AÏOBI_DIRECTOR]."
   },
   "hosting": {
     "title": "Hébergement",
-    "body": "Le service est hébergé par Outscale West-1 CloudGouv SecNumCloud situé en France."
+    "body": "Le service est hébergé par [AÏOBI_HOSTING_PROVIDER]."
   },
   "accessibility": {
     "title": "Accessibilité",
-    "body": "La conformité aux normes d'accessibilité numérique est un objectif ultérieur. Le site n'a pas encore été audité. Cependant, l'équipe s'efforce de créer un site accessible à tous en suivant les recommandations du RGAA.",
+    "body": "La conformité aux normes d'accessibilité numérique est un objectif ultérieur. Le site n'a pas encore été audité. Cependant, l'équipe s'efforce de créer un site accessible à tous.",
     "more": "Pour en savoir plus : ",
     "link": "lien vers la page d'accessibilité",
     "status": "Etat d'accessibilité : non conforme"
