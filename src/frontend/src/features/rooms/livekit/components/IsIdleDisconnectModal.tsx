@@ -97,13 +97,13 @@ export const IsIdleDisconnectModal = () => {
               className={css({
                 height: '50px',
                 width: '50px',
-                backgroundColor: 'blue.100',
+                backgroundColor: 'primary.100',
                 borderRadius: '25px',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 fontWeight: '500',
-                color: 'blue.800',
+                color: 'primary.800',
                 margin: 'auto',
               })}
               aria-hidden="true"

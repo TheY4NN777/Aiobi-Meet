@@ -40,20 +40,20 @@ const link = cva({
         fontSize: '0.8rem',
         lineHeight: '1rem',
         fontWeight: '700',
-        fontFamily: 'Marianne',
+        fontFamily: 'heading',
         textWrap: 'nowrap',
       },
       minor: {
         fontSize: '0.75rem',
         color: 'rgb(77 77 77)',
-        fontFamily: 'Marianne',
+        fontFamily: 'heading',
         textWrap: 'nowrap',
         lineHeight: '1rem',
       },
     },
     color: {
       primary: {
-        color: 'blue',
+        color: 'primary',
       },
       note: {
         color: 'default.subtle-text',

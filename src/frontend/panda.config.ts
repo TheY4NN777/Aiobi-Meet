@@ -123,33 +123,33 @@ const config: Config = {
       colors: defineTokens.colors({
         ...pandaPreset.theme.tokens.colors,
         primaryDark: {
-          50: { value: '#161622' },
-          75: { value: '#222234' },
-          100: { value: '#2D2D46' },
-          200: { value: '#43436A' },
-          300: { value: '#5A5A8F' },
-          400: { value: '#7070B3' },
-          500: { value: '#8787D7' },
-          600: { value: '#9D9DDF' },
-          700: { value: '#B3B3E7' },
-          800: { value: '#C9C9EE' },
-          900: { value: '#DFDFF6' },
-          950: { value: '#F5F5FE' },
-          action: { value: '#C1C1FB' },
+          50: { value: '#1A1422' },
+          75: { value: '#241C30' },
+          100: { value: '#2E243C' },
+          200: { value: '#3E3250' },
+          300: { value: '#5E4A6E' },
+          400: { value: '#7A6488' },
+          500: { value: '#967EA2' },
+          600: { value: '#B098BC' },
+          700: { value: '#C8B2D2' },
+          800: { value: '#DCCCE4' },
+          900: { value: '#EADCEF' },
+          950: { value: '#F6F0F8' },
+          action: { value: '#C0A5C4' },
         },
         primary: {
-          50: { value: '#F5F5FE' },
-          100: { value: '#ECECFE' },
-          200: { value: '#E3E3FB' },
-          300: { value: '#CACAFB' },
-          400: { value: '#8585F6' },
-          500: { value: '#6A6AF4' },
-          600: { value: '#313178' },
-          700: { value: '#272747' },
-          800: { value: '#000091' },
-          900: { value: '#21213F' },
-          950: { value: '#1B1B35' },
-          action: { value: '#1212FF' },
+          50: { value: '#F6F3F7' },
+          100: { value: '#E4D3E6' },
+          200: { value: '#D4BFD7' },
+          300: { value: '#C0A5C4' },
+          400: { value: '#9A7EA0' },
+          500: { value: '#7A6282' },
+          600: { value: '#5E4A66' },
+          700: { value: '#4A3C5C' },
+          800: { value: '#3A2E4A' },
+          900: { value: '#2B2138' },
+          950: { value: '#1E1628' },
+          action: { value: '#4A3C5C' },
         },
         greyscale: {
           '000': { value: '#FFFFFF' },
@@ -189,14 +189,23 @@ const config: Config = {
        * see semanticTokens for tokens targeting specific usages
        */
       fonts: {
+        heading: {
+          value: [
+            '"HK Grotesk"',
+            '"Hanken Grotesk"',
+            'ui-sans-serif',
+            'system-ui',
+            'sans-serif',
+          ],
+        },
         sans: {
           value: [
+            'Roboto',
             'ui-sans-serif',
             'system-ui',
             '-apple-system',
             'BlinkMacSystemFont',
             '"Segoe UI"',
-            'Roboto',
             '"Helvetica Neue"',
             'Arial',
             '"Noto Sans"',
@@ -280,8 +289,8 @@ const config: Config = {
     semanticTokens: defineSemanticTokens({
       colors: {
         default: {
-          text: { value: '{colors.greyscale.1000}' },
-          bg: { value: 'white' },
+          text: { value: '#0F1010' },
+          bg: { value: '#F8F8F9' },
           subtle: { value: '{colors.gray.100}' },
           'subtle-text': { value: '{colors.gray.600}' },
         },
@@ -299,13 +308,13 @@ const config: Config = {
           subtle: { value: '{colors.gray.400}' },
         },
         primary: {
-          DEFAULT: { value: '{colors.blue.700}' },
-          hover: { value: '{colors.blue.800}' },
-          active: { value: '{colors.blue.900}' },
+          DEFAULT: { value: '{colors.primary.700}' },
+          hover: { value: '{colors.primary.800}' },
+          active: { value: '{colors.primary.900}' },
           text: { value: '{colors.white}' },
-          warm: { value: '{colors.blue.300}' },
-          subtle: { value: '{colors.blue.100}' },
-          'subtle-text': { value: '{colors.blue.700}' },
+          warm: { value: '{colors.primary.300}' },
+          subtle: { value: '{colors.primary.100}' },
+          'subtle-text': { value: '{colors.primary.700}' },
         },
         danger: {
           DEFAULT: { value: '{colors.red.600}' },
@@ -317,7 +326,7 @@ const config: Config = {
           ...pandaPreset.theme.tokens.colors.red,
         },
         alert: {
-          DEFAULT: { value: '{colors.blue.700}' },
+          DEFAULT: { value: '{colors.primary.700}' },
           notification: { value: '{colors.red.600}' },
         },
         success: {
@@ -337,7 +346,7 @@ const config: Config = {
           subtle: { value: '{colors.amber.100}' },
           'subtle-text': { value: '{colors.amber.700}' },
         },
-        focusRing: { value: 'rgb(74, 121, 199)' },
+        focusRing: { value: '#4A3C5C' },
       },
       shadows: {
         box: { value: '{shadows.sm}' },
@@ -362,6 +371,7 @@ const config: Config = {
     textStyles: defineTextStyles({
       display: {
         value: {
+          fontFamily: 'heading',
           fontSize: '3rem',
           lineHeight: '2rem',
           fontWeight: 700,
@@ -369,6 +379,7 @@ const config: Config = {
       },
       h1: {
         value: {
+          fontFamily: 'heading',
           fontSize: '1.5rem',
           lineHeight: '2rem',
           fontWeight: 700,
@@ -376,6 +387,7 @@ const config: Config = {
       },
       h2: {
         value: {
+          fontFamily: 'heading',
           fontSize: '1.25rem',
           lineHeight: '1.75rem',
           fontWeight: 700,
@@ -383,6 +395,7 @@ const config: Config = {
       },
       h3: {
         value: {
+          fontFamily: 'heading',
           fontSize: '1.125rem',
           lineHeight: '1.75rem',
         },

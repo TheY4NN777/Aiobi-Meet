@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@fontsource-variable/material-symbols-outlined": "5.2.34",
+    "@fontsource/hanken-grotesk": "^5.2.8",
     "@fontsource/material-icons-outlined": "5.2.6",
+    "@fontsource/roboto": "^5.2.10",
     "@livekit/components-react": "2.9.19",
     "@livekit/components-styles": "1.2.0",
     "@livekit/track-processors": "0.7.0",

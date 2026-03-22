@@ -137,6 +137,13 @@ Example: `chore(branding) rebrand fork to Aïobi Meet`
 
 Add a changelog entry in `CHANGELOG.md` under `[Unreleased]` for each PR.
 
+## Plans
+
+All implementation plans must be stored in `.claude/plans/` at the project root.
+- Format: `.claude/plans/<plan-name>.md`
+- Plans are versioned with the repo and serve as implementation specs
+- Current plans: `theme-aiobi.md`
+
 ## Access Points (Docker dev)
 - Frontend: http://localhost:3000 (credentials: meet/meet)
 - Backend: http://localhost:8071

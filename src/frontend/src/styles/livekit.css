@@ -123,7 +123,7 @@
 [data-lk-theme='aiobi-light']
   .lk-chat-entry[data-lk-message-origin='remote']
   .lk-message-body {
-  background-color: var(--colors-blue-300);
+  background-color: var(--colors-primary-300);
 }
 
 [data-lk-theme] .lk-chat-header {
