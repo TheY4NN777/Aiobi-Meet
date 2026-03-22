@@ -18,7 +18,7 @@ permissions:
 env:
   DOCKER_USER: 1001:127
   DOCKER_CONTAINER_REGISTRY_HOSTNAME: docker.io
-  DOCKER_CONTAINER_REGISTRY_NAMESPACE: lasuite
+  DOCKER_CONTAINER_REGISTRY_NAMESPACE: aiobi
 
 jobs:
   build-and-push-backend:
@@ -112,7 +112,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-and-push-frontend-dinum:
+  build-and-push-frontend-aiobi:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -131,7 +131,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: '${{ env.DOCKER_CONTAINER_REGISTRY_NAMESPACE }}/meet-frontend-dinum'
+          images: '${{ env.DOCKER_CONTAINER_REGISTRY_NAMESPACE }}/meet-frontend-aiobi'
       -
         name: Login to DockerHub
         if: github.event_name != 'pull_request'
@@ -144,7 +144,7 @@ jobs:
         uses: numerique-gouv/action-trivy-cache@main
         with:
           docker-build-args: '-f docker/dinum-frontend/Dockerfile --target frontend-production'
-          docker-image-name: '${{ env.DOCKER_CONTAINER_REGISTRY_HOSTNAME }}/${{ env.DOCKER_CONTAINER_REGISTRY_NAMESPACE }}/meet-frontend-dinum:${{ github.sha }}'
+          docker-image-name: '${{ env.DOCKER_CONTAINER_REGISTRY_HOSTNAME }}/${{ env.DOCKER_CONTAINER_REGISTRY_NAMESPACE }}/meet-frontend-aiobi:${{ github.sha }}'
       -
         name: Build and push
         uses: docker/build-push-action@v6
@@ -225,7 +225,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: lasuite/meet-agents
+          images: aiobi/meet-agents
       -
         name: Login to DockerHub
         if: github.event_name != 'pull_request'

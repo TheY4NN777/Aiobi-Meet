@@ -28,7 +28,7 @@ loadBalancer:
   tls:
     - hosts:
         - livekit.127.0.0.1.nip.io
-      secretName: livekit-dinum-cert
+      secretName: livekit-aiobi-cert
 
 autoscaling:
   enabled: false

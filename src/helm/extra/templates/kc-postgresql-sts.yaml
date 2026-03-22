@@ -44,7 +44,7 @@ spec:
           - name: POSTGRES_PASSWORD
             value: pass
           - name: POSTGRES_USER
-            value: dinum
+            value: aiobi
           - name: POSTGRES_DB
             value: keycloak
         volumeMounts:

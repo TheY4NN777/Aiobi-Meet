@@ -6,7 +6,7 @@
 
 | Name                                                                         | Description                                          | Value                                                              |
 | ---------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
-| `image.repository`                                                           | Repository to use to pull meet's container image     | `lasuite/meet-backend`                                             |
+| `image.repository`                                                           | Repository to use to pull meet's container image     | `aiobi/meet-backend`                                             |
 | `image.tag`                                                                  | meet's container tag                                 | `latest`                                                           |
 | `image.pullPolicy`                                                           | Container image pull policy                          | `IfNotPresent`                                                     |
 | `image.credentials.username`                                                 | Username for container registry authentication       |                                                                    |

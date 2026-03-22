@@ -39,12 +39,12 @@ spec:
         image: postgres:16-alpine
         readinessProbe:
           exec:
-            command: [ "pg_isready", "-U", "dinum", "-d", "meet", "-h", "127.0.0.1" ]
+            command: [ "pg_isready", "-U", "aiobi", "-d", "meet", "-h", "127.0.0.1" ]
           initialDelaySeconds: 5
           periodSeconds: 5
         livenessProbe:
           exec:
-            command: [ "pg_isready", "-U", "dinum", "-d", "meet", "-h", "127.0.0.1" ]
+            command: [ "pg_isready", "-U", "aiobi", "-d", "meet", "-h", "127.0.0.1" ]
           initialDelaySeconds: 15
           periodSeconds: 10
         ports:
@@ -54,7 +54,7 @@ spec:
           - name: POSTGRES_PASSWORD
             value: pass
           - name: POSTGRES_USER
-            value: dinum
+            value: aiobi
           - name: POSTGRES_DB
             value: meet
         volumeMounts:
