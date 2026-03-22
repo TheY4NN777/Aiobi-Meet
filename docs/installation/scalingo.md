@@ -1,6 +1,6 @@
 # Deployment on Scalingo
 
-This guide explains how to deploy La Suite Meet on [Scalingo](https://scalingo.com/) using the [Suite Numérique buildpack](https://github.com/suitenumerique/buildpack).
+This guide explains how to deploy Aïobi Meet on [Scalingo](https://scalingo.com/) using a [custom buildpack](https://github.com/suitenumerique/buildpack).
 
 ## Overview
 
@@ -180,6 +180,6 @@ On Scalingo, the application runs as follows:
 ## Additional Resources
 
 - [Scalingo Documentation](https://doc.scalingo.com/)
-- [Suite Numérique Buildpack](https://github.com/suitenumerique/buildpack)
+- [Custom Buildpack](https://github.com/suitenumerique/buildpack)
 - [Meet Environment Variables](../../src/helm/meet/README.md)
 - [Django Configurations Documentation](https://django-configurations.readthedocs.io/)

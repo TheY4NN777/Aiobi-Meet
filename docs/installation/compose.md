@@ -4,7 +4,7 @@ We provide a sample configuration for running Meet using Docker Compose. Please 
 
 ## Requirements
 
-All services are required to run the minimalist instance of LaSuite Meet. Click the links for ready-to-use configuration examples:
+All services are required to run the minimalist instance of Aïobi Meet. Click the links for ready-to-use configuration examples:
 
 | Service           | Purpose | Example Config                                           |
 |-------------------|---------|----------------------------------------------------------|
@@ -115,8 +115,8 @@ DJANGO_EMAIL_FROM=<your email address>
 #DJANGO_EMAIL_USE_SSL=true # A flag to enable or disable SSL for email sending.
 
 
-DJANGO_EMAIL_BRAND_NAME=<brand name used in email templates> # e.g. "La Suite Numérique"
-DJANGO_EMAIL_LOGO_IMG=<logo image to use in email templates.> # e.g. "https://meet.yourdomain.tld/assets/logo-suite-numerique.png" 
+DJANGO_EMAIL_BRAND_NAME=<brand name used in email templates> # e.g. "Aïobi Meet"
+DJANGO_EMAIL_LOGO_IMG=<logo image to use in email templates.> # e.g. "https://meet.yourdomain.tld/assets/logo.svg" 
 ```
 
 ## Step 3: Configure your firewall

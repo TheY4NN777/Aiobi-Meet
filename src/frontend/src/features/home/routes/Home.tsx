@@ -249,7 +249,7 @@ export const Home = () => {
                     height:
                       !isLoggedIn && data?.use_proconnect_button
                         ? '56px'
-                        : undefined, // Temporary, Align with ProConnect Button fixed height
+                        : undefined, // Temporary, Align with login button fixed height
                   }}
                 >
                   {t('joinMeeting')}

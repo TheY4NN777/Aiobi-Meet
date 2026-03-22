@@ -197,7 +197,7 @@ export const Conference = ({
     )
   }
 
-  // Some clients (like DINUM) operate in bandwidth-constrained environments
+  // Some deployments operate in bandwidth-constrained environments
   // These settings help ensure successful connections in poor network conditions
   const connectOptions = {
     maxRetries: 5, // Default: 1. Only for unreachable server scenarios

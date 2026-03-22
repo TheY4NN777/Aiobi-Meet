@@ -19,7 +19,7 @@
       "paragraphs": [
         "Aïobi Meet is het product waarvan het gebruik in deze voorwaarden wordt beschreven en dat wordt gepresenteerd op de volgende pagina: https://meet.aiobi.world.",
         "Gebruikers van Aïobi Meet zijn alle personen die Aïobi Meet gebruiken voor videocommunicatiedoeleinden.",
-        "Ruimteorganisatoren zijn gebruikers die verantwoordelijk zijn voor een videoconferentieruimte na inloggen via ProConnect."
+        "Ruimteorganisatoren zijn gebruikers die verantwoordelijk zijn voor een videoconferentieruimte na inloggen met hun account."
       ]
     },
     "article4": {
@@ -31,7 +31,7 @@
       "sections": {
         "section1": {
           "title": "5.1. Functionaliteiten voor organisatoren",
-          "content": "Aïobi Meet biedt gebruikers de mogelijkheid om vanaf een standaardwerkstation een videoconferentieruimte aan te maken, gekoppeld aan hun ProConnect-account.",
+          "content": "Aïobi Meet biedt gebruikers de mogelijkheid om vanaf een standaardwerkstation een videoconferentieruimte aan te maken, gekoppeld aan hun account.",
           "paragraph1": "Elke gebruiker van wie de activiteiten verenigbaar zijn met het gebruik van Aïobi Meet of die niet onder specifieke vertrouwelijkheids- of beroepsgeheimverplichtingen valt, kan een videoconferentie aanmaken en organiseren. De vergaderlink kan vervolgens worden gedeeld met andere personen.",
           "paragraph2": "Daartoe kan elke ruimteorganisator:",
           "capabilities": [
@@ -41,7 +41,7 @@
             "een gebruiker uit de ruimte verwijderen;",
             "de transcriptietool van de vergadering gebruiken na toestemming van de gebruikers, onder eigen verantwoordelijkheid."
           ],
-          "paragraph3": "Alleen gebruikers van wie het ProConnect-account behoort tot een domein dat gemachtigd is om ruimtes op Aïobi Meet te organiseren, of die niet onder specifieke vertrouwelijkheids- of beroepsgeheimverplichtingen vallen, mogen de applicatie en haar functionaliteiten gebruiken of beheren.",
+          "paragraph3": "Alleen gebruikers van wie het account behoort tot een domein dat gemachtigd is om ruimtes op Aïobi Meet te organiseren, of die niet onder specifieke vertrouwelijkheids- of beroepsgeheimverplichtingen vallen, mogen de applicatie en haar functionaliteiten gebruiken of beheren.",
           "paragraph4": "De automatische transcriptietool kan door organisatoren worden gebruikt via het instellingenmenu van de ruimte. Het is de verantwoordelijkheid van de organisatoren om de toestemming te verkrijgen van de gebruikers die deelnemen aan de getranscribeerde vergadering. De transcriptietaal kan in hetzelfde menu worden gewijzigd. Aan het einde van de vergadering ontvangt de organisator een link om de transcriptie te raadplegen."
         },
         "section2": {

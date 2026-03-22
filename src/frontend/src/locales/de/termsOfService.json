@@ -19,7 +19,7 @@
       "paragraphs": [
         "Aïobi Meet ist das Produkt, dessen Nutzung in diesen Bedingungen beschrieben wird und das auf der folgenden Seite vorgestellt ist: https://meet.aiobi.world.",
         "Nutzerinnen und Nutzer von Aïobi Meet sind alle Personen, die Aïobi Meet zu Zwecken der Videokommunikation verwenden.",
-        "Raumorganisatorinnen und -organisatoren sind Nutzerinnen und Nutzer, die nach Anmeldung über ProConnect für einen Videokonferenzraum verantwortlich sind."
+        "Raumorganisatorinnen und -organisatoren sind Nutzerinnen und Nutzer, die nach Anmeldung mit ihrem Konto für einen Videokonferenzraum verantwortlich sind."
       ]
     },
     "article4": {
@@ -31,7 +31,7 @@
       "sections": {
         "section1": {
           "title": "5.1. Funktionen für Organisatorinnen und Organisatoren",
-          "content": "Aïobi Meet ermöglicht Nutzerinnen und Nutzern, von einem Standardarbeitsplatz aus einen Videokonferenzraum zu erstellen, der mit ihrem ProConnect-Konto verknüpft ist.",
+          "content": "Aïobi Meet ermöglicht Nutzerinnen und Nutzern, von einem Standardarbeitsplatz aus einen Videokonferenzraum zu erstellen, der mit ihrem Konto verknüpft ist.",
           "paragraph1": "Jede Nutzerin und jeder Nutzer, deren Tätigkeiten mit der Nutzung von Aïobi Meet vereinbar sind oder die keinen besonderen Vertraulichkeits- oder Berufsgeheimnispflichten unterliegen, kann eine Videokonferenz erstellen und organisieren. Der Einladungslink kann anschließend mit anderen Personen geteilt werden.",
           "paragraph2": "Zu diesem Zweck kann jede Raumorganisatorin bzw. jeder Raumorganisator:",
           "capabilities": [
@@ -41,7 +41,7 @@
             "eine Nutzerin oder einen Nutzer aus dem Raum entfernen;",
             "das Transkriptionstool der Sitzung nach Einholung der Zustimmung der Nutzerinnen und Nutzer unter eigener Verantwortung verwenden."
           ],
-          "paragraph3": "Nur Nutzerinnen und Nutzer, deren ProConnect-Konto zu einer zur Raumorganisation in Aïobi Meet berechtigten Domäne gehört oder die keiner besonderen Vertraulichkeits- oder Berufsgeheimnispflicht unterliegen, dürfen die Anwendung und ihre Funktionen nutzen oder kontrollieren.",
+          "paragraph3": "Nur Nutzerinnen und Nutzer, deren Konto zu einer zur Raumorganisation in Aïobi Meet berechtigten Domäne gehört oder die keiner besonderen Vertraulichkeits- oder Berufsgeheimnispflicht unterliegen, dürfen die Anwendung und ihre Funktionen nutzen oder kontrollieren.",
           "paragraph4": "Das automatische Transkriptionstool kann von Organisatorinnen und Organisatoren über das Einstellungsmenü des Raums genutzt werden. Es liegt in ihrer Verantwortung, die Zustimmung der an der transkribierten Sitzung teilnehmenden Nutzerinnen und Nutzer sicherzustellen. Die Transkriptionssprache kann im selben Menü geändert werden. Am Ende der Sitzung erhält die Organisatorin bzw. der Organisator einen Link zum Zugriff auf die Transkription."
         },
         "section2": {

@@ -16,9 +16,9 @@
   "loggedInUserTooltip": "Angemeldet als…",
   "login": {
     "buttonLabel": "Anmelden",
-    "proconnectButtonLabel": "Mit ProConnect anmelden",
-    "proconnectLinkLabel": "Was ist ProConnect? – neuer Tab",
-    "proconnectLink": "Was ist ProConnect?"
+    "proconnectButtonLabel": "Mit Ihrem Konto anmelden",
+    "proconnectLinkLabel": "Mehr über Aïobi Meet erfahren – neuer Tab",
+    "proconnectLink": "Mehr über Aïobi Meet erfahren"
   },
   "logout": "Abmelden",
   "notFound": {

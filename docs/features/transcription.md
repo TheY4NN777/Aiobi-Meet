@@ -1,8 +1,8 @@
 # Transcription
 
-La Suite Meet provides a room transcription capability, currently available in beta. This feature is under active development, with ongoing enhancements planned.
+Aïobi Meet provides a room transcription capability, currently available in beta. This feature is under active development, with ongoing enhancements planned.
 
-The transcription feature enables users to record room sessions. Upon completion of a recording, the room owner receives a notification containing a link to LaSuite Docs, where the transcribed meeting content can be accessed.
+The transcription feature enables users to record room sessions. Upon completion of a recording, the room owner receives a notification containing a link to Docs, where the transcribed meeting content can be accessed.
 
 > [!NOTE]
 > Audio recordings are automatically deleted after the configured `RECORDING_EXPIRATION_DAYS` period.
@@ -31,9 +31,9 @@ Example of a transcript :
 To enable the transcription feature, the following components must be in place:
 
 * Recording feature components: All dependencies and configurations required for the [recording feature](https://github.com/suitenumerique/meet/blob/main/docs/features/recording.md).
-* LaSuite Docs instance: A running [LaSuite Docs](https://github.com/suitenumerique/docs) capable of handling requests to the `/create-for-owner` endpoint.
+* Docs instance: A running [Docs](https://github.com/suitenumerique/docs) service capable of handling requests to the `/create-for-owner` endpoint.
 * WhisperX API: A running WhisperX service. An open-source implementation combining WhisperX and FastAPI is available [here](https://github.com/suitenumerique/meet-whisperx).
-* Deployment of the [summary service](https://hub.docker.com/r/lasuite/meet-summary), a Celery worker, and a Redis instance.
+* Deployment of the summary service, a Celery worker, and a Redis instance.
 
 ## How It Works
 
@@ -44,7 +44,7 @@ sequenceDiagram
   participant Celery as Celery Workers (transcribe-queue)
   participant MinIO as MinIO (Object Storage)
   participant STT as WhisperX API
-  participant Docs as LaSuite Docs
+  participant Docs as Docs
 
   Backend->>Summary: POST /api/v1/tasks/ (bearer token, payload)
   Note right of Backend: Payload contains 7 params: owner_id, filename, email, sub, room, recording_date, recording_time

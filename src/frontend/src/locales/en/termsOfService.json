@@ -19,7 +19,7 @@
       "paragraphs": [
         "Aïobi Meet is the product whose use is described in these terms and presented on the following page: https://meet.aiobi.world.",
         "Users of Aïobi Meet are any persons using Aïobi Meet for videoconferencing communication purposes, whether they are staff members, partners, or service providers.",
-        "Room organizers are users who are responsible for a videoconference room after logging in via ProConnect."
+        "Room organizers are users who are responsible for a videoconference room after logging in with their account."
       ]
     },
     "article4": {
@@ -31,7 +31,7 @@
       "sections": {
         "section1": {
           "title": "5.1. Features available to organizers",
-          "content": "Aïobi Meet allows users to create a videoconference room from a standard workstation, linked to their ProConnect account.",
+          "content": "Aïobi Meet allows users to create a videoconference room from a standard workstation, linked to their account.",
           "paragraph1": "Any user whose activities are compatible with the use of Aïobi Meet or who is not subject to specific confidentiality or professional secrecy obligations, may create and organize a videoconference. They may then share the meeting link with other persons, users, whether or not they belong to the organization.",
           "paragraph2": "For this purpose, each room organizer may:",
           "capabilities": [
@@ -41,7 +41,7 @@
             "Remove a user from the room;",
             "Use the meeting transcription tool after obtaining the consent of users, under their responsibility."
           ],
-          "paragraph3": "Only users whose ProConnect account belongs to a domain authorized to organize rooms on Aïobi Meet or who are not subject to specific confidentiality or professional secrecy obligations may use or have control over the application and its features.",
+          "paragraph3": "Only users whose account belongs to a domain authorized to organize rooms on Aïobi Meet or who are not subject to specific confidentiality or professional secrecy obligations may use or have control over the application and its features.",
           "paragraph4": "The automatic transcription tool can be used by organizers from the room settings menu. Organizers are responsible for ensuring the consent of users participating in the transcribed meeting. The transcription language can be changed from the same menu. At the end of the meeting, a link is sent to the organizer to access the transcription stored in the Docs tool operated by Aïobi."
         },
         "section2": {

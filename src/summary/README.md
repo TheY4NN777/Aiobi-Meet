@@ -1,6 +1,6 @@
 # Experimental Stack
 
-This is an experimental part of the stack.  It currently lacks proper observability, unit tests, and other production-grade features. This serves as the base for AI features in Visio.
+This is an experimental part of the stack.  It currently lacks proper observability, unit tests, and other production-grade features. This serves as the base for AI features in Aïobi Meet.
 
 ## How it works 
 
@@ -8,7 +8,7 @@ Please refer to the [Recording feature documentation](https://github.com/suitenu
 
 ## How to develop
 
-(To develop locally follow the instructions on [developing La Suite Meet locally](https://github.com/suitenumerique/meet/blob/main/docs/developping_locally.md))
+(To develop locally follow the instructions on [developing locally](https://github.com/suitenumerique/meet/blob/main/docs/developping_locally.md))
 
 From the root of the project:
 

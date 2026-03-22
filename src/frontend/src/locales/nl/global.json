@@ -16,9 +16,9 @@
   "loggedInUserTooltip": "Ingelogd als ",
   "login": {
     "buttonLabel": "Log in",
-    "proconnectButtonLabel": "Log in met Proconnect",
-    "proconnectLinkLabel": "Wat is ProConnect?",
-    "proconnectLink": "Wat is ProConnect?"
+    "proconnectButtonLabel": "Inloggen met uw account",
+    "proconnectLinkLabel": "Meer informatie over Aïobi Meet",
+    "proconnectLink": "Meer informatie over Aïobi Meet"
   },
   "logout": "Uitloggen",
   "notFound": {

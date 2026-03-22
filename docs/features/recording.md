@@ -1,7 +1,7 @@
 
 # Room Recording (Beta)
 
-La Suite Meet offers a room recording feature that is currently in beta, with ongoing improvements planned. 
+Aïobi Meet offers a room recording feature that is currently in beta, with ongoing improvements planned. 
 
 The feature allows users to record their room sessions. When a recording is complete, the room owner receives a notification with a link to download the recorded file. Recordings are automatically deleted after `RECORDING_EXPIRATION_DAYS`.
 
@@ -121,7 +121,7 @@ RECORDING_STORAGE_EVENT_TOKEN = <token>
 
 ## LiveKit Egress
 
-La Suite Meet uses LiveKit Egress to record room sessions. For reference, see the [LiveKit Egress repository](https://github.com/livekit/egress) and the [official documentation](https://docs.livekit.io/home/egress/overview/).
+Aïobi Meet uses LiveKit Egress to record room sessions. For reference, see the [LiveKit Egress repository](https://github.com/livekit/egress) and the [official documentation](https://docs.livekit.io/home/egress/overview/).
 
 Currently, only `RoomCompositeEgress` is supported. This mode combines all video and audio tracks from the room into a single recording.
 

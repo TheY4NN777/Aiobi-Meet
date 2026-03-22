@@ -19,7 +19,7 @@
       "paragraphs": [
         "Aïobi Meet est le produit dont l'utilisation est décrite dans les présentes modalités et présenté sur la page suivante : https://meet.aiobi.world.",
         "Les utilisateurs et utilisatrices de Aïobi Meet sont toute personne utilisant Aïobi Meet à des fins de communication en visioconférence, qu'elles soient des agents, des partenaires ou des prestataires.",
-        "Les organisateurs et organisatrices de salon sont des utilisateurs et utilisatrices qui sont responsables d'un salon de visioconférence après s'être connecté par ProConnect."
+        "Les organisateurs et organisatrices de salon sont des utilisateurs et utilisatrices qui sont responsables d'un salon de visioconférence après s'être connecté avec leur compte."
       ]
     },
     "article4": {
@@ -31,7 +31,7 @@
       "sections": {
         "section1": {
           "title": "5.1. Fonctionnalités ouvertes aux organisateurs et organisatrices",
-          "content": "Aïobi Meet offre aux utilisateurs la possibilité de créer un salon de visioconférence depuis un poste de travail standard, lié à leur compte ProConnect.",
+          "content": "Aïobi Meet offre aux utilisateurs la possibilité de créer un salon de visioconférence depuis un poste de travail standard, lié à leur compte.",
           "paragraph1": "Tout utilisateur, dont les activités sont compatibles avec l'utilisation de Aïobi Meet ou qui n'est pas soumis à des obligations particulières de confidentialité ou de secret professionnel, peut créer et organiser une visioconférence. Il ou elle peut ensuite partager le lien de la réunion avec d'autres personnes, utilisateurs et utilisatrices.",
           "paragraph2": "A cet effet, chaque organisateur ou organisatrice de salon peut :",
           "capabilities": [
@@ -41,7 +41,7 @@
             "Exclure un utilisateur ou utilisatrice du salon ;",
             "Utiliser l'outil de transcription de la réunion après avoir obtenu l'aval des utilisateurs et des utilisatrices, sous sa responsabilité."
           ],
-          "paragraph3": "Seuls les utilisateurs, dont le compte ProConnect relève d'un domaine autorisé à organiser des salons sur Aïobi Meet ou qui <u>ne sont pas soumis à une obligation de confidentialité particulière ou de secret professionnel</u>, peuvent utiliser ou avoir la maîtrise de l'application et de ses fonctionnalités.",
+          "paragraph3": "Seuls les utilisateurs, dont le compte relève d'un domaine autorisé à organiser des salons sur Aïobi Meet ou qui <u>ne sont pas soumis à une obligation de confidentialité particulière ou de secret professionnel</u>, peuvent utiliser ou avoir la maîtrise de l'application et de ses fonctionnalités.",
           "paragraph4": "L'outil de transcription automatique peut être utilisé par les organisateurs et organisatrices depuis le menu des paramètres du salon. Il appartient aux organisateurs et organisatrices de s'assurer de l'aval des utilisateurs et utilisatrices participants à la réunion transcrite. La langue de transcription peut être modifiée depuis le même menu. À la fin de la réunion, un lien est transmis à l'organisateur ou l'organisatrice pour accéder à la transcription conservée sur l'outil intitulé Docs opéré par Aïobi."
         },
         "section2": {

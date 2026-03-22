@@ -1,7 +1,7 @@
 
-# Theming La Suite Meet
+# Theming Aïobi Meet
 
-There are two ways to customize LaSuite Meet:
+There are two ways to customize Aïobi Meet:
 
 - **Runtime Theming**. You can load a custom CSS file to apply any CSS you want. You can change all design-system tokens through CSS variables: colors, fonts, spacing multipliers, and more.
 - **Build-time Theming**. Some additional things, like the app name appearing in the browser tab, can be customized through environment variables that are applied at build-time.
@@ -18,7 +18,7 @@ FRONTEND_CSS_URL=https://example.com/custom-style.css
 ```
 
 > [!TIP]
-> If you serve your CSS file on the same domain as LaSuite Meet, paths are supported, i.e. `FRONTEND_CSS_URL=/custom/style.css` will load `https://your-domain.com/custom/style.css`.
+> If you serve your CSS file on the same domain as Aïobi Meet, paths are supported, i.e. `FRONTEND_CSS_URL=/custom/style.css` will load `https://your-domain.com/custom/style.css`.
 
 Setting this variable makes the app load your CSS at runtime, adding a `<link>` to `<head>` so you can override CSS variables and customize the frontend without rebuilding.
 
@@ -90,7 +90,7 @@ For example, to replace the images used in the landing page carousel, provide yo
 Some settings cannot be applied at runtime and require rebuilding the Docker image.
 One key example is the **application title and name**, controlled by the `VITE_APP_TITLE` build argument.
 
-* **Default:** `La Suite Meet`
+* **Default:** `Aïobi Meet`
 * **Override:** supply your own value at build time
 
 ```bash
@@ -101,12 +101,12 @@ docker build \
 
 ```dockerfile
 # Dockerfile
-ARG VITE_APP_TITLE="La Suite Meet"
+ARG VITE_APP_TITLE="Aïobi Meet"
 ENV VITE_APP_TITLE=${VITE_APP_TITLE}
 ```
 
-For a real-world example, see how DINUM rebuilds the frontend to match their branding:
-[DINUM Dockerfile](../docker/dinum-frontend/Dockerfile)
+For a real-world example, see the custom frontend Dockerfile used for branding:
+[Custom Frontend Dockerfile](../docker/dinum-frontend/Dockerfile)
 
 ----
 
