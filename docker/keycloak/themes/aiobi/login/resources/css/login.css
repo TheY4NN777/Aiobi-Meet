@@ -536,9 +536,15 @@ body.login-pf .card-pf:has(#kc-register-form) {
   transform: none;
 }
 
-/* Compact register form — reduce spacing */
+/* ── Register form ── */
+
+#kc-register-form {
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+}
+
 #kc-register-form .form-group {
-  margin-bottom: 0.875rem;
+  margin-bottom: 0.75rem;
 }
 
 #kc-register-form label {
@@ -546,79 +552,10 @@ body.login-pf .card-pf:has(#kc-register-form) {
   font-size: 0.8rem;
 }
 
-/* Two-column layout for First name + Last name on desktop */
-#kc-register-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 1rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Ensure inputs don't overflow container */
 #kc-register-form input[type="text"],
 #kc-register-form input[type="password"],
 #kc-register-form input[type="email"],
 #kc-register-form .form-control {
   width: 100%;
   box-sizing: border-box;
-}
-
-/* First name → col 1, Last name → col 2 */
-#kc-register-form .form-group:nth-child(1) {
-  grid-column: 1;
-}
-
-#kc-register-form .form-group:nth-child(2) {
-  grid-column: 2;
-}
-
-/* Remaining fields → full width */
-#kc-register-form .form-group:nth-child(n+3) {
-  grid-column: 1 / -1;
-}
-
-/* Button area full width */
-#kc-register-form .form-group:last-child,
-#kc-register-form > div:last-child {
-  grid-column: 1 / -1;
-}
-
-/* "Back to login" link on register page */
-#kc-form-options.register-backToLogin {
-  grid-column: 1 / -1;
-}
-
-/* Tablet: register card needs breathing room */
-@media (max-width: 768px) {
-  .card-pf:has(#kc-register-form) {
-    max-width: 100%;
-    padding: 2rem 1.75rem 1.75rem;
-  }
-}
-
-/* Mobile: single column, proper spacing */
-@media (max-width: 480px) {
-  #kc-register-form {
-    grid-template-columns: 1fr;
-  }
-
-  #kc-register-form .form-group:nth-child(1),
-  #kc-register-form .form-group:nth-child(2) {
-    grid-column: 1;
-  }
-
-  .card-pf:has(#kc-register-form) {
-    padding: 1.5rem 1.25rem;
-    margin: 0 0.5rem;
-    max-width: calc(100% - 1rem);
-  }
-}
-
-/* Small mobile */
-@media (max-width: 360px) {
-  .card-pf:has(#kc-register-form) {
-    padding: 1.25rem 1rem;
-    margin: 0 0.25rem;
-  }
 }
