@@ -26,16 +26,13 @@ RUN npm run build
 RUN set -e && \
     npx @posthog/cli@0.4.8 sourcemap inject --directory ./dist/assets
 
-COPY ./docker/dinum-frontend/dinum-styles.css \
+COPY ./docker/aiobi-frontend/aiobi-styles.css \
     ./dist/assets/
 
-COPY ./docker/dinum-frontend/logo.svg \
+COPY ./docker/aiobi-frontend/logo.svg \
     ./dist/assets/logo.svg
 
-COPY ./docker/dinum-frontend/assets/ \
-    ./dist/assets/
-
-COPY ./docker/dinum-frontend/fonts/ \
+COPY ./docker/aiobi-frontend/fonts/ \
     ./dist/assets/fonts/
 
 # ---- Front-end image ----

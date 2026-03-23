@@ -106,7 +106,7 @@ ENV VITE_APP_TITLE=${VITE_APP_TITLE}
 ```
 
 For a real-world example, see the custom frontend Dockerfile used for branding:
-[Custom Frontend Dockerfile](../docker/dinum-frontend/Dockerfile)
+[Custom Frontend Dockerfile](../docker/aiobi-frontend/Dockerfile)
 
 ----
 

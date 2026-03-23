@@ -414,7 +414,7 @@
     },
     "premium": {
       "heading": "Fonctionnalité premium",
-      "body": "Cette fonctionnalité est réservée aux agents publics. Si votre adresse email n’est pas autorisée, contactez le support pour obtenir l'accès.",
+      "body": "Cette fonctionnalité est réservée aux membres autorisés. Si votre adresse email n’est pas autorisée, contactez le support pour obtenir l'accès.",
       "linkMore": "Ouvrir la documentation",
       "dividerLabel": "OU",
       "login": {

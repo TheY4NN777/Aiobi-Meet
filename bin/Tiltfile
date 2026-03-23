@@ -4,11 +4,11 @@ namespace_create('meet')
 
 DEV_ENV = os.getenv('DEV_ENV', 'dev')
 
-if DEV_ENV == 'dev-dinum':
+if DEV_ENV == 'dev-aiobi':
     update_settings(suppress_unused_image_warnings=["localhost:5001/meet-frontend-generic:latest"])
 
 if DEV_ENV == 'dev-keycloak':
-    update_settings(suppress_unused_image_warnings=["localhost:5001/meet-frontend-dinum:latest"])
+    update_settings(suppress_unused_image_warnings=["localhost:5001/meet-frontend-aiobi:latest"])
 
 
 def clean_old_images(image_name):
@@ -31,16 +31,16 @@ docker_build(
 clean_old_images('localhost:5001/meet-backend')
 
 docker_build(
-    'localhost:5001/meet-frontend-dinum:latest',
+    'localhost:5001/meet-frontend-aiobi:latest',
     context='..',
-    dockerfile='../docker/dinum-frontend/Dockerfile',
+    dockerfile='../docker/aiobi-frontend/Dockerfile',
     only=['./src/frontend', './docker', './.dockerignore'],
     target = 'frontend-production',
     live_update=[
         sync('../src/frontend', '/home/frontend'),
     ]
 )
-clean_old_images('localhost:5001/meet-frontend-dinum')
+clean_old_images('localhost:5001/meet-frontend-aiobi')
 
 docker_build(
     'localhost:5001/meet-frontend-generic:latest',

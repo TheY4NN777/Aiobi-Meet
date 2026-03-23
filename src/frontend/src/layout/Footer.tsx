@@ -1,6 +1,6 @@
 import { styled } from '@/styled-system/jsx'
 import { css } from '@/styled-system/css'
-import { A, Link } from '@/primitives'
+import { Link } from '@/primitives'
 import { useTranslation } from 'react-i18next'
 
 const StyledLi = styled('li', {
@@ -44,15 +44,6 @@ const SecondRow = styled('ul', {
   },
 })
 
-const ThirdRow = styled('p', {
-  base: {
-    fontSize: '0.75rem',
-    color: 'rgb(77 77 77)',
-    textWrap: 'wrap',
-    lineHeight: '1rem',
-    marginTop: { base: '1rem', xs: '0.5rem' },
-  },
-})
 
 export const Footer = () => {
   const { t } = useTranslation('global', { keyPrefix: 'footer' })
@@ -98,27 +89,7 @@ export const Footer = () => {
             </Link>
           </StyledLi>
         </SecondRow>
-        <ThirdRow>
-          {t('mentions')}{' '}
-          <A
-            externalIcon
-            footer="minor"
-            href="https://opensource.org/licenses/MIT"
-          >
-            {t('license')}
-          </A>
-          .
-          <br /> {t('links.codeAnnotation')}{' '}
-          <A
-            externalIcon
-            footer="minor"
-            href="https://github.com/TheY4NN777/Aiobi-Meet"
-            aria-label={t('links.code') + ' - ' + t('links.ariaLabel')}
-          >
-            {t('links.code')}
-          </A>
-          .
-        </ThirdRow>
+
       </InnerContainer>
     </footer>
   )

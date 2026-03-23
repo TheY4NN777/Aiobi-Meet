@@ -414,7 +414,7 @@
     },
     "premium": {
       "heading": "Premium feature",
-      "body": "This feature is reserved for public agents. If your email address is not authorized, please contact support to get access.",
+      "body": "This feature is reserved for authorized members. If your email address is not authorized, please contact support to get access.",
       "linkMore": "Open documentation",
       "linkAriaLabel": "Open documentation about premium access - opens in new window",
       "dividerLabel": "OR",

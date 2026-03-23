@@ -367,6 +367,6 @@ start-tilt-keycloak: ## start the kubernetes cluster using kind, without Pro Con
 	DEV_ENV=dev-keycloak tilt up --namespace=meet -f ./bin/Tiltfile
 .PHONY: build-k8s-cluster
 
-start-tilt-dinum: ## start the kubernetes cluster using kind, without Pro Connect for authentication, but with DINUM styles
-	DEV_ENV=dev-dinum tilt up --namespace=meet -f ./bin/Tiltfile
+start-tilt-aiobi: ## start the kubernetes cluster using kind, without Pro Connect for authentication, but with Aïobi styles
+	DEV_ENV=dev-aiobi tilt up --namespace=meet -f ./bin/Tiltfile
 .PHONY: build-k8s-cluster

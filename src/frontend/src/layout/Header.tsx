@@ -19,7 +19,7 @@ const Logo = () => (
     src="/assets/logo.svg"
     alt={`${import.meta.env.VITE_APP_TITLE}`}
     className={`Header-logo ${css({
-      maxHeight: { base: '30px', sm: '40px' },
+      maxHeight: { base: '40px', sm: '50px' },
       marginTop: { base: '10px', sm: '5px' },
     })}`}
   />
