@@ -4,7 +4,7 @@
   "loginTheme": "aiobi",
   "accountTheme": "aiobi",
   "displayName": "Aïobi Meet",
-  "displayNameHtml": "<img src=\"${url.resourcesPath}/img/aiobi-logo.png\" alt=\"Aïobi Meet\" style=\"max-height: 50px; margin-bottom: 10px;\">",
+  "displayNameHtml": "<img src=\"${url.resourcesPath}/img/aiobi-logo.svg\" alt=\"Aïobi Meet\" style=\"max-height: 56px;\">",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": "false",

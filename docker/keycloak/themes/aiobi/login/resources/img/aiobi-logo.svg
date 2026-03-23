@@ -1,0 +1,23 @@
+<svg width="210" height="50" viewBox="0 0 210 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap');
+    text {
+      font-family: 'Hanken Grotesk', 'Roboto', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      fill: #0F1010;
+    }
+  </style>
+  <g transform="translate(-2, 0) scale(0.105)">
+    <g id="svg-1" transform="matrix(1, 0, 0, 1, -325.710332, -34.650063)">
+      <g transform="matrix(2.945058, 0, 0, 2.790564, 431.020545, 120.871729)">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M50 0C22.4 0 0 22.4 0 50C0 77.6 22.4 100 50 100C77.6 100 100 77.6 100 50C100 22.4 77.6 0 50 0ZM54 10C31.9 10 14 27.9 14 50C14 72.1 31.9 90 54 90C76.1 90 94 72.1 94 50C94 27.9 76.1 10 54 10Z" fill="#0F1010"/>
+        <rect x="35" y="38" width="10" height="24" rx="5" fill="#0F1010"/>
+        <rect x="63" y="38" width="10" height="24" rx="5" fill="#0F1010"/>
+      </g>
+      <rect x="517.607" y="410.324" width="86.28" height="75.514" rx="4" fill="#0F1010"/>
+      <polygon points="606.53 426.175 651.607 403.41 651.607 486.887 606.53 464.117" fill="#0F1010"/>
+    </g>
+  </g>
+  <text x="44" y="35">Aïobi Meet</text>
+</svg>

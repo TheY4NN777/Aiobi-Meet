@@ -1,102 +1,467 @@
-/* Aïobi Meet – Custom Keycloak Login Theme */
+/* Aïobi Meet — Keycloak Login Theme
+   Brand: Blanc #F8F8F9 · Noir #0F1010 · Violet #4A3C5C · Lilas #E4D3E6
+   Fonts: HK Grotesk (headings) · Roboto (body)
+   ────────────────────────────────────────────────────────────────────── */
 
+/* ── 1. Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700&family=Roboto:wght@400;500;700&display=swap');
 
-/* ── Global ── */
-body, .login-pf body {
-  font-family: 'Roboto', 'Hanken Grotesk', sans-serif;
-  background: url('../img/aiobi_wallpaper.png') no-repeat center center fixed;
-  background-size: cover;
+/* ── 2. Custom Properties ── */
+:root {
+  --aiobi-blanc: #F8F8F9;
+  --aiobi-noir: #0F1010;
+  --aiobi-violet: #4A3C5C;
+  --aiobi-violet-hover: #3A2E4A;
+  --aiobi-violet-active: #2B2138;
+  --aiobi-lilas: #E4D3E6;
+  --aiobi-lilas-soft: rgba(228, 211, 230, 0.4);
+  --aiobi-card-shadow: 0 8px 32px rgba(15, 16, 16, 0.06),
+                        0 2px 8px rgba(15, 16, 16, 0.04);
+  --aiobi-radius: 16px;
+  --aiobi-radius-sm: 10px;
+  --aiobi-radius-xs: 8px;
 }
 
-/* ── Login card ── */
-#kc-login {
-  font-family: 'Roboto', sans-serif;
+/* ── 3. Global — Page layout ── */
+body,
+.login-pf body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(ellipse at 50% 40%, var(--aiobi-lilas-soft), var(--aiobi-blanc) 70%);
+  background-attachment: fixed;
+  color: var(--aiobi-noir);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.login-pf .container-fluid {
+  padding: 0;
+  max-width: 100%;
+}
+
+.login-pf-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.login-pf-page .login-pf-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* ── 4. Header — Logo area ── */
+#kc-header {
+  text-align: center;
+  padding: 0;
+  margin-bottom: 0.25rem;
 }
 
 #kc-header-wrapper {
   font-family: 'Hanken Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 1.6rem;
-  color: #0F1010;
-  padding-bottom: 1rem;
+  font-size: 1.5rem;
+  color: var(--aiobi-noir);
+  text-align: center;
+  padding: 0 0 0.75rem 0;
+  line-height: 1.2;
 }
 
-/* ── Card container ── */
-#kc-form-wrapper,
+/* Logo is rendered via displayNameHtml (img tag in realm.json) */
+#kc-header-wrapper img {
+  display: block;
+  margin: 0 auto 0.25rem auto;
+  max-height: 56px;
+  width: auto;
+}
+
+/* Hide default logo wrapper — we use displayNameHtml instead */
+#kc-logo-wrapper {
+  display: none;
+}
+
+/* ── 5. Card — Login form container ── */
 .card-pf {
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+  border-radius: var(--aiobi-radius);
+  box-shadow: var(--aiobi-card-shadow);
+  border: 1px solid rgba(228, 211, 230, 0.3);
+  padding: 2.5rem 2.5rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* ── Primary button ── */
-#kc-login {
-  background-color: #4A3C5C;
-  border-color: #4A3C5C;
-  color: #ffffff;
-  border-radius: 8px;
+#kc-content {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+#kc-content-wrapper {
+  padding: 0;
+}
+
+/* "Sign in to your account" subtitle */
+#kc-page-title {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--aiobi-noir);
+  text-align: center;
+  margin: 0 0 1.75rem 0;
+  line-height: 1.3;
+}
+
+/* ── 6. Form — Inputs & labels ── */
+.login-pf label {
+  font-size: 0.85rem;
   font-weight: 500;
-  padding: 0.6rem 1.2rem;
+  color: var(--aiobi-noir);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.login-pf .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.login-pf input[type="text"],
+.login-pf input[type="password"],
+.login-pf input[type="email"],
+.login-pf .form-control {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0.625rem 0.875rem;
+  font-family: 'Roboto', sans-serif;
   font-size: 0.95rem;
-  transition: background-color 0.2s ease;
+  color: var(--aiobi-noir);
+  background: #FFFFFF;
+  border: 1.5px solid #E0E0E0;
+  border-radius: var(--aiobi-radius-xs);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  -webkit-appearance: none;
 }
 
-#kc-login:hover {
-  background-color: #3a2e4a;
-  border-color: #3a2e4a;
+.login-pf input[type="text"]::placeholder,
+.login-pf input[type="password"]::placeholder,
+.login-pf input[type="email"]::placeholder,
+.login-pf .form-control::placeholder {
+  color: #9CA3AF;
 }
 
-#kc-login:focus {
-  box-shadow: 0 0 0 3px rgba(74, 60, 92, 0.35);
+.login-pf input[type="text"]:focus,
+.login-pf input[type="password"]:focus,
+.login-pf input[type="email"]:focus,
+.login-pf .form-control:focus {
+  border-color: var(--aiobi-violet);
+  box-shadow: 0 0 0 3px rgba(74, 60, 92, 0.12);
+  outline: none;
 }
 
-/* ── Links ── */
+/* Checkbox — Remember me */
+.login-pf .checkbox label,
+.login-pf .checkbox-inline {
+  font-size: 0.825rem;
+  font-weight: 400;
+  color: #6B7280;
+}
+
+.login-pf input[type="checkbox"] {
+  accent-color: var(--aiobi-violet);
+}
+
+/* ── 7. Button — Sign In ── */
+#kc-login,
+.login-pf .btn-primary {
+  display: block;
+  width: 100%;
+  height: 48px;
+  background-color: var(--aiobi-violet);
+  border: 2px solid var(--aiobi-violet);
+  color: #FFFFFF;
+  border-radius: var(--aiobi-radius-sm);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+              transform 0.15s ease, box-shadow 0.2s ease;
+  margin-top: 0.5rem;
+  -webkit-appearance: none;
+}
+
+#kc-login:hover,
+.login-pf .btn-primary:hover {
+  background-color: var(--aiobi-violet-hover);
+  border-color: var(--aiobi-violet-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 60, 92, 0.25);
+}
+
+#kc-login:active,
+.login-pf .btn-primary:active {
+  background-color: var(--aiobi-violet-active);
+  border-color: var(--aiobi-violet-active);
+  transform: none;
+  box-shadow: none;
+}
+
+#kc-login:focus-visible,
+.login-pf .btn-primary:focus-visible {
+  outline: 2px solid var(--aiobi-violet);
+  outline-offset: 2px;
+}
+
+/* ── 8. Links — Forgot password, Register ── */
+#kc-form-options {
+  margin-top: 1rem;
+}
+
 #kc-form-options a,
 #kc-registration a,
 .login-pf a {
-  color: #4A3C5C;
+  color: var(--aiobi-violet);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
 }
 
 #kc-form-options a:hover,
 #kc-registration a:hover,
 .login-pf a:hover {
-  color: #3a2e4a;
+  color: var(--aiobi-violet-hover);
+  text-decoration: underline;
 }
 
-/* ── Input fields ── */
-.login-pf input[type="text"],
-.login-pf input[type="password"],
-.login-pf input[type="email"] {
-  border-radius: 6px;
-  border: 1px solid #d1d1d6;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease;
+#kc-registration {
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #F0F0F0;
+  margin-top: 1.5rem;
 }
 
-.login-pf input[type="text"]:focus,
-.login-pf input[type="password"]:focus,
-.login-pf input[type="email"]:focus {
-  border-color: #4A3C5C;
-  box-shadow: 0 0 0 2px rgba(74, 60, 92, 0.2);
-  outline: none;
+#kc-registration span {
+  font-size: 0.85rem;
+  color: #6B7280;
 }
 
-/* ── Logo ── */
-#kc-logo-wrapper {
-  background-image: url('../img/aiobi-logo.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  height: 60px;
-  margin-bottom: 1rem;
+/* ── 9. Alerts — Error / Success ── */
+.alert {
+  border-radius: var(--aiobi-radius-xs);
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border: none;
 }
 
-/* ── Alert messages ── */
-.alert-error {
-  border-radius: 6px;
+.alert-error,
+.alert-danger {
+  background: #FEF2F2;
+  border-left: 3px solid #EF4444;
+  color: #991B1B;
 }
 
 .alert-success {
-  border-radius: 6px;
+  background: #F0FDF4;
+  border-left: 3px solid #22C55E;
+  color: #166534;
+}
+
+.alert-warning {
+  background: #FFFBEB;
+  border-left: 3px solid #F59E0B;
+  color: #92400E;
+}
+
+.alert-info {
+  background: #EFF6FF;
+  border-left: 3px solid #3B82F6;
+  color: #1E40AF;
+}
+
+/* ── 10. Responsive ── */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .login-pf-page {
+    padding: 2rem 1.5rem;
+  }
+
+  .card-pf {
+    max-width: 400px;
+    padding: 2rem 2rem 1.75rem;
+  }
+}
+
+/* Large mobile */
+@media (max-width: 480px) {
+  .login-pf-page {
+    padding: 1.5rem 0.75rem;
+    justify-content: flex-start;
+    padding-top: 3rem;
+  }
+
+  .card-pf {
+    padding: 1.75rem 1.25rem;
+    border-radius: 12px;
+    max-width: 100%;
+    box-shadow: 0 4px 16px rgba(15, 16, 16, 0.06);
+    border: none;
+  }
+
+  #kc-header-wrapper {
+    font-size: 1.3rem;
+  }
+
+  #kc-header-wrapper img {
+    max-height: 44px;
+  }
+
+  #kc-page-title {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  #kc-login,
+  .login-pf .btn-primary {
+    height: 44px;
+    font-size: 0.95rem;
+  }
+
+  .login-pf input[type="text"],
+  .login-pf input[type="password"],
+  .login-pf input[type="email"],
+  .login-pf .form-control {
+    height: 42px;
+    font-size: 1rem; /* 16px prevents iOS zoom on focus */
+  }
+}
+
+/* Small mobile */
+@media (max-width: 360px) {
+  .login-pf-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .card-pf {
+    padding: 1.5rem 1rem;
+    border-radius: 10px;
+  }
+
+  #kc-header-wrapper img {
+    max-height: 40px;
+  }
+}
+
+/* ── 11. Animation — Fade in ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-pf {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+#kc-header {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-pf,
+  #kc-header {
+    animation: none;
+  }
+}
+
+/* ── 12. Keycloak overrides ── */
+
+/* Reset PatternFly defaults that clash */
+.login-pf-page .row,
+.login-pf-page .col-sm-12 {
+  padding: 0;
+  margin: 0;
+}
+
+/* Remove default Keycloak background */
+.login-pf-page,
+.login-pf-page .login-pf-accounts {
+  background: none;
+}
+
+/* Locale selector */
+#kc-locale ul {
+  background: #FFFFFF;
+  border-radius: var(--aiobi-radius-xs);
+  box-shadow: var(--aiobi-card-shadow);
+  border: 1px solid #E0E0E0;
+}
+
+#kc-locale ul li a {
+  color: var(--aiobi-noir);
+  font-size: 0.85rem;
+}
+
+#kc-locale ul li a:hover {
+  background: var(--aiobi-blanc);
+  color: var(--aiobi-violet);
+}
+
+/* Social login buttons */
+#kc-social-providers {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #F0F0F0;
+}
+
+#kc-social-providers a {
+  display: block;
+  width: 100%;
+  padding: 0.625rem;
+  border: 1.5px solid #E0E0E0;
+  border-radius: var(--aiobi-radius-xs);
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--aiobi-noir);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+#kc-social-providers a:hover {
+  border-color: var(--aiobi-violet);
+  background: var(--aiobi-blanc);
+}
+
+/* Info/instructions text */
+#kc-info-message {
+  font-size: 0.875rem;
+  color: #6B7280;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Powered by / footer */
+#kc-attempts-count {
+  font-size: 0.75rem;
+  color: #9CA3AF;
 }
