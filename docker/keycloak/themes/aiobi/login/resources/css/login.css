@@ -480,3 +480,98 @@ body.login-pf,
   font-size: 0.75rem;
   color: #9CA3AF;
 }
+
+/* ── 13. Register page ── */
+
+/* Force violet on ALL submit buttons (register, update-password, etc.) */
+.login-pf input[type="submit"],
+.login-pf button[type="submit"],
+#kc-register-form .btn-primary,
+#kc-register-form input[type="submit"],
+.login-pf .btn-primary.btn-block,
+.login-pf .btn.btn-primary {
+  background-color: var(--aiobi-violet) !important;
+  border-color: var(--aiobi-violet) !important;
+  color: #FFFFFF !important;
+  border-radius: var(--aiobi-radius-sm);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  height: 48px;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.login-pf input[type="submit"]:hover,
+.login-pf button[type="submit"]:hover,
+#kc-register-form .btn-primary:hover,
+.login-pf .btn.btn-primary:hover {
+  background-color: var(--aiobi-violet-hover) !important;
+  border-color: var(--aiobi-violet-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 60, 92, 0.25);
+}
+
+.login-pf input[type="submit"]:active,
+.login-pf button[type="submit"]:active,
+.login-pf .btn.btn-primary:active {
+  background-color: var(--aiobi-violet-active) !important;
+  border-color: var(--aiobi-violet-active) !important;
+  transform: none;
+}
+
+/* Compact register form — reduce spacing */
+#kc-register-form .form-group {
+  margin-bottom: 0.875rem;
+}
+
+#kc-register-form label {
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+/* Two-column layout for First name + Last name on desktop */
+#kc-register-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+/* First name → col 1, Last name → col 2 */
+#kc-register-form .form-group:nth-child(1) {
+  grid-column: 1;
+}
+
+#kc-register-form .form-group:nth-child(2) {
+  grid-column: 2;
+}
+
+/* Remaining fields → full width */
+#kc-register-form .form-group:nth-child(n+3) {
+  grid-column: 1 / -1;
+}
+
+/* Button area full width */
+#kc-register-form .form-group:last-child,
+#kc-register-form > div:last-child {
+  grid-column: 1 / -1;
+}
+
+/* "Back to login" link on register page */
+#kc-form-options.register-backToLogin {
+  grid-column: 1 / -1;
+}
+
+/* Mobile: single column */
+@media (max-width: 480px) {
+  #kc-register-form {
+    grid-template-columns: 1fr;
+  }
+
+  #kc-register-form .form-group:nth-child(1),
+  #kc-register-form .form-group:nth-child(2) {
+    grid-column: 1;
+  }
+}
