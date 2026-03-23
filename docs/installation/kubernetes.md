@@ -51,17 +51,17 @@ It will expire on 23 March 2027 🗓
 
 1. Create registry container unless it already exists
 2. Create kind cluster with containerd registry config dir enabled
-Creating cluster "visio" ...
+Creating cluster "aiobi-meet" ...
  ✓ Ensuring node image (kindest/node:v1.27.3) 🖼
  ✓ Preparing nodes 📦
  ✓ Writing configuration 📜
  ✓ Starting control-plane 🕹️
  ✓ Installing CNI 🔌
  ✓ Installing StorageClass 💾
-Set kubectl context to "kind-visio"
+Set kubectl context to "kind-aiobi-meet"
 You can now use your cluster with:
 
-kubectl cluster-info --context kind-visio
+kubectl cluster-info --context kind-aiobi-meet
 
 Thanks for using kind! 😊
 3. Add the registry config to the nodes
@@ -95,10 +95,10 @@ secret/mkcert created
 deployment.apps/ingress-nginx-controller patched
 7. Setup namespace
 namespace/meet created
-Context "kind-visio" modified.
+Context "kind-aiobi-meet" modified.
 secret/mkcert created
 $ kind get clusters
-visio
+aiobi-meet
 $ kubectl -n ingress-nginx get po
 NAME                                        READY   STATUS      RESTARTS   AGE
 ingress-nginx-admission-create-jgnc9        0/1     Completed   0          2m44s
@@ -214,7 +214,7 @@ From here important information you will need are :
 ```
 DB_HOST: postgres-postgresql
 DB_NAME: meet
-DB_USER: dinum
+DB_USER: aiobi
 DB_PASSWORD: pass
 DB_PORT: 5432
 ```
@@ -257,7 +257,7 @@ These are the environmental options available on meet backend.
 | DJANGO_ALLOW_UNSECURE_USER_LISTING              | Allow unsecure user listing                                                                                                                                  | false                                                                                                                                                         |
 | DB_ENGINE                                       | Database engine used                                                                                                                                         | django.db.backends.postgresql_psycopg2                                                                                                                        |
 | DB_NAME                                         | Name of the database                                                                                                                                         | meet                                                                                                                                                          |
-| DB_USER                                         | User used to connect to database                                                                                                                             | dinum                                                                                                                                                         |
+| DB_USER                                         | User used to connect to database                                                                                                                             | aiobi                                                                                                                                                         |
 | DB_PASSWORD                                     | Password used to connect to the database                                                                                                                     | pass                                                                                                                                                          |
 | DB_HOST                                         | Hostname of the database                                                                                                                                     | localhost                                                                                                                                                     |
 | DB_PORT                                         | Port to connect to database                                                                                                                                  | 5432                                                                                                                                                          |

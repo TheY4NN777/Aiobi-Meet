@@ -1,8 +1,8 @@
 # Getting Started
 
-Before setting up, let's review Visio's architecture.
+Before setting up, let's review Aïobi Meet's architecture.
 
-Visio consists of four main components that run simultaneously:
+Aïobi Meet consists of four main components that run simultaneously:
 
 - React frontend, built with Vite.js
 - Django server
@@ -16,7 +16,7 @@ These components rely on a few key services:
 - MinIO for storing files (room recordings)
 - Celery workers for meeting transcript (optional, required for AI beta features)
 
-We provide two stack options for getting Visio up and running for development:
+We provide two stack options for getting Aïobi Meet up and running for development:
 
 - Docker Compose stack (recommended for most users)
 - Kubernetes stack powered by Tilt (Advanced)
@@ -120,7 +120,7 @@ $ make demo
 
 ## Option 2: Developing with Kubernetes
 
-Visio is deployed across staging, preprod, and production environments using **Kubernetes (K8s)**. Reproducing the environment locally is crucial for developing new features or debugging.
+Aïobi Meet is deployed across staging, preprod, and production environments using **Kubernetes (K8s)**. Reproducing the environment locally is crucial for developing new features or debugging.
 
 This is facilitated by [Tilt](https://tilt.dev/), which provides Kubernetes-like development for local environments, enabling smart rebuilds and live updates.
 

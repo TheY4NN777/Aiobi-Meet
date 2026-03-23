@@ -143,14 +143,14 @@ jobs:
         name: Run trivy scan
         uses: numerique-gouv/action-trivy-cache@main
         with:
-          docker-build-args: '-f docker/dinum-frontend/Dockerfile --target frontend-production'
+          docker-build-args: '-f docker/aiobi-frontend/Dockerfile --target frontend-production'
           docker-image-name: '${{ env.DOCKER_CONTAINER_REGISTRY_HOSTNAME }}/${{ env.DOCKER_CONTAINER_REGISTRY_NAMESPACE }}/meet-frontend-aiobi:${{ github.sha }}'
       -
         name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/dinum-frontend/Dockerfile
+          file: ./docker/aiobi-frontend/Dockerfile
           target: frontend-production
           platforms: linux/amd64,linux/arm64
           build-args: DOCKER_USER=${{ env.DOCKER_USER }}:-1000
@@ -259,7 +259,7 @@ jobs:
       contents: read
     needs:
       - build-and-push-frontend-generic
-      - build-and-push-frontend-dinum
+      - build-and-push-frontend-aiobi
       - build-and-push-backend
       - build-and-push-summary
       - build-and-push-agents

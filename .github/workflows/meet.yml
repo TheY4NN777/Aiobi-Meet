@@ -194,7 +194,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_DB: meet
-          POSTGRES_USER: dinum
+          POSTGRES_USER: aiobi
           POSTGRES_PASSWORD: pass
         ports:
           - 5432:5432
@@ -218,7 +218,7 @@ jobs:
       OIDC_OP_JWKS_ENDPOINT: /endpoint-for-test-purpose-only
       DB_HOST: localhost
       DB_NAME: meet
-      DB_USER: dinum
+      DB_USER: aiobi
       DB_PASSWORD: pass
       DB_PORT: 5432
       REDIS_URL: redis://localhost:6379/1
