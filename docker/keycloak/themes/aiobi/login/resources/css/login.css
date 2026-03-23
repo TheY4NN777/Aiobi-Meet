@@ -23,11 +23,16 @@
 }
 
 /* ── 3. Global — Page layout ── */
+/* !important needed to override Keycloak parent theme PatternFly background (rays pattern) */
+html,
+html.login-pf-page,
 body,
+body.login-pf,
 .login-pf body {
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: radial-gradient(ellipse at 50% 40%, var(--aiobi-lilas-soft), var(--aiobi-blanc) 70%);
-  background-attachment: fixed;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  background: var(--aiobi-blanc) !important;
+  background-image: radial-gradient(ellipse at 50% 40%, var(--aiobi-lilas-soft), var(--aiobi-blanc) 70%) !important;
+  background-attachment: fixed !important;
   color: var(--aiobi-noir);
   margin: 0;
   padding: 0;
@@ -65,21 +70,28 @@ body,
 }
 
 #kc-header-wrapper {
-  font-family: 'Hanken Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-  color: var(--aiobi-noir);
+  font-size: 0;
+  color: transparent;
   text-align: center;
   padding: 0 0 0.75rem 0;
-  line-height: 1.2;
+  line-height: 0;
+  overflow: hidden;
 }
 
-/* Logo is rendered via displayNameHtml (img tag in realm.json) */
-#kc-header-wrapper img {
+/* Inject logo SVG via CSS — independent of realm.json displayNameHtml */
+#kc-header-wrapper::before {
+  content: '';
   display: block;
-  margin: 0 auto 0.25rem auto;
-  max-height: 56px;
-  width: auto;
+  width: 210px;
+  height: 56px;
+  margin: 0 auto 0.5rem auto;
+  background: url('../img/aiobi-logo.svg') no-repeat center center;
+  background-size: contain;
+}
+
+/* Hide any img from displayNameHtml if present */
+#kc-header-wrapper img {
+  display: none;
 }
 
 /* Hide default logo wrapper — we use displayNameHtml instead */
@@ -401,10 +413,13 @@ body,
   margin: 0;
 }
 
-/* Remove default Keycloak background */
+/* Remove default Keycloak background (rays pattern) */
 .login-pf-page,
-.login-pf-page .login-pf-accounts {
-  background: none;
+.login-pf-page .login-pf-accounts,
+.login-pf-page .login-pf-page-header,
+.login-pf-page .container-fluid {
+  background: none !important;
+  background-image: none !important;
 }
 
 /* Locale selector */
