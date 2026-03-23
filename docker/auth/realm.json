@@ -1,6 +1,10 @@
 {
   "id": "ccf4fd40-4286-474d-854a-4714282a8bec",
   "realm": "meet",
+  "loginTheme": "aiobi",
+  "accountTheme": "aiobi",
+  "displayName": "Aïobi Meet",
+  "displayNameHtml": "<img src=\"${url.resourcesPath}/img/aiobi-logo.png\" alt=\"Aïobi Meet\" style=\"max-height: 50px; margin-bottom: 10px;\">",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": "false",

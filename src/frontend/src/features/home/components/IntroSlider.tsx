@@ -2,7 +2,7 @@ import { styled } from '@/styled-system/jsx'
 import { css } from '@/styled-system/css'
 import { Button } from '@/primitives'
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/react'
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useScreenReaderAnnounce } from '@/hooks/useScreenReaderAnnounce'
 
@@ -176,14 +176,36 @@ const SLIDES: Slide[] = [
   },
 ]
 
+const AUTO_SCROLL_INTERVAL = 5000 // 5 seconds
+
 export const IntroSlider = () => {
   const [slideIndex, setSlideIndex] = useState(0)
   const { t } = useTranslation('home', { keyPrefix: 'introSlider' })
   const announce = useScreenReaderAnnounce()
+  const pausedRef = useRef(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const NUMBER_SLIDES = SLIDES.length
 
+  // Auto-advance slides
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (pausedRef.current) return
+      setSlideIndex((prev) => (prev + 1) % NUMBER_SLIDES)
+    }, AUTO_SCROLL_INTERVAL)
+    return () => clearInterval(timer)
+  }, [NUMBER_SLIDES])
+
+  // Pause auto-scroll temporarily when user interacts
+  const pauseAutoScroll = useCallback(() => {
+    pausedRef.current = true
+    setTimeout(() => {
+      pausedRef.current = false
+    }, AUTO_SCROLL_INTERVAL * 2)
+  }, [])
+
   const goPrev = () => {
+    pauseAutoScroll()
     if (slideIndex === 0) return
     const newIndex = slideIndex - 1
     setSlideIndex(newIndex)
@@ -195,6 +217,7 @@ export const IntroSlider = () => {
   }
 
   const goNext = () => {
+    pauseAutoScroll()
     if (slideIndex === NUMBER_SLIDES - 1) return
     const newIndex = slideIndex + 1
     setSlideIndex(newIndex)
@@ -214,9 +237,12 @@ export const IntroSlider = () => {
 
   return (
     <Container
+      ref={containerRef}
       role="region"
       aria-roledescription="carousel"
       aria-label={t('carouselLabel')}
+      onMouseEnter={() => { pausedRef.current = true }}
+      onMouseLeave={() => { pausedRef.current = false }}
     >
       <div
         className={css({

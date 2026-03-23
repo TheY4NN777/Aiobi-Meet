@@ -1,4 +1,4 @@
-<svg width="220" height="50" viewBox="0 0 220 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="210" height="50" viewBox="0 0 210 50" fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap');
     text {
@@ -8,21 +8,16 @@
       fill: #0F1010;
     }
   </style>
-  <g transform="scale(0.1)">
-    <g id="svg2" transform="matrix(1, 0, 0, 1, -287.756382, 11.187091)">
-      <g id="svg-1" transform="matrix(1.582618, 0, 0, 1.595971, -186.985598, -244.509128)" style="">
-        <rect x="310.844" y="167.113" width="297.92" height="224.601" rx="20" fill="none" stroke="#0F1010" style="stroke-width: 10.0674px;"/>
-        <path d="M 417.447 391.712 L 489.606 391.712 M 453.527 391.712 L 453.527 445.769 M 381.367 445.769 L 525.688 445.769" stroke="#0F1010" stroke-linecap="round" style="stroke-width: 8.80894px;"/>
-        <circle cx="365.982" cy="172.395" r="6" fill="#0F1010" style="stroke-width: 11.2278px;" transform="matrix(1.804003, 0, 0, 1.758593, -92.567193, -111.601122)"/>
-        <g transform="matrix(1.991495, 0, 0, 1.893008, 321.847875, 179.022601)" style="">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M50 0C22.4 0 0 22.4 0 50C0 77.6 22.4 100 50 100C77.6 100 100 77.6 100 50C100 22.4 77.6 0 50 0ZM54 10C31.9 10 14 27.9 14 50C14 72.1 31.9 90 54 90C76.1 90 94 72.1 94 50C94 27.9 76.1 10 54 10Z" fill="#0F1010" style="stroke-width: 10.0987px;"/>
-          <rect x="35" y="38" width="10" height="24" rx="5" fill="#0F1010" style="stroke-width: 12.6234px;"/>
-          <rect x="63" y="38" width="10" height="24" rx="5" fill="#0F1010" style="stroke-width: 12.6234px;"/>
-        </g>
-        <rect x="511.196" y="324.699" width="47.299" height="42.058" rx="4" fill="#0F1010" style="stroke-width: 20px;"/>
-        <polygon points="560.659 333.745 585.37 321.066 585.37 367.559 560.659 354.877" fill="#0F1010" style="stroke-width: 20px;"/>
+  <g transform="translate(-2, 0) scale(0.105)">
+    <g id="svg-1" transform="matrix(1, 0, 0, 1, -325.710332, -34.650063)">
+      <g transform="matrix(2.945058, 0, 0, 2.790564, 431.020545, 120.871729)">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M50 0C22.4 0 0 22.4 0 50C0 77.6 22.4 100 50 100C77.6 100 100 77.6 100 50C100 22.4 77.6 0 50 0ZM54 10C31.9 10 14 27.9 14 50C14 72.1 31.9 90 54 90C76.1 90 94 72.1 94 50C94 27.9 76.1 10 54 10Z" fill="#0F1010"/>
+        <rect x="35" y="38" width="10" height="24" rx="5" fill="#0F1010"/>
+        <rect x="63" y="38" width="10" height="24" rx="5" fill="#0F1010"/>
       </g>
+      <rect x="517.607" y="410.324" width="86.28" height="75.514" rx="4" fill="#0F1010"/>
+      <polygon points="606.53 426.175 651.607 403.41 651.607 486.887 606.53 464.117" fill="#0F1010"/>
     </g>
   </g>
-  <text x="56" y="35">Aïobi Meet</text>
+  <text x="44" y="35">Aïobi Meet</text>
 </svg>

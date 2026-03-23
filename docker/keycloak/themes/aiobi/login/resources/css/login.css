@@ -1,0 +1,102 @@
+/* Aïobi Meet – Custom Keycloak Login Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700&family=Roboto:wght@400;500;700&display=swap');
+
+/* ── Global ── */
+body, .login-pf body {
+  font-family: 'Roboto', 'Hanken Grotesk', sans-serif;
+  background: url('../img/aiobi_wallpaper.png') no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* ── Login card ── */
+#kc-login {
+  font-family: 'Roboto', sans-serif;
+}
+
+#kc-header-wrapper {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #0F1010;
+  padding-bottom: 1rem;
+}
+
+/* ── Card container ── */
+#kc-form-wrapper,
+.card-pf {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Primary button ── */
+#kc-login {
+  background-color: #4A3C5C;
+  border-color: #4A3C5C;
+  color: #ffffff;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+}
+
+#kc-login:hover {
+  background-color: #3a2e4a;
+  border-color: #3a2e4a;
+}
+
+#kc-login:focus {
+  box-shadow: 0 0 0 3px rgba(74, 60, 92, 0.35);
+}
+
+/* ── Links ── */
+#kc-form-options a,
+#kc-registration a,
+.login-pf a {
+  color: #4A3C5C;
+}
+
+#kc-form-options a:hover,
+#kc-registration a:hover,
+.login-pf a:hover {
+  color: #3a2e4a;
+}
+
+/* ── Input fields ── */
+.login-pf input[type="text"],
+.login-pf input[type="password"],
+.login-pf input[type="email"] {
+  border-radius: 6px;
+  border: 1px solid #d1d1d6;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+}
+
+.login-pf input[type="text"]:focus,
+.login-pf input[type="password"]:focus,
+.login-pf input[type="email"]:focus {
+  border-color: #4A3C5C;
+  box-shadow: 0 0 0 2px rgba(74, 60, 92, 0.2);
+  outline: none;
+}
+
+/* ── Logo ── */
+#kc-logo-wrapper {
+  background-image: url('../img/aiobi-logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+/* ── Alert messages ── */
+.alert-error {
+  border-radius: 6px;
+}
+
+.alert-success {
+  border-radius: 6px;
+}
