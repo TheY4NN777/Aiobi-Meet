@@ -1,0 +1,5 @@
+# Secrets — ne jamais commiter
+.env
+
+# Data persistantes
+data/

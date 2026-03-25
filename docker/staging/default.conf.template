@@ -1,0 +1,103 @@
+upstream meet_backend {
+    server backend:8000 fail_timeout=0;
+}
+
+upstream meet_frontend {
+    server frontend:8080 fail_timeout=0;
+}
+
+upstream meet_keycloak {
+    server keycloak:8080 fail_timeout=0;
+}
+
+server {
+    listen 8083;
+    server_name localhost;
+    charset utf-8;
+    server_tokens off;
+    client_max_body_size 100m;
+
+    proxy_ssl_server_name on;
+
+    # -- Proxy targets --------------------------------------------------------
+
+    location @proxy_to_meet_backend {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_redirect off;
+        proxy_pass http://meet_backend;
+    }
+
+    location @proxy_to_meet_frontend {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_pass http://meet_frontend;
+    }
+
+    # -- Routes ---------------------------------------------------------------
+
+    # Frontend SPA (catch-all)
+    location / {
+        try_files $uri @proxy_to_meet_frontend;
+    }
+
+    # Backend API
+    location /api {
+        try_files $uri @proxy_to_meet_backend;
+    }
+
+    # Django admin
+    location /admin {
+        try_files $uri @proxy_to_meet_backend;
+    }
+
+    # Django static files
+    location /static {
+        try_files $uri @proxy_to_meet_backend;
+    }
+
+    # -- Keycloak (OIDC) ------------------------------------------------------
+
+    location /realms/ {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_redirect off;
+        proxy_pass http://meet_keycloak;
+    }
+
+    location /resources/ {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_redirect off;
+        proxy_pass http://meet_keycloak;
+    }
+
+    location /js/ {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_redirect off;
+        proxy_pass http://meet_keycloak;
+    }
+
+    # -- Media (MinIO via auth) -----------------------------------------------
+
+    location /media/ {
+        auth_request /media-auth;
+        proxy_pass http://minio:9000/meet-media-storage/;
+    }
+
+    location /media-auth {
+        internal;
+        proxy_pass http://meet_backend/api/v1.0/files/media-auth/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}

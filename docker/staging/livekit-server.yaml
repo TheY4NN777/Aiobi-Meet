@@ -1,0 +1,13 @@
+port: 47880
+redis:
+  address: redis:6379
+keys:
+  meet: ${LIVEKIT_API_SECRET}
+rtc:
+  udp_port: 47882
+  tcp_port: 47881
+  use_external_ip: true
+webhook:
+  urls:
+    - http://backend:8000/api/v1.0/rooms/webhooks-livekit/
+  api_key: meet
