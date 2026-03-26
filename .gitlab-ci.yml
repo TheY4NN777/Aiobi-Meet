@@ -81,11 +81,7 @@ deploy-staging:
     # Se placer dans le staging du host
     - cd $HOST_STAGING
 
-    # Creer les reseaux si necessaire
-    - docker network create proxy-tier 2>/dev/null || true
-    - docker network create staging-app 2>/dev/null || true
-
-    # Deployer dans l'ordre
+    # Deployer dans l'ordre (les reseaux sont crees automatiquement par les compose)
     - docker compose -f compose.nginx-proxy.yaml up -d
     - docker compose -f compose.keycloak.yaml up -d
     - docker compose -f compose.yaml up -d

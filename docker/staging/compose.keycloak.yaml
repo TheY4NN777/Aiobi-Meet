@@ -37,4 +37,4 @@ services:
 networks:
   default:
   staging-app:
-    external: true
+    name: staging-app
