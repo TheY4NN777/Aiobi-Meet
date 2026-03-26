@@ -324,6 +324,16 @@ Cette section documente les choix techniques majeurs et leurs justifications. El
 
 3. **Variables CI/CD GitLab** — Les secrets sont aussi stockes dans GitLab CI/CD Variables comme backup et pour reference, mais le `.env` du serveur fait autorite.
 
+### Pourquoi LiveKit utilise envsubst au demarrage ?
+
+**Decision** : Le fichier `livekit-server.yaml` est monte comme template. Un entrypoint `envsubst` resout les variables d'environnement (`${LIVEKIT_API_SECRET}`) au demarrage, puis lance LiveKit avec le fichier resolu.
+
+**Raison** : LiveKit ne fait pas de substitution de variables d'environnement dans son fichier de configuration YAML. Il lit les valeurs telles quelles. Sans envsubst, le secret serait la chaine litterale `${LIVEKIT_API_SECRET}` et tous les tokens JWT seraient rejetes.
+
+**Pourquoi pas mettre le secret en dur dans le YAML ?** Le fichier est versionne dans le repo. Mettre un secret en dur dans un fichier git est une faille de securite. Le template + envsubst permet de garder le secret uniquement dans le `.env` du serveur.
+
+**En production** : Meme approche. Le compose de prod utilisera le meme entrypoint envsubst.
+
 ---
 
 ## 6. Routing HTTP — comment le trafic circule
@@ -569,18 +579,12 @@ DuckDNS est un service DNS dynamique gratuit. Nos deux sous-domaines pointent ve
 
 ### Mise a jour automatique
 
-Meme avec une IP fixe, il est recommande de configurer un cron de mise a jour. Si l'IP change (migration de serveur, changement de fournisseur), le DNS sera mis a jour automatiquement.
+La pipeline CI/CD installe automatiquement le cron DuckDNS lors de chaque deploy.
+Le cron met a jour l'IP toutes les 5 minutes et execute une mise a jour immediate au deploy.
+Pas besoin de configuration manuelle — tout est gere par la CI.
 
-```bash
-# Rendre le script executable
-chmod +x duckdns-update.sh
-
-# Tester manuellement
-./duckdns-update.sh
-
-# Ajouter au crontab (mise a jour toutes les 5 minutes)
-(crontab -l 2>/dev/null; echo "*/5 * * * * $(pwd)/duckdns-update.sh >> /var/log/duckdns.log 2>&1") | crontab -
-```
+Le script `duckdns-update.sh` lit le token depuis `.env` (`DUCKDNS_TOKEN`) et met a jour
+les deux sous-domaines (`aiobi-meet` et `aiobi-livekit`) en une seule requete.
 
 ### Verification
 

@@ -192,6 +192,20 @@ deploy-staging:
         fi
       fi
 
+    # --- 7. DuckDNS cron (mise a jour IP automatique toutes les 5 min) --------
+    - echo "=== Setting up DuckDNS cron ==="
+    - |
+      chmod +x $HOST_STAGING/duckdns-update.sh
+      CRON_CMD="*/5 * * * * $HOST_STAGING/duckdns-update.sh >> /var/log/duckdns.log 2>&1"
+      if ! crontab -l 2>/dev/null | grep -q "duckdns-update.sh"; then
+        (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
+        echo "DuckDNS cron installed."
+      else
+        echo "DuckDNS cron already exists."
+      fi
+      # Mise a jour immediate
+      $HOST_STAGING/duckdns-update.sh || true
+
     - echo "=== Deploy complete ==="
 
   environment:

@@ -279,18 +279,59 @@ Error: client version 1.43 is too old. Minimum supported API version is 1.44
 
 ---
 
-## Etat actuel (26 mars 2026, 19h)
+## Erreur 24 — LIVEKIT_API_URL sans port 8443
 
-**Pipeline CI/CD** : Vert (docker:27, --no-cache, deploy robuste avec TLS check)
-**nginx-proxy** : Fonctionnel (ports 8880/8443, vrais certificats Let's Encrypt R12)
-**Keycloak** : Fonctionnel, realm "meet", locale FR, OIDC client configure
-**Backend Django** : Fonctionnel (healthy), endpoints OIDC internes
-**Frontend** : Fonctionnel, nouveau logo designer, favicons Aiobi, lang="fr"
-**OIDC** : Login OK, logout OK (buffers 16k), post_logout_redirect_uris configures
+**Date** : 26 mars 2026
+**Erreur** : `ERR_CONNECTION_REFUSED` lors de la connexion WebSocket a LiveKit.
+**Cause** : `LIVEKIT_API_URL=https://aiobi-livekit.duckdns.org` (port 443 implicite). nginx-proxy ecoute sur 8443, pas 443. Le navigateur se connectait au mauvais port.
+**Solution** : Ajout du port dans `env.d/common` : `LIVEKIT_API_URL=https://${LIVEKIT_HOST}:8443`.
+**Commit** : `649740bc`
+
+---
+
+## Erreur 25 — Logo SVG invisible dans le header
+
+**Date** : 26 mars 2026
+**Erreur** : Le logo n'apparait pas du tout dans le header malgre le bon fichier SVG.
+**Cause** : Le SVG du designer n'avait pas d'attributs `width` et `height`, seulement `viewBox`. Avec `maxWidth` en CSS sur un `<img>`, le navigateur ne connait pas les dimensions intrinseques et rend l'image a 0px.
+**Solution** : Ajout de `width="1420" height="476"` dans le tag `<svg>` du logo.
+**Commit** : `649740bc`
+
+---
+
+## Erreur 26 — LiveKit "invalid token: error in cryptographic primitive"
+
+**Date** : 26 mars 2026
+**Erreur** : `ConnectionError: invalid token` lors de la connexion a une salle LiveKit.
+**Cause** : Le fichier `livekit-server.yaml` contenait `${LIVEKIT_API_SECRET}` comme secret. LiveKit ne fait pas de substitution de variables d'environnement dans son YAML — il lisait la chaine litterale `${LIVEKIT_API_SECRET}` comme secret. Le backend signait les tokens avec le vrai secret → mismatch.
+**Solution** : Le fichier YAML est monte comme template (`/config.template.yaml`). Un entrypoint `envsubst` resout les variables au demarrage du conteneur, puis `exec livekit-server` lance avec le fichier resolu. L'env var `LIVEKIT_API_SECRET` est passee au conteneur via le compose.
+**Commit** : `4cf61168`
+
+---
+
+## Erreur 27 — DuckDNS non actualise (ERR_NAME_NOT_RESOLVED)
+
+**Date** : 26 mars 2026
+**Erreur** : `ERR_NAME_NOT_RESOLVED` pour `aiobi-livekit.duckdns.org`.
+**Cause** : Le script `duckdns-update.sh` existait mais n'etait pas installe dans le crontab. L'IP du serveur n'etait plus a jour chez DuckDNS.
+**Solution** : La pipeline CI/CD installe automatiquement le cron (`*/5 * * * *`) et execute une mise a jour immediate lors de chaque deploy.
+
+---
+
+## Etat actuel (26 mars 2026, 21h)
+
+**Pipeline CI/CD** : docker:27, --no-cache, deploy robuste (TLS check, DuckDNS cron, envsubst LiveKit)
+**nginx-proxy** : Ports 8880/8443, vrais certificats Let's Encrypt R12, buffers 16k via vhost.d
+**Keycloak** : Realm "meet", locale FR uniquement, OIDC client avec post_logout_redirect_uris
+**Backend Django** : Healthy, endpoints OIDC internes (http://keycloak:8080), migrations auto
+**Frontend** : Logo designer (Aiobi Meet SVG), favicons Aiobi-head, lang="fr", maxWidth 200px
+**LiveKit** : Config via envsubst, ports 47880/47881/47882, secret resolu au runtime
+**OIDC** : Login OK, logout OK (buffers 16k double proxy)
+**DuckDNS** : Cron automatique toutes les 5 minutes
 
 ### Ce qui reste
 
-1. Configurer le cron DuckDNS pour renouvellement IP automatique
-2. Tester le flux complet : login OIDC → creation de salle → visioconference
-3. Tester LiveKit (WebRTC) via `aiobi-livekit.duckdns.org:8443`
-4. Finaliser l'alignement du logo header (Aiobi + Meet)
+1. Tester le flux complet : login OIDC → creation de salle → visioconference WebRTC
+2. Augmenter le buffer UDP (`net.core.rmem_max=5000000`) pour LiveKit en production
+3. Finaliser le logo header (taille/alignement du texte "Meet")
+4. Supprimer les references open source (plan dans `.claude/plans/remove-opensource-refs.md`)
