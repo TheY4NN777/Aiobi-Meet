@@ -17,18 +17,19 @@
 2. [Architecture technique](#2-architecture-technique)
 3. [Les trois compose files et pourquoi](#3-les-trois-compose-files-et-pourquoi)
 4. [Reseaux Docker](#4-reseaux-docker)
-5. [Routing HTTP — comment le trafic circule](#5-routing-http--comment-le-trafic-circule)
-6. [Description de chaque service](#6-description-de-chaque-service)
-7. [Fichiers d'environnement](#7-fichiers-denvironnement)
-8. [Gestion des secrets](#8-gestion-des-secrets)
-9. [DuckDNS — DNS dynamique](#9-duckdns--dns-dynamique)
-10. [TLS / Let's Encrypt](#10-tls--lets-encrypt)
-11. [Ports et firewall](#11-ports-et-firewall)
-12. [Procedure de deploiement pas a pas](#12-procedure-de-deploiement-pas-a-pas)
-13. [Procedure de mise a jour](#13-procedure-de-mise-a-jour)
-14. [Commandes utiles](#14-commandes-utiles)
-15. [Diagnostic et depannage](#15-diagnostic-et-depannage)
-16. [Passage en production](#16-passage-en-production)
+5. [Decisions d'architecture et justifications](#5-decisions-darchitecture-et-justifications)
+6. [Routing HTTP — comment le trafic circule](#6-routing-http--comment-le-trafic-circule)
+7. [Description de chaque service](#7-description-de-chaque-service)
+8. [Fichiers d'environnement](#8-fichiers-denvironnement)
+9. [Gestion des secrets](#9-gestion-des-secrets)
+10. [DuckDNS — DNS dynamique](#10-duckdns--dns-dynamique)
+11. [TLS / Let's Encrypt](#11-tls--lets-encrypt)
+12. [Ports et firewall](#12-ports-et-firewall)
+13. [Procedure de deploiement pas a pas](#13-procedure-de-deploiement-pas-a-pas)
+14. [Procedure de mise a jour](#14-procedure-de-mise-a-jour)
+15. [Commandes utiles](#15-commandes-utiles)
+16. [Diagnostic et depannage](#16-diagnostic-et-depannage)
+17. [Passage en production](#17-passage-en-production)
 
 ---
 
@@ -220,7 +221,91 @@ proxy-tier          staging-app         default (compose.yaml)
 
 ---
 
-## 5. Routing HTTP — comment le trafic circule
+## 5. Decisions d'architecture et justifications
+
+Cette section documente les choix techniques majeurs et leurs justifications. Elle sert de reference pour l'equipe et pour les decisions futures.
+
+### Pourquoi 3 reseaux Docker et pas un seul ?
+
+**Decision** : Utiliser 3 reseaux isoles (`proxy-tier`, `staging-app`, `default`) au lieu d'un reseau unique partage.
+
+**Alternative consideree** : Un seul reseau `aiobi-staging` ou tous les services communiquent librement. Plus simple a configurer et a debugger.
+
+**Pourquoi on a choisi la separation** :
+
+1. **Principe du moindre privilege** — PostgreSQL, Redis et MinIO n'ont aucune raison d'etre visibles depuis nginx-proxy. Un reseau unique exposerait ces services a tout conteneur du reseau, y compris nginx-proxy qui monte le Docker socket (surface d'attaque).
+
+2. **Coherence avec la production** — Le staging doit reproduire l'architecture de production. En prod sur le Server Aïobi Master, la separation reseau sera obligatoire. Tester avec un reseau unique en staging masquerait des bugs de connectivite qui apparaitraient en prod.
+
+3. **Isolation des bases de donnees** — La base Keycloak (`kc-postgresql`) et la base applicative (`postgresql`) sont sur des reseaux `default` differents. Un probleme de securite sur l'application ne compromet pas les donnees d'authentification.
+
+4. **Blast radius** — Si un service est compromis, l'attaquant ne peut atteindre que les services du meme reseau. Avec un reseau unique, un seul service compromis donne acces a tout.
+
+**Quand changer** : Jamais. Cette architecture sera identique en production.
+
+### Pourquoi 3 compose files et pas un seul ?
+
+**Decision** : Separer en `compose.nginx-proxy.yaml`, `compose.keycloak.yaml` et `compose.yaml`.
+
+**Pourquoi** :
+
+1. **Cycles de vie independants** — On met a jour l'app (compose.yaml) a chaque sprint. Keycloak est mis a jour rarement (patches securite). nginx-proxy ne change quasiment jamais. Un seul fichier forcerait a tout redemarrer pour un changement mineur.
+
+2. **Resilience** — Un `docker compose down` sur l'app ne coupe pas Keycloak. Les tokens JWT deja emis restent valides, donc les utilisateurs en visio ne sont pas deconnectes.
+
+3. **Debuggage** — Quand un service ne repond pas, on peut isoler le probleme en redemarrant un seul compose au lieu de tout relancer.
+
+### Pourquoi les ports 8443/8880 et pas 443/80 ?
+
+**Decision** : nginx-proxy Docker ecoute sur 8880 (HTTP) et 8443 (HTTPS) au lieu des ports standards.
+
+**Raison** : Le serveur de staging (161.97.179.176) heberge temporairement d'autres applications (ERPNext, Eshu, Traccar) qui utilisent le nginx natif sur les ports 80/443. Donner ces ports a nginx-proxy Docker casserait ces applications.
+
+**Solution** : Un fichier `nginx-host-proxy.conf` configure le nginx natif pour :
+- Proxier les challenges ACME Let's Encrypt (port 80 → 8880) pour que les certificats TLS soient emis.
+- Rediriger les visiteurs HTTP vers HTTPS sur le port 8443.
+
+**Quand changer** : Quand les autres applications seront migrees du serveur de staging. A ce moment, nginx-proxy pourra reprendre les ports 80/443 et le fichier `nginx-host-proxy.conf` sera supprime.
+
+### Pourquoi des images locales et pas un registry ?
+
+**Decision** : Les images Docker sont buildees et stockees localement sur le serveur de staging, pas poussees vers le GitLab Container Registry.
+
+**Raison** : Le runner CI (`dev-serv-runner`) tourne sur le meme serveur que le staging. Builder localement evite le cycle build → push → pull qui est lent et inutile quand le build et le deploiement sont sur la meme machine.
+
+**En production** : Les images seront poussees vers le GitLab Container Registry (`10.13.13.1:5050/aiobi/ogun/aiobi-meet`) car le runner de build (staging) et le serveur de deploiement (Aïobi Master) sont differents.
+
+### Pourquoi les ports LiveKit 47880/47881/47882 ?
+
+**Decision** : Utiliser les ports 47880-47882 au lieu des ports standards LiveKit 7880-7882.
+
+**Raison** : Demande de l'administrateur systeme (Abdoul-Aziz Ousmane KABORE) pour eviter le scan automatise sur les ports connus. Les ports standards de LiveKit sont facilement identifiables par les scanners de ports.
+
+**Impact** : La configuration `livekit-server.yaml` et les regles UFW utilisent ces ports custom. En production, les memes ports seront utilises sauf decision contraire de l'equipe infra.
+
+### Pourquoi Keycloak sur le meme domaine (path-based) et pas un sous-domaine dedie ?
+
+**Decision** : Keycloak est accessible via `aiobi-meet.duckdns.org:8443/realms/*` (path-based routing) au lieu d'un sous-domaine comme `auth.aiobi-meet.duckdns.org`.
+
+**Raison** : DuckDNS est limite en nombre de sous-domaines gratuits. On utilise 2 sous-domaines (meet + livekit), et LiveKit a besoin du sien pour les WebSockets. Keycloak peut fonctionner derriere un path-based proxy sans probleme.
+
+**En production** : Le domaine `id.aiobi.world` sera dedie a Keycloak (sous-domaine complet) comme prevu dans `env.d/production.dist/hosts`. Le path-based routing est specifique au staging avec DuckDNS.
+
+### Pourquoi le .env est sur le serveur et pas genere par le CI ?
+
+**Decision** : Le fichier `.env` avec les secrets est maintenu manuellement sur le serveur, pas genere par le pipeline CI.
+
+**Raison** :
+
+1. **Les secrets ne changent pas a chaque deploiement** — Les mots de passe DB, cles API et tokens sont stables. Les regenerer a chaque push corromprait les donnees existantes (nouveau mot de passe PostgreSQL = base inaccessible).
+
+2. **Separation des responsabilites** — Le CI deploie le code. Les secrets sont geres par les maintainers du serveur.
+
+3. **Variables CI/CD GitLab** — Les secrets sont aussi stockes dans GitLab CI/CD Variables comme backup et pour reference, mais le `.env` du serveur fait autorite.
+
+---
+
+## 6. Routing HTTP — comment le trafic circule
 
 Le trafic HTTP suit un chemin precis avec deux niveaux de proxy. Comprendre ce chemin est essentiel pour debugger les problemes d'acces.
 
@@ -291,7 +376,7 @@ Quand un utilisateur clique "Se connecter" :
 
 ---
 
-## 6. Description de chaque service
+## 7. Description de chaque service
 
 ### Frontend (`frontend`)
 
@@ -378,7 +463,7 @@ En staging, aucun email n'est envoye pour de vrai. Mailcatcher intercepte tous l
 
 ---
 
-## 7. Fichiers d'environnement
+## 8. Fichiers d'environnement
 
 ### Structure
 
@@ -423,7 +508,7 @@ env.d/hosts         → REALM_NAME=meet
 
 ---
 
-## 8. Gestion des secrets
+## 9. Gestion des secrets
 
 ### Generer les secrets
 
@@ -450,7 +535,7 @@ Copier chaque valeur dans `.env`. Ne jamais reutiliser les memes secrets entre s
 
 ---
 
-## 9. DuckDNS — DNS dynamique
+## 10. DuckDNS — DNS dynamique
 
 DuckDNS est un service DNS dynamique gratuit. Nos deux sous-domaines pointent vers l'IP publique du serveur de staging.
 
@@ -489,7 +574,7 @@ dig aiobi-livekit.duckdns.org +short
 
 ---
 
-## 10. TLS / Let's Encrypt
+## 11. TLS / Let's Encrypt
 
 ### Fonctionnement
 
@@ -530,7 +615,7 @@ docker compose -f compose.yaml up -d
 
 ---
 
-## 11. Ports et firewall
+## 12. Ports et firewall
 
 ### Ports requis
 
@@ -571,7 +656,7 @@ Ces ports sont utilises uniquement entre conteneurs Docker sur les reseaux inter
 
 ---
 
-## 12. Procedure de deploiement pas a pas
+## 13. Procedure de deploiement pas a pas
 
 ### Prerequis
 
@@ -703,7 +788,7 @@ echo | openssl s_client -connect aiobi-meet.duckdns.org:443 2>/dev/null | openss
 
 ---
 
-## 13. Procedure de mise a jour
+## 14. Procedure de mise a jour
 
 ### Mise a jour du code applicatif
 
@@ -744,7 +829,7 @@ docker compose -f compose.yaml up -d livekit
 
 ---
 
-## 14. Commandes utiles
+## 15. Commandes utiles
 
 ### Logs
 
@@ -796,7 +881,7 @@ docker compose -f compose.yaml down -v
 
 ---
 
-## 15. Diagnostic et depannage
+## 16. Diagnostic et depannage
 
 ### Le site ne charge pas (ERR_CONNECTION_REFUSED)
 
@@ -840,7 +925,7 @@ Le redirect URI configure dans le client Keycloak ne correspond pas a l'URL du s
 
 ---
 
-## 16. Passage en production
+## 17. Passage en production
 
 Quand le serveur Aïobi Master sera pret, la migration staging → production se resume a :
 
