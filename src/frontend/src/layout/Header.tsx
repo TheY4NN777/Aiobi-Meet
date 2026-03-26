@@ -18,8 +18,8 @@ const Logo = () => (
   <span
     className={`Header-logo ${css({
       display: 'flex',
-      alignItems: 'center',
-      gap: '0.35rem',
+      alignItems: 'flex-end',
+      gap: '0.1rem',
     })}`}
   >
     <img
@@ -27,17 +27,17 @@ const Logo = () => (
       alt={`${import.meta.env.VITE_APP_TITLE}`}
       className={css({
         maxHeight: { base: '36px', sm: '44px' },
-        marginTop: { base: '4px', sm: '2px' },
       })}
     />
     <span
       className={css({
-        fontFamily: 'heading',
-        fontWeight: 700,
-        fontSize: { base: '1.25rem', sm: '1.5rem' },
+        fontFamily: '"HK Grotesk", "Hanken Grotesk", sans-serif',
+        fontWeight: 800,
+        fontSize: { base: '0.9rem', sm: '1.1rem' },
         color: '#0F1010',
-        letterSpacing: '-0.01em',
+        letterSpacing: '0.01em',
         lineHeight: 1,
+        marginBottom: { base: '1px', sm: '2px' },
       })}
     >
       Meet
