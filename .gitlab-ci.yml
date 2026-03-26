@@ -60,36 +60,35 @@ deploy-staging:
   tags:
     - dev
     - docker
-  image: docker/compose:2.24.0
+  image: docker:24
   variables:
     DOCKER_HOST: unix:///var/run/docker.sock
+  before_script:
+    - apk add --no-cache docker-compose docker-cli-compose
   script:
     - cd docker/staging
 
     # Generer le .env depuis les variables CI/CD
-    - |
-      cat > .env << ENVEOF
-      MEET_HOST=${MEET_HOST}
-      LIVEKIT_HOST=${LIVEKIT_HOST}
-      DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
-      LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-      LETSENCRYPT_TEST=${LETSENCRYPT_TEST}
-      DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      POSTGRES_DB=${POSTGRES_DB}
-      POSTGRES_USER=${POSTGRES_USER}
-      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      KC_POSTGRES_DB=${KC_POSTGRES_DB}
-      KC_POSTGRES_USER=${KC_POSTGRES_USER}
-      KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}
-      KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}
-      KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
-      OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
-      OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
-      LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
-      LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
-      REALM_NAME=${REALM_NAME}
-      DOCKER_USER=${DOCKER_USER}
-      ENVEOF
+    - echo "MEET_HOST=${MEET_HOST}" > .env
+    - echo "LIVEKIT_HOST=${LIVEKIT_HOST}" >> .env
+    - echo "DUCKDNS_TOKEN=${DUCKDNS_TOKEN}" >> .env
+    - echo "LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}" >> .env
+    - echo "LETSENCRYPT_TEST=${LETSENCRYPT_TEST}" >> .env
+    - echo "DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}" >> .env
+    - echo "POSTGRES_DB=${POSTGRES_DB}" >> .env
+    - echo "POSTGRES_USER=${POSTGRES_USER}" >> .env
+    - echo "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}" >> .env
+    - echo "KC_POSTGRES_DB=${KC_POSTGRES_DB}" >> .env
+    - echo "KC_POSTGRES_USER=${KC_POSTGRES_USER}" >> .env
+    - echo "KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}" >> .env
+    - echo "KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}" >> .env
+    - echo "KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}" >> .env
+    - echo "OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}" >> .env
+    - echo "OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}" >> .env
+    - echo "LIVEKIT_API_KEY=${LIVEKIT_API_KEY}" >> .env
+    - echo "LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}" >> .env
+    - echo "REALM_NAME=${REALM_NAME}" >> .env
+    - echo "DOCKER_USER=${DOCKER_USER}" >> .env
 
     # Creer les reseaux si necessaire
     - docker network create proxy-tier 2>/dev/null || true
