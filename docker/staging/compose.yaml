@@ -64,10 +64,7 @@ services:
   # Backend Django (Gunicorn)
   # ---------------------------------------------------------------------------
   backend:
-    image: aiobi/meet-backend:latest
-    build:
-      context: ../..
-      target: backend-production
+    image: ${BACKEND_IMAGE:-10.13.13.1:5050/aiobi/ogun/aiobi-meet/backend}:latest
     user: ${DOCKER_USER:-1000}
     restart: always
     env_file:
@@ -97,7 +94,7 @@ services:
   # Celery worker
   # ---------------------------------------------------------------------------
   celery:
-    image: aiobi/meet-backend:latest
+    image: ${BACKEND_IMAGE:-10.13.13.1:5050/aiobi/ogun/aiobi-meet/backend}:latest
     user: ${DOCKER_USER:-1000}
     restart: always
     command: celery -A meet.celery_app worker -l INFO
@@ -117,11 +114,7 @@ services:
   # Route: / -> SPA, /api -> backend, /realms -> keycloak
   # ---------------------------------------------------------------------------
   frontend:
-    image: aiobi/meet-frontend-aiobi:latest
-    build:
-      context: ../..
-      dockerfile: docker/aiobi-frontend/Dockerfile
-      target: frontend-production
+    image: ${FRONTEND_IMAGE:-10.13.13.1:5050/aiobi/ogun/aiobi-meet/frontend}:latest
     user: ${DOCKER_USER:-1000}
     restart: always
     entrypoint:

@@ -1,0 +1,141 @@
+# =============================================================================
+# Aïobi Meet — GitLab CI/CD Pipeline
+# =============================================================================
+# Registry : 10.13.13.1:5050/aiobi/ogun/aiobi-meet
+# Runners  : dev-serv-runner (dev, docker) | bbs-master-runner (docker, prod)
+# =============================================================================
+
+stages:
+  - build
+  - deploy-staging
+
+variables:
+  REGISTRY: 10.13.13.1:5050/aiobi/ogun/aiobi-meet
+  BACKEND_IMAGE: ${REGISTRY}/backend
+  FRONTEND_IMAGE: ${REGISTRY}/frontend
+  DOCKER_TLS_CERTDIR: ""
+
+# =============================================================================
+# BUILD — Construit et pousse les images Docker
+# =============================================================================
+
+build-backend:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - docker build
+      --target backend-production
+      --tag ${BACKEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
+      --tag ${BACKEND_IMAGE}:latest
+      .
+    - docker push ${BACKEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
+    - docker push ${BACKEND_IMAGE}:latest
+  only:
+    - develop
+    - main
+
+build-frontend:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - docker build
+      --file docker/aiobi-frontend/Dockerfile
+      --target frontend-production
+      --tag ${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
+      --tag ${FRONTEND_IMAGE}:latest
+      .
+    - docker push ${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
+    - docker push ${FRONTEND_IMAGE}:latest
+  only:
+    - develop
+    - main
+
+# =============================================================================
+# DEPLOY STAGING — Deploie sur le serveur de dev (161.97.179.176)
+# =============================================================================
+
+deploy-staging:
+  stage: deploy-staging
+  tags:
+    - dev
+    - docker
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - echo "Pulling latest images..."
+    - docker pull ${BACKEND_IMAGE}:latest
+    - docker pull ${FRONTEND_IMAGE}:latest
+
+    - echo "Deploying staging stack..."
+    - cd docker/staging
+
+    # Generer le .env depuis les variables CI/CD
+    - |
+      cat > .env << ENVEOF
+      MEET_HOST=${MEET_HOST}
+      LIVEKIT_HOST=${LIVEKIT_HOST}
+      DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+      LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      LETSENCRYPT_TEST=${LETSENCRYPT_TEST}
+      DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      KC_POSTGRES_DB=${KC_POSTGRES_DB}
+      KC_POSTGRES_USER=${KC_POSTGRES_USER}
+      KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      REALM_NAME=${REALM_NAME}
+      DOCKER_USER=${DOCKER_USER}
+      ENVEOF
+
+    # Creer le reseau si necessaire
+    - docker network create proxy-tier 2>/dev/null || true
+    - docker network create staging-app 2>/dev/null || true
+
+    # Deployer dans l'ordre
+    - docker compose -f compose.nginx-proxy.yaml up -d
+    - docker compose -f compose.keycloak.yaml up -d
+    - docker compose -f compose.yaml up -d
+
+    # Attendre que le backend soit healthy
+    - echo "Waiting for backend to be healthy..."
+    - |
+      for i in $(seq 1 30); do
+        if docker compose -f compose.yaml exec -T backend python manage.py check 2>/dev/null; then
+          echo "Backend is healthy!"
+          break
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 5
+      done
+
+    # Migrations automatiques
+    - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
+  environment:
+    name: staging
+    url: https://aiobi-meet.duckdns.org
+  only:
+    - develop
