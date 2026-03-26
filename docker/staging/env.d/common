@@ -16,25 +16,25 @@ DJANGO_EMAIL_BRAND_NAME="Aïobi Meet"
 DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo.svg"
 
 # Backend url
-MEET_BASE_URL="https://${MEET_HOST}"
+MEET_BASE_URL="https://${MEET_HOST}:8443"
 
 # OIDC — Keycloak sur le meme domaine (path-based routing)
-OIDC_OP_JWKS_ENDPOINT=https://${MEET_HOST}/realms/${REALM_NAME}/protocol/openid-connect/certs
-OIDC_OP_AUTHORIZATION_ENDPOINT=https://${MEET_HOST}/realms/${REALM_NAME}/protocol/openid-connect/auth
+OIDC_OP_JWKS_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/certs
+OIDC_OP_AUTHORIZATION_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/auth
 OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/token
-OIDC_OP_USER_ENDPOINT=https://${MEET_HOST}/realms/${REALM_NAME}/protocol/openid-connect/userinfo
-OIDC_OP_LOGOUT_ENDPOINT=https://${MEET_HOST}/realms/${REALM_NAME}/protocol/openid-connect/logout
+OIDC_OP_USER_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/userinfo
+OIDC_OP_LOGOUT_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/logout
 
 OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
 OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
 OIDC_RP_SIGN_ALGO=RS256
 OIDC_RP_SCOPES="openid email"
 
-LOGIN_REDIRECT_URL=https://${MEET_HOST}
-LOGIN_REDIRECT_URL_FAILURE=https://${MEET_HOST}
-LOGOUT_REDIRECT_URL=https://${MEET_HOST}
+LOGIN_REDIRECT_URL=https://${MEET_HOST}:8443
+LOGIN_REDIRECT_URL_FAILURE=https://${MEET_HOST}:8443
+LOGOUT_REDIRECT_URL=https://${MEET_HOST}:8443
 
-OIDC_REDIRECT_ALLOWED_HOSTS=["https://${MEET_HOST}"]
+OIDC_REDIRECT_ALLOWED_HOSTS=["https://${MEET_HOST}:8443"]
 
 # LiveKit
 LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}

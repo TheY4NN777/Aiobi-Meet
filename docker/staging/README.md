@@ -1,8 +1,13 @@
 # Aïobi Meet — Guide de deploiement staging
 
 > **Serveur** : 161.97.179.176 (12 vCPU, 48 GB RAM, 485 GB SSD)
-> **Domaines** : `aiobi-meet.duckdns.org` / `aiobi-livekit.duckdns.org`
-> **Derniere mise a jour** : 25 mars 2026
+> **Domaines** : `aiobi-meet.duckdns.org:8443` / `aiobi-livekit.duckdns.org:8443`
+> **Derniere mise a jour** : 26 mars 2026
+>
+> **Note importante** : Le staging utilise le port **8443** pour HTTPS (pas 443).
+> Le port 443 est deja occupe par le nginx natif du serveur qui sert d'autres
+> applications. Le nginx natif proxy les challenges ACME (port 80) vers
+> nginx-proxy Docker (port 8880) pour que Let's Encrypt fonctionne.
 
 ---
 
@@ -120,11 +125,14 @@ Le staging est decoupe en **trois fichiers Docker Compose** independants. Ce n'e
 
 Ce compose contient uniquement le reverse proxy et son companion Let's Encrypt. Il est le premier a demarrer et le dernier a s'arreter. C'est lui qui :
 
-- Ecoute sur les ports 80 et 443 de la machine hote.
+- Ecoute sur les ports **8880** (HTTP) et **8443** (HTTPS) de la machine hote. Ces ports non-standards sont necessaires car le nginx natif du serveur occupe deja 80/443 pour les autres applications (ERPNext, Eshu, etc.).
 - Detecte automatiquement les conteneurs qui ont des variables `VIRTUAL_HOST` et genere la configuration Nginx correspondante.
 - Via acme-companion, demande et renouvelle les certificats TLS pour chaque `LETSENCRYPT_HOST` detecte.
+- Un fichier `nginx-host-proxy.conf` doit etre installe dans le nginx natif pour proxier les challenges ACME depuis le port 80 vers le port 8880.
 
 **Pourquoi separe ?** Parce qu'on ne veut jamais redemarrer le reverse proxy quand on met a jour l'application ou Keycloak. Si nginx-proxy tombe, plus rien n'est accessible.
+
+**Pourquoi les ports 8880/8443 ?** Le serveur de staging heberge temporairement d'autres applications qui utilisent les ports 80/443. Quand ces apps seront migrees, on pourra remettre nginx-proxy sur 80/443 et supprimer le fichier `nginx-host-proxy.conf`.
 
 ### `compose.keycloak.yaml` — L'authentification
 
@@ -216,7 +224,7 @@ proxy-tier          staging-app         default (compose.yaml)
 
 Le trafic HTTP suit un chemin precis avec deux niveaux de proxy. Comprendre ce chemin est essentiel pour debugger les problemes d'acces.
 
-### Requete vers `https://aiobi-meet.duckdns.org/`
+### Requete vers `https://aiobi-meet.duckdns.org:8443/`
 
 ```
 Client (navigateur)
@@ -269,7 +277,7 @@ Quand un utilisateur clique "Se connecter" :
 ```
 1. Frontend           --> Backend /api/v1.0/auth/          (demande de login)
 2. Backend            --> 302 Redirect vers Keycloak
-3. Client (navigateur)--> https://aiobi-meet.duckdns.org/realms/meet/protocol/openid-connect/auth
+3. Client (navigateur)--> https://aiobi-meet.duckdns.org:8443/realms/meet/protocol/openid-connect/auth
 4. nginx-proxy        --> frontend:8083 --> keycloak:8080   (proxy chain)
 5. Keycloak           --> Affiche la page de login (theme Aïobi)
 6. Utilisateur        --> Saisit ses identifiants
@@ -328,7 +336,7 @@ Serveur d'identite compatible OpenID Connect. En staging :
 Le client OIDC "meet" doit etre configure dans Keycloak avec :
 - Client ID : valeur de `OIDC_RP_CLIENT_ID` dans `.env`
 - Client Secret : valeur de `OIDC_RP_CLIENT_SECRET` dans `.env`
-- Valid Redirect URIs : `https://aiobi-meet.duckdns.org/*`
+- Valid Redirect URIs : `https://aiobi-meet.duckdns.org:8443/*`
 
 ### LiveKit (`livekit`)
 
@@ -488,7 +496,7 @@ dig aiobi-livekit.duckdns.org +short
 Le couple `nginx-proxy` + `acme-companion` automatise entierement la gestion TLS :
 
 1. Quand un conteneur avec `LETSENCRYPT_HOST=aiobi-meet.duckdns.org` demarre, acme-companion detecte la variable via le Docker socket.
-2. Il lance un challenge HTTP-01 : Let's Encrypt envoie une requete sur `http://aiobi-meet.duckdns.org/.well-known/acme-challenge/xxx`.
+2. Il lance un challenge HTTP-01 : Let's Encrypt envoie une requete sur `http://aiobi-meet.duckdns.org:8443/.well-known/acme-challenge/xxx`.
 3. nginx-proxy sert la reponse depuis le volume `html` partage.
 4. Let's Encrypt valide et emet le certificat.
 5. Le certificat est stocke dans le volume `certs` et nginx-proxy recharge automatiquement sa configuration.
@@ -528,8 +536,9 @@ docker compose -f compose.yaml up -d
 
 | Port | Protocole | Service | Direction | Expose a |
 |------|-----------|---------|-----------|----------|
-| 80 | TCP | HTTP (redirect + ACME challenge) | Entrant | Internet |
-| 443 | TCP | HTTPS (nginx-proxy TLS termination) | Entrant | Internet |
+| 80 | TCP | HTTP (ACME challenge via nginx natif) | Entrant | Internet (deja ouvert) |
+| 8443 | TCP | HTTPS (nginx-proxy TLS termination) | Entrant | Internet |
+| 8880 | TCP | HTTP interne (nginx-proxy, ACME) | Interne | nginx natif seulement |
 | 47880 | TCP | LiveKit WebSocket signaling | Entrant | Internet (via nginx-proxy) |
 | 47881 | TCP | LiveKit ICE TCP fallback | Entrant | Internet (direct) |
 | 47882 | UDP | LiveKit media RTP/RTCP | Entrant | Internet (direct) |
@@ -595,13 +604,29 @@ chmod +x duckdns-update.sh
 (crontab -l 2>/dev/null; echo "*/5 * * * * $(pwd)/duckdns-update.sh >> /var/log/duckdns.log 2>&1") | crontab -
 ```
 
-### Etape 4 — Creer le reseau proxy
+### Etape 4 — Installer le proxy nginx hote
+
+Le nginx natif du serveur doit proxier les challenges ACME vers nginx-proxy Docker :
+
+```bash
+sudo cp nginx-host-proxy.conf /etc/nginx/sites-enabled/aiobi-meet-staging
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Ouvrir le port 8443 dans le firewall :
+
+```bash
+sudo ufw allow 8443/tcp comment "HTTPS Aiobi Meet Staging"
+```
+
+### Etape 5 — Creer le reseau proxy
 
 ```bash
 docker network create proxy-tier
 ```
 
-### Etape 5 — Lancer le reverse proxy
+### Etape 6 — Lancer le reverse proxy
 
 ```bash
 docker compose -f compose.nginx-proxy.yaml up -d
@@ -648,12 +673,12 @@ docker compose -f compose.yaml exec backend python manage.py createsuperuser
 
 Si le realm n'a pas ete importe automatiquement :
 
-1. Acceder a `https://aiobi-meet.duckdns.org/admin/master/console/`
+1. Acceder a `https://aiobi-meet.duckdns.org:8443/admin/master/console/`
 2. Se connecter avec les credentials admin de `.env`
 3. Selectionner le realm "meet" (ou le creer)
 4. Aller dans Clients > Creer un client
 5. Client ID : `meet`, Client Protocol : `openid-connect`
-6. Valid Redirect URIs : `https://aiobi-meet.duckdns.org/*`
+6. Valid Redirect URIs : `https://aiobi-meet.duckdns.org:8443/*`
 7. Copier le Client Secret genere dans `.env` (`OIDC_RP_CLIENT_SECRET`)
 8. Redemarrer le backend : `docker compose -f compose.yaml restart backend`
 
@@ -664,10 +689,10 @@ Si le realm n'a pas ete importe automatiquement :
 curl -sI https://aiobi-meet.duckdns.org | head -5
 
 # API backend
-curl -s https://aiobi-meet.duckdns.org/api/v1.0/ | head -20
+curl -s https://aiobi-meet.duckdns.org:8443/api/v1.0/ | head -20
 
 # Keycloak
-curl -sI https://aiobi-meet.duckdns.org/realms/meet/ | head -5
+curl -sI https://aiobi-meet.duckdns.org:8443/realms/meet/ | head -5
 
 # LiveKit (WebSocket)
 curl -sI https://aiobi-livekit.duckdns.org | head -5
@@ -811,7 +836,7 @@ Verifier : `docker volume ls | grep staging` — les volumes doivent exister.
 
 ### Keycloak affiche "Invalid parameter: redirect_uri"
 
-Le redirect URI configure dans le client Keycloak ne correspond pas a l'URL du site. Aller dans Keycloak admin > Clients > meet > Settings et ajouter `https://aiobi-meet.duckdns.org/*` dans Valid Redirect URIs.
+Le redirect URI configure dans le client Keycloak ne correspond pas a l'URL du site. Aller dans Keycloak admin > Clients > meet > Settings et ajouter `https://aiobi-meet.duckdns.org:8443/*` dans Valid Redirect URIs.
 
 ---
 
