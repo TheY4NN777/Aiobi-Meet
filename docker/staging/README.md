@@ -291,6 +291,27 @@ Cette section documente les choix techniques majeurs et leurs justifications. El
 
 **En production** : Le domaine `id.aiobi.world` sera dedie a Keycloak (sous-domaine complet) comme prevu dans `env.d/production.dist/hosts`. Le path-based routing est specifique au staging avec DuckDNS.
 
+### Pourquoi les endpoints OIDC serveur-a-serveur sont en HTTP interne ?
+
+**Decision** : Les endpoints OIDC appeles par le backend Django (JWKS, token, userinfo) utilisent `http://keycloak:8080` (reseau Docker interne) au lieu de l'URL publique HTTPS.
+
+**Raison** :
+
+1. **Performance** — L'URL publique traverse 3 proxys : nginx-proxy → frontend nginx → keycloak. L'URL interne atteint keycloak directement via le reseau Docker `staging-app`.
+
+2. **Fiabilite** — L'URL publique depend du certificat TLS. Tout probleme de certificat (renouvellement, symlinks) bloque le login. L'URL interne HTTP ne depend d'aucun certificat.
+
+3. **Securite** — Le trafic reste dans le reseau Docker prive `staging-app`, jamais expose a l'exterieur.
+
+**Endpoints concernes** :
+- `OIDC_OP_JWKS_ENDPOINT` : `http://keycloak:8080/realms/meet/protocol/openid-connect/certs`
+- `OIDC_OP_TOKEN_ENDPOINT` : `http://keycloak:8080/realms/meet/protocol/openid-connect/token`
+- `OIDC_OP_USER_ENDPOINT` : `http://keycloak:8080/realms/meet/protocol/openid-connect/userinfo`
+
+**Endpoints navigateur (restent en HTTPS publique)** :
+- `OIDC_OP_AUTHORIZATION_ENDPOINT` : appele par le navigateur, doit etre HTTPS
+- `OIDC_OP_LOGOUT_ENDPOINT` : appele par le navigateur, doit etre HTTPS
+
 ### Pourquoi le .env est sur le serveur et pas genere par le CI ?
 
 **Decision** : Le fichier `.env` avec les secrets est maintenu manuellement sur le serveur, pas genere par le pipeline CI.
@@ -587,31 +608,26 @@ Le couple `nginx-proxy` + `acme-companion` automatise entierement la gestion TLS
 5. Le certificat est stocke dans le volume `certs` et nginx-proxy recharge automatiquement sa configuration.
 6. Renouvellement automatique toutes les 60 jours (verification toutes les heures).
 
-### Mode test
+### Certificats reels (configuration actuelle)
 
-Au premier deploiement, utiliser `LETSENCRYPT_TEST=true` dans `.env`. Cela utilise le serveur staging de Let's Encrypt qui :
-- N'a pas de rate limit (le serveur de production limite a 5 certificats par domaine par semaine).
-- Emet des certificats non reconnus par les navigateurs (avertissement de securite).
-- Permet de tester sans risque de se faire bloquer.
+Le staging utilise des vrais certificats Let's Encrypt (`LETSENCRYPT_TEST=false` dans `.env`).
+Le certificat actuel est emis par **Let's Encrypt R12** (production), valide 90 jours.
 
-### Passer en certificats reels
+La pipeline CI/CD gere automatiquement les certificats :
+- Verifie l'existence des fichiers `fullchain.pem` apres chaque deploy
+- Cree/repare les symlinks `.crt`/`.key` que nginx-proxy utilise
+- Supprime les dossiers `_test_*` residuels si presents
+- Force un restart d'acme-companion si aucun certificat n'est trouve
+- Reload nginx-proxy apres correction
 
-Une fois que tout fonctionne avec les certificats de test :
+### Buffers proxy pour Keycloak JWT
 
-```bash
-# 1. Modifier .env
-# LETSENCRYPT_TEST=false
+Le logout OIDC envoie un `id_token_hint` JWT (~2KB) dans l'URL. Le trafic traverse
+2 proxys (nginx-proxy → frontend nginx → keycloak), chacun ayant des buffers par defaut
+de 4K, trop petits. Les buffers sont augmentes a 16K :
 
-# 2. Supprimer les certificats de test
-docker compose -f compose.nginx-proxy.yaml down
-docker volume rm staging_certs staging_acme
-
-# 3. Relancer
-docker compose -f compose.nginx-proxy.yaml up -d
-# Attendre ~2 minutes que les certificats soient emis
-docker compose -f compose.keycloak.yaml up -d
-docker compose -f compose.yaml up -d
-```
+- **nginx-proxy** : via `vhost.d/aiobi-meet.duckdns.org` (mount dans compose)
+- **frontend nginx** : via `proxy_buffer_size 16k` dans `default.conf.template`
 
 ---
 

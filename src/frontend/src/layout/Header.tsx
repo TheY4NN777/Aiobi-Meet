@@ -19,25 +19,25 @@ const Logo = () => (
     className={`Header-logo ${css({
       display: 'flex',
       alignItems: 'flex-end',
-      gap: '0.1rem',
+      gap: '0.35rem',
     })}`}
   >
     <img
       src="/assets/logo.svg"
       alt={`${import.meta.env.VITE_APP_TITLE}`}
       className={css({
-        maxHeight: { base: '36px', sm: '44px' },
+        maxHeight: { base: '64px', sm: '80px' },
       })}
     />
     <span
       className={css({
         fontFamily: '"HK Grotesk", "Hanken Grotesk", sans-serif',
         fontWeight: 800,
-        fontSize: { base: '0.9rem', sm: '1.1rem' },
+        fontSize: { base: '0.75rem', sm: '0.95rem' },
         color: '#0F1010',
         letterSpacing: '0.01em',
         lineHeight: 1,
-        marginBottom: { base: '1px', sm: '2px' },
+        marginBottom: { base: '3px', sm: '4px' },
       })}
     >
       Meet

@@ -92,6 +92,8 @@ deploy-staging:
     - cp docker/staging/default.conf.template $HOST_STAGING/
     - cp docker/staging/livekit-server.yaml $HOST_STAGING/
     - cp docker/staging/env.d/* $HOST_STAGING/env.d/
+    - mkdir -p $HOST_STAGING/vhost.d
+    - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
     - cp -r docker/keycloak/themes/aiobi/. $HOST_PROJECT/docker/keycloak/themes/aiobi/
 

@@ -10,6 +10,7 @@ services:
       - html:/usr/share/nginx/html
       - certs:/etc/nginx/certs:ro
       - vhost:/etc/nginx/vhost.d
+      - ./vhost.d/aiobi-meet.duckdns.org:/etc/nginx/vhost.d/aiobi-meet.duckdns.org:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       - proxy-tier

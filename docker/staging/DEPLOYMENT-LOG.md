@@ -205,18 +205,92 @@ failed to bind host port 0.0.0.0:80/tcp: address already in use
 
 ---
 
-## Etat actuel (26 mars 2026, 15h)
+## Erreur 18 — Backend SSL cert verify failed sur JWKS endpoint
 
-**Pipeline CI/CD** : Vert (build backend + frontend + deploy)
-**nginx-proxy** : Fonctionnel (ports 8880/8443, certificats Let's Encrypt test)
-**Keycloak** : Fonctionnel, realm "meet" importe, client OIDC configure
-**Backend Django** : Fonctionnel (healthy), migrations appliquees
-**Frontend** : Fonctionnel, SPA charge sur `https://aiobi-meet.duckdns.org:8443`
-**OIDC** : Client secret synchronise, redirect URIs configures
+**Date** : 26 mars 2026
+**Erreur** :
+```
+SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed'))
+HTTPSConnectionPool(host='aiobi-meet.duckdns.org', port=8443) /realms/meet/protocol/openid-connect/certs
+```
+**Cause** : Les endpoints OIDC serveur-a-serveur (JWKS, token, userinfo) utilisaient l'URL publique HTTPS. Le backend Django devait valider le certificat TLS via le reseau externe, ce qui echouait avec les certificats de test Let's Encrypt.
+**Solution** : Passer les 3 endpoints serveur-a-serveur en URL interne Docker (`http://keycloak:8080`). Seuls `authorization` et `logout` (appeles par le navigateur) restent en HTTPS publique.
+**Commit** : `16910b93`
+
+---
+
+## Erreur 19 — Logout "Invalid redirect uri"
+
+**Date** : 26 mars 2026
+**Erreur** : Keycloak affiche "We are sorry... Invalid redirect uri" lors du logout.
+**Cause** : Le client Keycloak n'avait pas les URLs de staging dans `post.logout.redirect.uris`. Seules les URLs localhost etaient configurees.
+**Solution** : Ajout de `https://aiobi-meet.duckdns.org:8443/*` et `https://meet.aiobi.world/*` via l'API REST Keycloak et dans `realm.json`.
+**Commit** : `16910b93`
+
+---
+
+## Erreur 20 — Logout 502 "upstream sent too big header" (double proxy)
+
+**Date** : 26 mars 2026
+**Erreur** : `upstream sent too big header while reading response header from upstream` dans nginx-proxy.
+**Cause** : L'URL de logout contient un `id_token_hint` JWT (~2KB). Le flux traverse 2 proxys : nginx-proxy (port 8443) → frontend nginx (port 8083) → keycloak. Les buffers par defaut (4K) etaient trop petits aux **deux** niveaux.
+**Solution** :
+- `default.conf.template` : ajout `proxy_buffer_size 16k` dans le server block 8083
+- `vhost.d/aiobi-meet.duckdns.org` : config custom pour nginx-proxy avec buffers 16k
+- Mount du fichier vhost dans `compose.nginx-proxy.yaml`
+**Commit** : `640e3051` (frontend) + commit courant (nginx-proxy)
+
+---
+
+## Erreur 21 — Docker build cache sert les anciens assets
+
+**Date** : 26 mars 2026
+**Erreur** : Apres mise a jour du logo et des favicons, l'image Docker frontend servait toujours les anciens fichiers.
+**Cause** : `docker build` sans `--no-cache` reutilise les layers en cache. Les fichiers COPY ne sont pas detectes comme changes si le layer hash ne change pas.
+**Solution** : Ajout de `--no-cache` aux commandes `docker build` dans `.gitlab-ci.yml`.
+**Commit** : `2dc8ce61`
+
+---
+
+## Erreur 22 — Docker API version mismatch (docker:24 trop ancien)
+
+**Date** : 26 mars 2026
+**Erreur** :
+```
+Error: client version 1.43 is too old. Minimum supported API version is 1.44
+```
+**Cause** : L'image `docker:24` dans la CI utilise l'API Docker 1.43. Le daemon du serveur (Docker 29.2.1) requiert minimum API 1.44.
+**Solution** : Passage de `docker:24` a `docker:27` dans `.gitlab-ci.yml`.
+**Commit** : `adefd0d9`
+
+---
+
+## Erreur 23 — TLS symlinks manquants apres deploy
+
+**Date** : 26 mars 2026
+**Erreur** : `ERR_SSL_UNRECOGNIZED_NAME_ALERT` — le site est inaccessible en HTTPS.
+**Cause** : nginx-proxy utilise des symlinks (`.crt`, `.key`) au niveau racine de `/etc/nginx/certs/`. Les vrais certificats existaient dans les sous-dossiers mais les symlinks n'etaient pas recrees apres un redeploy. De plus, acme-companion ne regenerait pas les symlinks car "Contents did not change".
+**Solution** : Ajout d'une etape post-deploy dans la CI qui :
+1. Verifie l'existence des fichiers fullchain.pem
+2. Cree/repare systematiquement les symlinks `.crt`, `.key`, `.chain.pem`
+3. Supprime les dossiers `_test_*` residuels
+4. Si aucun cert n'existe, force un restart d'acme-companion
+5. Reload nginx-proxy apres correction
+
+---
+
+## Etat actuel (26 mars 2026, 19h)
+
+**Pipeline CI/CD** : Vert (docker:27, --no-cache, deploy robuste avec TLS check)
+**nginx-proxy** : Fonctionnel (ports 8880/8443, vrais certificats Let's Encrypt R12)
+**Keycloak** : Fonctionnel, realm "meet", locale FR, OIDC client configure
+**Backend Django** : Fonctionnel (healthy), endpoints OIDC internes
+**Frontend** : Fonctionnel, nouveau logo designer, favicons Aiobi, lang="fr"
+**OIDC** : Login OK, logout OK (buffers 16k), post_logout_redirect_uris configures
 
 ### Ce qui reste
 
-1. Passer en vrais certificats TLS (`LETSENCRYPT_TEST=false`)
-2. Configurer le cron DuckDNS
-3. Tester le flux complet : login OIDC → creation de salle → visioconference
-4. Tester LiveKit (WebRTC) via `aiobi-livekit.duckdns.org:8443`
+1. Configurer le cron DuckDNS pour renouvellement IP automatique
+2. Tester le flux complet : login OIDC → creation de salle → visioconference
+3. Tester LiveKit (WebRTC) via `aiobi-livekit.duckdns.org:8443`
+4. Finaliser l'alignement du logo header (Aiobi + Meet)
