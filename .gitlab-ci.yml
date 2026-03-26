@@ -32,6 +32,7 @@ build-backend:
   image: docker:24
   script:
     - docker build
+      --no-cache
       --target backend-production
       --tag aiobi-meet/backend:${CI_COMMIT_SHORT_SHA}
       --tag aiobi-meet/backend:latest
@@ -47,6 +48,7 @@ build-frontend:
   image: docker:24
   script:
     - docker build
+      --no-cache
       --file docker/aiobi-frontend/Dockerfile
       --target frontend-production
       --tag aiobi-meet/frontend:${CI_COMMIT_SHORT_SHA}
