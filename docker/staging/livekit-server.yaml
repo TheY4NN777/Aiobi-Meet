@@ -2,7 +2,7 @@ port: 47880
 redis:
   address: redis:6379
 keys:
-  meet: ${LIVEKIT_API_SECRET}
+  meet: __LIVEKIT_API_SECRET__
 rtc:
   udp_port: 47882
   tcp_port: 47881
