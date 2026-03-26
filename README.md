@@ -1,8 +1,8 @@
 <p align="center">
-  <img alt="Aïobi Meet logo" src="./docs/assets/banner-meet-fr.png" maxWidth="100%">
+  <img alt="Aïobi Meet logo" src="./src/frontend/public/assets/logo.svg" height="80">
 </p>
 
-
+<h1 align="center">Aïobi Meet</h1>
 <p align="center">
   <a href="https://github.com/TheY4NN777/Aiobi-Meet/stargazers/">
     <img src="https://img.shields.io/github/stars/TheY4NN777/Aiobi-Meet" alt="">
