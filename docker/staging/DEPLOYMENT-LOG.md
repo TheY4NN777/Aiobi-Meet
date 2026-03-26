@@ -318,20 +318,59 @@ Error: client version 1.43 is too old. Minimum supported API version is 1.44
 
 ---
 
-## Etat actuel (26 mars 2026, 21h)
+## Erreur 28 — LiveKit entrypoint "livekit-server: not found"
 
-**Pipeline CI/CD** : docker:27, --no-cache, deploy robuste (TLS check, DuckDNS cron, envsubst LiveKit)
+**Date** : 26 mars 2026
+**Erreur** : `exec: line 2: livekit-server: not found` — conteneur en restart loop (exit 127).
+**Cause** : L'image `livekit/livekit-server` est minimaliste (scratch/distroless). Le binaire est a `/livekit-server` (racine), pas dans le PATH. De plus, `envsubst` et `apk` n'existent pas dans l'image.
+**Solution** : Chemin absolu `/livekit-server` et remplacement de `envsubst` par `sed` avec un placeholder `__LIVEKIT_API_SECRET__` dans le template YAML.
+**Commit** : `2b0d2f54`
+
+---
+
+## Erreur 29 — sed shell escaping corrompt le secret LiveKit
+
+**Date** : 26 mars 2026
+**Erreur** : Le secret resolu dans LiveKit (`qG1V8cph...`) ne matchait pas le `.env` (`hxzc1kNc...`).
+**Cause** : Le pattern `${LIVEKIT_API_SECRET}` dans le template YAML se melangeait avec l'expansion shell dans la commande `sed`. Les `$` etaient interpretes avant que sed ne les voie.
+**Solution** : Utiliser un placeholder plain text `__LIVEKIT_API_SECRET__` sans caracteres speciaux shell. Le `sed` remplace simplement le texte sans ambiguite.
+**Commit** : `c0ea5d77`
+
+---
+
+## Erreur 30 — Variable GitLab CI override le .env du serveur
+
+**Date** : 26 mars 2026
+**Erreur** : Le secret LiveKit dans le conteneur etait different de celui dans le `.env`. Le backend et LiveKit avaient des secrets differents → `invalid token`.
+**Cause** : Les variables CI/CD GitLab sont injectees dans l'environnement du job. `docker compose up` herite de ces variables, qui prennent priorite sur le `.env`. La variable `LIVEKIT_API_SECRET` dans GitLab avait une valeur differente de celle du `.env`.
+**Solution** : Mise a jour de la variable `LIVEKIT_API_SECRET` dans GitLab CI/CD Variables pour matcher la valeur du `.env` du serveur.
+
+---
+
+## Fix — Permission camera "loading" infini sur certains navigateurs
+
+**Date** : 26 mars 2026
+**Symptome** : L'ecran pre-join affiche "La camera va demarrer..." indefiniment au lieu du message "Autorisez l'acces a la camera et au micro".
+**Cause** : Firefox ne supporte pas `navigator.permissions.query({ name: 'camera' })`. L'appel throw une erreur, mais le catch ne mettait pas les permissions a un etat valide — elles restaient `undefined`. L'UI ne detectait ni `denied` ni `prompt` et tombait dans le cas `cameraStarting`.
+**Solution** : Dans le catch de `useWatchPermissions.ts`, si les permissions sont `undefined` apres erreur, les mettre a `prompt`. L'UI affiche alors le message d'autorisation avec le bouton.
+**Commit** : `4562cf65`
+
+---
+
+## Etat actuel (27 mars 2026, 00h)
+
+**Pipeline CI/CD** : docker:27, --no-cache, deploy robuste (TLS check, DuckDNS cron, LiveKit sed)
 **nginx-proxy** : Ports 8880/8443, vrais certificats Let's Encrypt R12, buffers 16k via vhost.d
 **Keycloak** : Realm "meet", locale FR uniquement, OIDC client avec post_logout_redirect_uris
 **Backend Django** : Healthy, endpoints OIDC internes (http://keycloak:8080), migrations auto
-**Frontend** : Logo designer (Aiobi Meet SVG), favicons Aiobi-head, lang="fr", maxWidth 200px
-**LiveKit** : Config via envsubst, ports 47880/47881/47882, secret resolu au runtime
+**Frontend** : Logo designer (Aiobi Meet SVG), favicons Aiobi-head, lang="fr", permissions fix
+**LiveKit** : Secret resolu via sed + placeholder, WebRTC connecte, audio/video fonctionnels
 **OIDC** : Login OK, logout OK (buffers 16k double proxy)
 **DuckDNS** : Cron automatique toutes les 5 minutes
+**Visioconference** : Testee et fonctionnelle (connexion WebRTC, publication audio/video)
 
 ### Ce qui reste
 
-1. Tester le flux complet : login OIDC → creation de salle → visioconference WebRTC
-2. Augmenter le buffer UDP (`net.core.rmem_max=5000000`) pour LiveKit en production
-3. Finaliser le logo header (taille/alignement du texte "Meet")
-4. Supprimer les references open source (plan dans `.claude/plans/remove-opensource-refs.md`)
+1. Augmenter le buffer UDP (`net.core.rmem_max=5000000`) pour LiveKit
+2. Supprimer les references open source (plan dans `.claude/plans/remove-opensource-refs.md`)
+3. Passer a la production (domaine `meet.aiobi.world`)
