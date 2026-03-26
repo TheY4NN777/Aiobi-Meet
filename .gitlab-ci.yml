@@ -23,6 +23,9 @@ variables:
 # =============================================================================
 # BUILD — Construit les images Docker sur le serveur
 # =============================================================================
+# --no-cache garantit que les assets (logo, favicons, config) sont toujours
+# a jour. Le build prend plus de temps mais evite les problemes de cache.
+# =============================================================================
 
 build-backend:
   stage: build
@@ -60,6 +63,18 @@ build-frontend:
 # =============================================================================
 # DEPLOY — Deploie le staging depuis les fichiers du host
 # =============================================================================
+# Strategie de deploy :
+#   1. nginx-proxy et acme-companion ne sont JAMAIS recreees (preserve les
+#      certificats TLS dans les volumes Docker). "up -d" est un no-op si
+#      le conteneur tourne deja.
+#   2. keycloak est demarre sans --force-recreate (preserve les sessions
+#      et la DB). Recree seulement si le compose change.
+#   3. Les conteneurs applicatifs (backend, frontend, celery, livekit) sont
+#      force-recreated pour prendre les nouvelles images et le .env a jour.
+#   4. Apres le deploy, on verifie que les certificats TLS sont presents.
+#      Si absents (premier deploy ou volumes perdus), on attend que
+#      acme-companion les genere.
+# =============================================================================
 
 deploy-staging:
   stage: deploy
@@ -68,9 +83,9 @@ deploy-staging:
     - docker
   image: docker:24
   before_script:
-    - apk add --no-cache docker-cli-compose
+    - apk add --no-cache docker-cli-compose curl
   script:
-    # Copier les fichiers staging du CI vers le host (sauf .env)
+    # --- Copier les fichiers staging du CI vers le host (sauf .env) ----------
     - export HOST_STAGING=/home/ogu/theY4NN/AïobiMeet/docker/staging
     - export HOST_PROJECT=/home/ogu/theY4NN/AïobiMeet
     - cp docker/staging/compose*.yaml $HOST_STAGING/
@@ -80,15 +95,23 @@ deploy-staging:
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
     - cp -r docker/keycloak/themes/aiobi/. $HOST_PROJECT/docker/keycloak/themes/aiobi/
 
-    # Se placer dans le staging du host
+    # --- Se placer dans le staging du host -----------------------------------
     - cd $HOST_STAGING
 
-    # Deployer dans l'ordre (les reseaux sont crees automatiquement par les compose)
+    # --- 1. nginx-proxy (ne jamais forcer la recreation) ---------------------
+    - echo "=== Deploying nginx-proxy (preserve TLS certs) ==="
     - docker compose -f compose.nginx-proxy.yaml up -d
-    - docker compose -f compose.keycloak.yaml up -d
-    - docker compose -f compose.yaml up -d
 
-    # Attendre le backend
+    # --- 2. Keycloak (preserve sessions) -------------------------------------
+    - echo "=== Deploying Keycloak ==="
+    - docker compose -f compose.keycloak.yaml up -d
+
+    # --- 3. App containers (force recreate pour nouvelles images + env) ------
+    - echo "=== Deploying app containers (force recreate) ==="
+    - docker compose -f compose.yaml up -d --force-recreate
+
+    # --- 4. Attendre le backend ----------------------------------------------
+    - echo "=== Waiting for backend health check ==="
     - |
       for i in $(seq 1 30); do
         if docker compose -f compose.yaml exec -T backend python manage.py check 2>/dev/null; then
@@ -99,8 +122,47 @@ deploy-staging:
         sleep 5
       done
 
-    # Migrations automatiques
+    # --- 5. Migrations automatiques ------------------------------------------
     - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
+
+    # --- 6. Verifier les certificats TLS -------------------------------------
+    - echo "=== Checking TLS certificates ==="
+    - |
+      CERT_OK=false
+      for i in $(seq 1 12); do
+        if docker exec nginx-proxy-acme sh -c "test -f /etc/nginx/certs/aiobi-meet.duckdns.org/fullchain.pem" 2>/dev/null; then
+          echo "TLS certificates found!"
+          # S'assurer que les symlinks pointent vers les vrais certs (pas _test_)
+          docker exec nginx-proxy-acme sh -c '
+            cd /etc/nginx/certs
+            if [ -L aiobi-meet.duckdns.org.crt ] && readlink aiobi-meet.duckdns.org.crt | grep -q "_test_"; then
+              echo "Fixing symlinks: pointing to real certs instead of test..."
+              for domain in aiobi-meet.duckdns.org aiobi-livekit.duckdns.org; do
+                if [ -d "$domain" ]; then
+                  rm -f ${domain}.crt ${domain}.key ${domain}.chain.pem
+                  ln -s ./${domain}/fullchain.pem ${domain}.crt
+                  ln -s ./${domain}/key.pem ${domain}.key
+                  ln -s ./${domain}/chain.pem ${domain}.chain.pem
+                fi
+              done
+              rm -rf _test_*
+            fi
+          '
+          docker exec nginx-proxy nginx -s reload 2>/dev/null || true
+          CERT_OK=true
+          break
+        fi
+        echo "Waiting for TLS certs... ($i/12, next check in 10s)"
+        sleep 10
+      done
+      if [ "$CERT_OK" = "false" ]; then
+        echo "WARNING: TLS certificates not ready after 2 minutes."
+        echo "acme-companion may still be generating them. Check logs:"
+        echo "  docker logs nginx-proxy-acme"
+      fi
+
+    - echo "=== Deploy complete ==="
+
   environment:
     name: staging
     url: https://aiobi-meet.duckdns.org:8443
