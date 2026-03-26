@@ -696,13 +696,17 @@
         "http://localhost:8071/*",
         "http://localhost:3200/*",
         "http://localhost:8088/*",
-        "http://localhost:3000/*"
+        "http://localhost:3000/*",
+        "https://aiobi-meet.duckdns.org:8443/*",
+        "https://meet.aiobi.world/*"
       ],
       "webOrigins": [
         "http://localhost:3200",
         "http://localhost:8088",
         "http://localhost:8070",
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://aiobi-meet.duckdns.org:8443",
+        "https://meet.aiobi.world"
       ],
       "notBefore": 0,
       "bearerOnly": "false",
