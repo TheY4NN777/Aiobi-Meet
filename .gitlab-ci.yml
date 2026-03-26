@@ -66,15 +66,17 @@ deploy-staging:
     - docker
   image: docker:24
   before_script:
-    - apk add --no-cache docker-cli-compose git
+    - apk add --no-cache docker-cli-compose
   script:
-    # Synchroniser le code sur le host
-    - git config --global --add safe.directory /home/ogu/theY4NN/AïobiMeet
-    - git -C /home/ogu/theY4NN/AïobiMeet fetch origin develop
-    - git -C /home/ogu/theY4NN/AïobiMeet checkout develop
-    - git -C /home/ogu/theY4NN/AïobiMeet reset --hard origin/develop
+    # Copier les fichiers staging du CI vers le host (sauf .env)
+    - cp docker/staging/compose*.yaml ${STAGING_DIR}/
+    - cp docker/staging/default.conf.template ${STAGING_DIR}/
+    - cp docker/staging/livekit-server.yaml ${STAGING_DIR}/
+    - cp docker/staging/env.d/* ${STAGING_DIR}/env.d/
+    - cp docker/auth/realm.json ${PROJECT_DIR}/docker/auth/realm.json
+    - cp -r docker/keycloak/themes/aiobi ${PROJECT_DIR}/docker/keycloak/themes/aiobi
 
-    # Se placer dans le staging du host (monte via volumes runner)
+    # Se placer dans le staging du host
     - cd ${STAGING_DIR}
 
     # Creer les reseaux si necessaire
