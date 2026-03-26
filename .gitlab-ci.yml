@@ -32,7 +32,7 @@ build-backend:
   tags:
     - dev
     - docker
-  image: docker:24
+  image: docker:27
   script:
     - docker build
       --no-cache
@@ -48,7 +48,7 @@ build-frontend:
   tags:
     - dev
     - docker
-  image: docker:24
+  image: docker:27
   script:
     - docker build
       --no-cache
@@ -81,7 +81,7 @@ deploy-staging:
   tags:
     - dev
     - docker
-  image: docker:24
+  image: docker:27
   before_script:
     - apk add --no-cache docker-cli-compose curl
   script:
