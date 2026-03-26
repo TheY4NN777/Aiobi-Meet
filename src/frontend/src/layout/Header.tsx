@@ -15,34 +15,14 @@ import { VisualOnlyTooltip } from '@/primitives/VisualOnlyTooltip'
 import { useLoginHint } from '@/hooks/useLoginHint'
 
 const Logo = () => (
-  <span
+  <img
+    src="/assets/logo.svg"
+    alt={`${import.meta.env.VITE_APP_TITLE}`}
     className={`Header-logo ${css({
-      display: 'flex',
-      alignItems: 'flex-end',
-      gap: '0.35rem',
+      maxHeight: { base: '40px', sm: '50px' },
+      marginTop: { base: '10px', sm: '5px' },
     })}`}
-  >
-    <img
-      src="/assets/logo.svg"
-      alt={`${import.meta.env.VITE_APP_TITLE}`}
-      className={css({
-        maxHeight: { base: '64px', sm: '80px' },
-      })}
-    />
-    <span
-      className={css({
-        fontFamily: '"HK Grotesk", "Hanken Grotesk", sans-serif',
-        fontWeight: 800,
-        fontSize: { base: '0.75rem', sm: '0.95rem' },
-        color: '#0F1010',
-        letterSpacing: '0.01em',
-        lineHeight: 1,
-        marginBottom: { base: '3px', sm: '4px' },
-      })}
-    >
-      Meet
-    </span>
-  </span>
+  />
 )
 
 const LoginHint = () => {

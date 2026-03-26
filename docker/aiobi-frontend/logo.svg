@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Calque_1" data-name="Calque 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 476.09">
+<svg id="Calque_1" data-name="Calque 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1420 476.09">
   <defs>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@800&amp;display=swap');
       .cls-1 {
         fill-rule: evenodd;
+      }
+      .meet-text {
+        font-family: 'Hanken Grotesk', 'HK Grotesk', sans-serif;
+        font-weight: 800;
+        font-size: 220px;
+        fill: #0F1010;
       }
     </style>
   </defs>
@@ -15,4 +22,5 @@
     <path class="cls-1" d="M461.7,153.32v57.14l21.96,10.98c3.01,1.5,6.55-.68,6.55-4.05v-71c0-3.36-3.54-5.55-6.55-4.05l-21.96,10.98Z"/>
     <path class="cls-1" d="M556.65,153.32v57.14l21.96,10.98c3.01,1.5,6.55-.68,6.55-4.05v-71c0-3.36-3.54-5.55-6.55-4.05l-21.96,10.98Z"/>
   </g>
+  <text class="meet-text" x="930" y="440">Meet</text>
 </svg>
