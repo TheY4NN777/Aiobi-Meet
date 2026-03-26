@@ -69,15 +69,17 @@ deploy-staging:
     - apk add --no-cache docker-cli-compose
   script:
     # Copier les fichiers staging du CI vers le host (sauf .env)
-    - cp docker/staging/compose*.yaml ${STAGING_DIR}/
-    - cp docker/staging/default.conf.template ${STAGING_DIR}/
-    - cp docker/staging/livekit-server.yaml ${STAGING_DIR}/
-    - cp docker/staging/env.d/* ${STAGING_DIR}/env.d/
-    - cp docker/auth/realm.json ${PROJECT_DIR}/docker/auth/realm.json
-    - cp -r docker/keycloak/themes/aiobi ${PROJECT_DIR}/docker/keycloak/themes/aiobi
+    - export HOST_STAGING=/home/ogu/theY4NN/AïobiMeet/docker/staging
+    - export HOST_PROJECT=/home/ogu/theY4NN/AïobiMeet
+    - cp docker/staging/compose*.yaml $HOST_STAGING/
+    - cp docker/staging/default.conf.template $HOST_STAGING/
+    - cp docker/staging/livekit-server.yaml $HOST_STAGING/
+    - cp docker/staging/env.d/* $HOST_STAGING/env.d/
+    - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
+    - cp -r docker/keycloak/themes/aiobi/. $HOST_PROJECT/docker/keycloak/themes/aiobi/
 
     # Se placer dans le staging du host
-    - cd ${STAGING_DIR}
+    - cd $HOST_STAGING
 
     # Creer les reseaux si necessaire
     - docker network create proxy-tier 2>/dev/null || true
