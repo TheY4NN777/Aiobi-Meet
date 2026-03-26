@@ -1,22 +1,19 @@
 # =============================================================================
 # Aïobi Meet — GitLab CI/CD Pipeline
 # =============================================================================
-# Registry : 10.13.13.1:5050/aiobi/ogun/aiobi-meet
-# Runners  : dev-serv-runner (dev, docker) | bbs-master-runner (docker, prod)
+# Runner  : dev-serv-runner (tags: dev, docker) sur le serveur de staging
+# Strategie : Build et deploy sur le meme serveur (pas de registry externe)
 # =============================================================================
 
 stages:
   - build
-  - deploy-staging
+  - deploy
 
 variables:
-  REGISTRY: 10.13.13.1:5050/aiobi/ogun/aiobi-meet
-  BACKEND_IMAGE: ${REGISTRY}/backend
-  FRONTEND_IMAGE: ${REGISTRY}/frontend
-  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: unix:///var/run/docker.sock
 
 # =============================================================================
-# BUILD — Construit et pousse les images Docker
+# BUILD — Construit les images Docker sur le serveur
 # =============================================================================
 
 build-backend:
@@ -25,21 +22,16 @@ build-backend:
     - dev
     - docker
   image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
   script:
     - docker build
       --target backend-production
-      --tag ${BACKEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
-      --tag ${BACKEND_IMAGE}:latest
+      --tag aiobi-meet/backend:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/backend:latest
       .
-    - docker push ${BACKEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
-    - docker push ${BACKEND_IMAGE}:latest
   only:
     - develop
-    - main
 
 build-frontend:
   stage: build
@@ -47,43 +39,31 @@ build-frontend:
     - dev
     - docker
   image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
   script:
     - docker build
       --file docker/aiobi-frontend/Dockerfile
       --target frontend-production
-      --tag ${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
-      --tag ${FRONTEND_IMAGE}:latest
+      --tag aiobi-meet/frontend:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/frontend:latest
       .
-    - docker push ${FRONTEND_IMAGE}:${CI_COMMIT_SHORT_SHA}
-    - docker push ${FRONTEND_IMAGE}:latest
   only:
     - develop
-    - main
 
 # =============================================================================
-# DEPLOY STAGING — Deploie sur le serveur de dev (161.97.179.176)
+# DEPLOY — Deploie le staging sur le serveur
 # =============================================================================
 
 deploy-staging:
-  stage: deploy-staging
+  stage: deploy
   tags:
     - dev
     - docker
-  image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  image: docker/compose:2.24.0
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
   script:
-    - echo "Pulling latest images..."
-    - docker pull ${BACKEND_IMAGE}:latest
-    - docker pull ${FRONTEND_IMAGE}:latest
-
-    - echo "Deploying staging stack..."
     - cd docker/staging
 
     # Generer le .env depuis les variables CI/CD
@@ -111,7 +91,7 @@ deploy-staging:
       DOCKER_USER=${DOCKER_USER}
       ENVEOF
 
-    # Creer le reseau si necessaire
+    # Creer les reseaux si necessaire
     - docker network create proxy-tier 2>/dev/null || true
     - docker network create staging-app 2>/dev/null || true
 
@@ -120,8 +100,7 @@ deploy-staging:
     - docker compose -f compose.keycloak.yaml up -d
     - docker compose -f compose.yaml up -d
 
-    # Attendre que le backend soit healthy
-    - echo "Waiting for backend to be healthy..."
+    # Attendre le backend
     - |
       for i in $(seq 1 30); do
         if docker compose -f compose.yaml exec -T backend python manage.py check 2>/dev/null; then
@@ -139,3 +118,6 @@ deploy-staging:
     url: https://aiobi-meet.duckdns.org
   only:
     - develop
+  needs:
+    - build-backend
+    - build-frontend
