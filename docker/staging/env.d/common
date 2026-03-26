@@ -19,11 +19,13 @@ DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo.svg"
 MEET_BASE_URL="https://${MEET_HOST}:8443"
 
 # OIDC — Keycloak sur le meme domaine (path-based routing)
-OIDC_OP_JWKS_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/certs
+# Browser-facing (HTTPS public) — le navigateur appelle ces URLs directement
 OIDC_OP_AUTHORIZATION_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/auth
-OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/token
-OIDC_OP_USER_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/userinfo
 OIDC_OP_LOGOUT_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/logout
+# Server-to-server (HTTP interne Docker) — evite TLS + DNS + nginx-proxy round-trip
+OIDC_OP_JWKS_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/certs
+OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/token
+OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/userinfo
 
 OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
 OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}

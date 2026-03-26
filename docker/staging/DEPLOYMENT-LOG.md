@@ -134,17 +134,89 @@ network staging-app declared as external, but could not be found
 
 ---
 
-## Etat actuel
+## Erreur 11 — Port 80 deja occupe par nginx natif
 
-**Derniere pipeline** : En attente de retry apres correction erreur 10.
-**Build backend** : A tester (jamais reussi a build)
-**Build frontend** : A tester (jamais reussi a build)
-**Deploy** : A tester (Keycloak + app jamais lances)
+**Date** : 26 mars 2026 — Pipeline #6
+**Erreur** :
+```
+failed to bind host port 0.0.0.0:80/tcp: address already in use
+```
+**Cause** : Le nginx natif du serveur utilise les ports 80/443 pour ERPNext, Eshu, Traccar, etc.
+**Solution** : nginx-proxy Docker ecoute sur 8880 (HTTP) et 8443 (HTTPS). Fichier `nginx-host-proxy.conf` installe dans le nginx natif pour proxier les challenges ACME.
+**Commit** : `207b11b9`
 
-### Ce qui reste pour que le staging fonctionne
+---
 
-1. Pipeline build + deploy passe au vert
-2. Installer `nginx-host-proxy.conf` dans le nginx natif du serveur
-3. Ouvrir le port 8443 dans UFW
-4. Configurer DuckDNS (cron)
-5. Verifier l'acces via `https://aiobi-meet.duckdns.org:8443`
+## Erreur 12 — Keycloak KC_HOSTNAME double https:// et port
+
+**Date** : 26 mars 2026
+**Erreur** : `GET https://https//aiobi-meet.duckdns.org:8443:8443/js/keycloak.js net::ERR_NAME_NOT_RESOLVED`
+**Cause** : `KC_HOSTNAME=https://${MEET_HOST}:8443` — Keycloak ajoutait le schema lui-meme, ce qui doublait le `https://`.
+**Solution** : Utiliser `KC_HOSTNAME_URL=https://${MEET_HOST}:8443` et `KC_HOSTNAME_ADMIN_URL` pour Keycloak 20.x.
+**Commit** : `518df9ef` puis `efd689e4`
+
+---
+
+## Erreur 13 — Django admin intercepte /admin/master/console/
+
+**Date** : 26 mars 2026
+**Erreur** : L'URL `/admin/master/console/` affichait "Administration de Django" au lieu de Keycloak admin.
+**Cause** : Le `location /admin` dans nginx routait tout vers Django, y compris les paths Keycloak admin.
+**Solution** : Ajout de `location /admin/master/` et `location /admin/realms/` avant `location /admin` pour router vers Keycloak en priorite.
+**Commit** : `8e8ad5ed`
+
+---
+
+## Erreur 14 — KEYCLOAK_ADMIN vs KC_BOOTSTRAP_ADMIN (Keycloak 20.x)
+
+**Date** : 26 mars 2026
+**Erreur** : Login admin Keycloak echoue avec "Invalid credentials".
+**Cause** : Keycloak 20.0.1 utilise `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD`, pas `KC_BOOTSTRAP_ADMIN_USERNAME` / `KC_BOOTSTRAP_ADMIN_PASSWORD` (introduit en KC 21+).
+**Solution** : Mapper les variables dans `env.d/keycloak` : `KEYCLOAK_ADMIN=${KC_BOOTSTRAP_ADMIN_USERNAME}`.
+**Commit** : `999c71c6`
+
+---
+
+## Erreur 15 — Client OIDC secret mismatch
+
+**Date** : 26 mars 2026
+**Erreur** : OIDC login echoue — `invalid_client` ou `redirect_uri` invalide.
+**Cause** : Le `realm.json` importe le secret `ThisIsAnExampleKeyForDevPurposeOnly` mais le backend utilise la valeur de `OIDC_RP_CLIENT_SECRET` du `.env`.
+**Solution** : Mise a jour du secret via l'API REST Keycloak admin (curl PUT sur `/admin/realms/meet/clients/{id}`).
+
+---
+
+## Erreur 16 — Mixed Content bloque Keycloak admin console
+
+**Date** : 26 mars 2026
+**Erreur** : `Mixed Content: loaded over HTTPS, but requested insecure XMLHttpRequest endpoint http://aiobi-meet.duckdns.org:8083/admin/realms/`
+**Cause** : Keycloak fait des appels internes via HTTP que le navigateur bloque en contexte HTTPS.
+**Solution** : Configuration du client via l'API REST Keycloak (`curl` en interne via `docker exec`) au lieu de l'interface web.
+
+---
+
+## Erreur 17 — Frontend 502 Bad Gateway (upstream meet_frontend)
+
+**Date** : 26 mars 2026
+**Erreur** : `502 Bad Gateway` sur toutes les pages.
+**Cause** : Le `default.conf.template` definissait un upstream `frontend:8080` mais le template remplacait la config SPA originale qui ecoutait sur 8080. Le port 8080 n'existait plus.
+**Solution** : Dual-server nginx config — un server sur 8080 (SPA statique) et un sur 8083 (reverse proxy). Le proxy route `/` vers `127.0.0.1:8080` (local).
+**Commit** : `a3caf7c8`
+
+---
+
+## Etat actuel (26 mars 2026, 15h)
+
+**Pipeline CI/CD** : Vert (build backend + frontend + deploy)
+**nginx-proxy** : Fonctionnel (ports 8880/8443, certificats Let's Encrypt test)
+**Keycloak** : Fonctionnel, realm "meet" importe, client OIDC configure
+**Backend Django** : Fonctionnel (healthy), migrations appliquees
+**Frontend** : Fonctionnel, SPA charge sur `https://aiobi-meet.duckdns.org:8443`
+**OIDC** : Client secret synchronise, redirect URIs configures
+
+### Ce qui reste
+
+1. Passer en vrais certificats TLS (`LETSENCRYPT_TEST=false`)
+2. Configurer le cron DuckDNS
+3. Tester le flux complet : login OIDC → creation de salle → visioconference
+4. Tester LiveKit (WebRTC) via `aiobi-livekit.duckdns.org:8443`
