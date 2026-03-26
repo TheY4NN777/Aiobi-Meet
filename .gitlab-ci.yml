@@ -2,7 +2,14 @@
 # Aïobi Meet — GitLab CI/CD Pipeline
 # =============================================================================
 # Runner  : dev-serv-runner (tags: dev, docker) sur le serveur de staging
-# Strategie : Build et deploy sur le meme serveur (pas de registry externe)
+# Strategie : Build et deploy sur le meme serveur via Docker socket
+#
+# Prerequis runner config.toml :
+#   volumes = ["/var/run/docker.sock:/var/run/docker.sock",
+#              "/home/ogu/theY4NN/AïobiMeet:/home/ogu/theY4NN/AïobiMeet",
+#              "/cache"]
+#
+# Le .env doit etre present sur le serveur dans docker/staging/.env
 # =============================================================================
 
 stages:
@@ -11,6 +18,7 @@ stages:
 
 variables:
   DOCKER_HOST: unix:///var/run/docker.sock
+  STAGING_DIR: /home/ogu/theY4NN/AïobiMeet/docker/staging
 
 # =============================================================================
 # BUILD — Construit les images Docker sur le serveur
@@ -22,8 +30,6 @@ build-backend:
     - dev
     - docker
   image: docker:24
-  variables:
-    DOCKER_HOST: unix:///var/run/docker.sock
   script:
     - docker build
       --target backend-production
@@ -39,8 +45,6 @@ build-frontend:
     - dev
     - docker
   image: docker:24
-  variables:
-    DOCKER_HOST: unix:///var/run/docker.sock
   script:
     - docker build
       --file docker/aiobi-frontend/Dockerfile
@@ -52,7 +56,7 @@ build-frontend:
     - develop
 
 # =============================================================================
-# DEPLOY — Deploie le staging sur le serveur
+# DEPLOY — Deploie le staging depuis les fichiers du host
 # =============================================================================
 
 deploy-staging:
@@ -61,34 +65,17 @@ deploy-staging:
     - dev
     - docker
   image: docker:24
-  variables:
-    DOCKER_HOST: unix:///var/run/docker.sock
   before_script:
-    - apk add --no-cache docker-compose docker-cli-compose
+    - apk add --no-cache docker-cli-compose git
   script:
-    - cd docker/staging
+    # Synchroniser le code sur le host
+    - git config --global --add safe.directory /home/ogu/theY4NN/AïobiMeet
+    - git -C /home/ogu/theY4NN/AïobiMeet fetch origin develop
+    - git -C /home/ogu/theY4NN/AïobiMeet checkout develop
+    - git -C /home/ogu/theY4NN/AïobiMeet reset --hard origin/develop
 
-    # Generer le .env depuis les variables CI/CD
-    - echo "MEET_HOST=${MEET_HOST}" > .env
-    - echo "LIVEKIT_HOST=${LIVEKIT_HOST}" >> .env
-    - echo "DUCKDNS_TOKEN=${DUCKDNS_TOKEN}" >> .env
-    - echo "LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}" >> .env
-    - echo "LETSENCRYPT_TEST=${LETSENCRYPT_TEST}" >> .env
-    - echo "DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}" >> .env
-    - echo "POSTGRES_DB=${POSTGRES_DB}" >> .env
-    - echo "POSTGRES_USER=${POSTGRES_USER}" >> .env
-    - echo "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}" >> .env
-    - echo "KC_POSTGRES_DB=${KC_POSTGRES_DB}" >> .env
-    - echo "KC_POSTGRES_USER=${KC_POSTGRES_USER}" >> .env
-    - echo "KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}" >> .env
-    - echo "KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}" >> .env
-    - echo "KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}" >> .env
-    - echo "OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}" >> .env
-    - echo "OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}" >> .env
-    - echo "LIVEKIT_API_KEY=${LIVEKIT_API_KEY}" >> .env
-    - echo "LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}" >> .env
-    - echo "REALM_NAME=${REALM_NAME}" >> .env
-    - echo "DOCKER_USER=${DOCKER_USER}" >> .env
+    # Se placer dans le staging du host (monte via volumes runner)
+    - cd ${STAGING_DIR}
 
     # Creer les reseaux si necessaire
     - docker network create proxy-tier 2>/dev/null || true
@@ -114,7 +101,7 @@ deploy-staging:
     - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
   environment:
     name: staging
-    url: https://aiobi-meet.duckdns.org
+    url: https://aiobi-meet.duckdns.org:8443
   only:
     - develop
   needs:
