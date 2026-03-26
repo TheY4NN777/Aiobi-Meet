@@ -154,13 +154,19 @@ services:
   livekit:
     image: livekit/livekit-server:latest
     restart: always
-    command: --config /config.yaml
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache gettext > /dev/null 2>&1 || true
+        envsubst < /config.template.yaml > /config.yaml
+        exec livekit-server --config /config.yaml
     ports:
       - "47881:47881/tcp"
       - "47882:47882/udp"
     volumes:
-      - ./livekit-server.yaml:/config.yaml
+      - ./livekit-server.yaml:/config.template.yaml:ro
     environment:
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
       - VIRTUAL_HOST=${LIVEKIT_HOST}
       - VIRTUAL_PORT=47880
       - LETSENCRYPT_HOST=${LIVEKIT_HOST}
