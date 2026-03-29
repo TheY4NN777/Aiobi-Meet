@@ -1,0 +1,47 @@
+services:
+  kc-postgresql:
+    image: postgres:16
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 1s
+      timeout: 2s
+      retries: 300
+    env_file:
+      - .env
+      - env.d/kc_postgresql
+    volumes:
+      - ./data/databases/keycloak:/var/lib/postgresql/data/pgdata
+    networks:
+      - default
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:20.0.1
+    restart: always
+    command: ["start", "--import-realm"]
+    env_file:
+      - .env
+      - env.d/kc_postgresql
+      - env.d/keycloak
+    environment:
+      - VIRTUAL_HOST=${KEYCLOAK_HOST}
+      - VIRTUAL_PORT=8080
+      - LETSENCRYPT_HOST=${KEYCLOAK_HOST}
+    volumes:
+      - ../../docker/auth/realm.json:/opt/keycloak/data/import/realm.json
+      - ../../docker/keycloak/themes/aiobi:/opt/keycloak/themes/aiobi
+    depends_on:
+      kc-postgresql:
+        condition: service_healthy
+        restart: true
+    networks:
+      - proxy-tier
+      - default
+      - prod-app
+
+networks:
+  proxy-tier:
+    external: true
+  prod-app:
+    name: prod-app
+  default:

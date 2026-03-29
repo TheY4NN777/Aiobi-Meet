@@ -1,0 +1,193 @@
+services:
+  # ---------------------------------------------------------------------------
+  # Base de donnees
+  # ---------------------------------------------------------------------------
+  postgresql:
+    image: postgres:16
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 1s
+      timeout: 2s
+      retries: 300
+    env_file:
+      - .env
+      - env.d/postgresql
+    command: >
+      postgres
+      -c shared_buffers=4GB
+      -c effective_cache_size=12GB
+      -c work_mem=64MB
+      -c maintenance_work_mem=512MB
+    volumes:
+      - ./data/databases/backend:/var/lib/postgresql/data
+    networks:
+      - default
+
+  redis:
+    image: redis:5
+    restart: always
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Stockage S3 (MinIO)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${POSTGRES_USER}
+      MINIO_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/media:/data
+    command: server /data --console-address :9001
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 1s
+      timeout: 20s
+      retries: 300
+    networks:
+      - default
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set meet http://minio:9000 $${POSTGRES_USER} $${POSTGRES_PASSWORD} &&
+      mc mb meet/meet-media-storage --ignore-existing;
+      "
+    env_file:
+      - .env
+      - env.d/postgresql
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Backend Django (Gunicorn — 6 workers)
+  # ---------------------------------------------------------------------------
+  backend:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/backend:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    env_file:
+      - .env
+      - env.d/common
+      - env.d/postgresql
+      - env.d/hosts
+    environment:
+      - GUNICORN_CMD_ARGS=--workers=6
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "check"]
+      interval: 15s
+      timeout: 30s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      postgresql:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_started
+      livekit:
+        condition: service_started
+    networks:
+      - default
+      - prod-app
+
+  # ---------------------------------------------------------------------------
+  # Celery worker (concurrency 4)
+  # ---------------------------------------------------------------------------
+  celery:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/backend:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A meet.celery_app worker -l INFO --concurrency=4
+    env_file:
+      - .env
+      - env.d/common
+      - env.d/postgresql
+      - env.d/hosts
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Frontend (Nginx — routing principal)
+  # Route: / -> SPA, /api -> backend, /admin -> backend, /media -> MinIO
+  # Keycloak n'est PAS route ici (sous-domaine dedie id.aiobi.world)
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/frontend:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    entrypoint:
+      - /docker-entrypoint.sh
+    command: ["nginx", "-g", "daemon off;"]
+    env_file:
+      - .env
+      - env.d/common
+      - env.d/hosts
+    environment:
+      - VIRTUAL_HOST=${MEET_HOST}
+      - VIRTUAL_PORT=8083
+      - LETSENCRYPT_HOST=${MEET_HOST}
+    volumes:
+      - ./default.conf.template:/etc/nginx/templates/default.conf.template
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - proxy-tier
+      - default
+      - prod-app
+
+  # ---------------------------------------------------------------------------
+  # Mailcatcher (temporaire — remplacer par SMTP reel plus tard)
+  # ---------------------------------------------------------------------------
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    restart: always
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # LiveKit (SFU WebRTC)
+  # ---------------------------------------------------------------------------
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: always
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed "s|__LIVEKIT_API_SECRET__|$LIVEKIT_API_SECRET|g" /config.template.yaml > /config.yaml
+        exec /livekit-server --config /config.yaml
+    ports:
+      - "47881:47881/tcp"
+      - "47882:47882/udp"
+    volumes:
+      - ./livekit-server.yaml:/config.template.yaml:ro
+    environment:
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - VIRTUAL_HOST=${LIVEKIT_HOST}
+      - VIRTUAL_PORT=47880
+      - LETSENCRYPT_HOST=${LIVEKIT_HOST}
+    depends_on:
+      redis:
+        condition: service_started
+    networks:
+      - proxy-tier
+      - default
+
+networks:
+  proxy-tier:
+    external: true
+  prod-app:
+    name: prod-app
+  default:
