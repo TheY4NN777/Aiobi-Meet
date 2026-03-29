@@ -1,5 +1,5 @@
 import { Screen } from '@/layout/Screen'
-import { Bold, H, P, Link } from '@/primitives'
+import { H, P } from '@/primitives'
 import { css } from '@/styled-system/css'
 import { HStack } from '@/styled-system/jsx'
 import { useTranslation } from 'react-i18next'
