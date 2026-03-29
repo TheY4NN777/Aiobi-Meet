@@ -1,5 +1,5 @@
 import { Screen } from '@/layout/Screen'
-import { Bold, H, P, A, Link } from '@/primitives'
+import { Bold, H, P, Link } from '@/primitives'
 import { css } from '@/styled-system/css'
 import { HStack } from '@/styled-system/jsx'
 import { useTranslation } from 'react-i18next'
@@ -41,31 +41,9 @@ export const LegalTermsRoute = () => {
         <P>{t('hosting.body')}</P>
 
         {/* Accessibilité section */}
-        <H lvl={2}>{t('accessibility.title')}</H>
-        <P>{t('accessibility.body')}</P>
-        <P>
-          {t('accessibility.more')}
-          <Link to="/accessibilite" color="primary">
-            {t('accessibility.link')}
-          </Link>
-        </P>
-
-        <P>
-          <Bold>{t('accessibility.status')}</Bold>
-        </P>
-
-        {/* Réutilisation des contenus et liens section */}
+        {/* Propriété intellectuelle */}
         <H lvl={2}>{t('reuse.title')}</H>
-        <P>
-          {t('reuse.body1')}{' '}
-          <A
-            href="https://www.etalab.gouv.fr/wp-content/uploads/2017/04/ETALAB-Licence-Ouverte-v2.0.pdf"
-            color="primary"
-          >
-            {t('reuse.license')}
-          </A>
-          .
-        </P>
+        <P>{t('reuse.body1')}</P>
         <P>{t('reuse.body2')}</P>
         <P>{t('reuse.body3')}</P>
       </HStack>

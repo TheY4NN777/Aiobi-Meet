@@ -28,10 +28,10 @@
     "status": "Etat d'accessibilité : non conforme"
   },
   "reuse": {
-    "title": "Réutilisation des contenus et liens",
-    "body1": "Sauf mention explicite de propriété intellectuelle détenue par des tiers, les contenus de ce site sont proposés sous ",
-    "license": "licence ouverte Etalab 2.0",
-    "body2": "Vous êtes notamment libres de les reproduire, copier, modifier, extraire, transformer, communiquer diffuser, redistribuer, publier, transmettre et exploiter sous réserve de mentionner leur source, leur date de dernière mise à jour et ne pas induire en erreur des tiers quant aux informations qui y figurent.",
+    "title": "Propriété intellectuelle",
+    "body1": "Tous droits réservés Aïobi.",
+    "license": "",
+    "body2": "Les contenus de ce site sont la propriété exclusive d'Aïobi. Toute reproduction, distribution ou utilisation sans autorisation écrite préalable est strictement interdite.",
     "body3": "Tout site public ou privé est autorisé à établir, sans autorisation préalable, un lien (y compris profond) vers les informations diffusées sur ce site."
   }
 }

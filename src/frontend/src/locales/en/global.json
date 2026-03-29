@@ -37,13 +37,13 @@
       "data": "Personal Data and Cookies",
       "accessibility": "Accessibility: non-compliant",
       "ariaLabel": "new window",
-      "codeAnnotation": "Our code is open and available on this",
-      "code": "Open Source Code Repository",
+      "codeAnnotation": "",
+      "code": "",
       "technicalDetails": "Technical Notice",
       "termsOfService": "Terms of service"
     },
-    "mentions": "Unless otherwise stated, the contents of this site are available under",
-    "license": "etalab 2.0 license"
+    "mentions": "",
+    "license": ""
   },
   "loginHint": {
     "title": "Log in with your account",

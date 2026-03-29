@@ -78,16 +78,6 @@ export const Footer = () => {
               {t('links.termsOfService')}
             </Link>
           </StyledLi>
-          <StyledLi divider>
-            <Link
-              underline={false}
-              footer="minor"
-              to="/accessibilite"
-              aria-label={t('links.accessibility')}
-            >
-              {t('links.accessibility')}
-            </Link>
-          </StyledLi>
         </SecondRow>
 
       </InnerContainer>

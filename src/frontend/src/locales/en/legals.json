@@ -28,10 +28,10 @@
     "status": "Accessibility status: non-compliant"
   },
   "reuse": {
-    "title": "Content Reuse and Links",
-    "body1": "Unless explicitly mentioned of intellectual property held by third parties, the contents of this site are offered under ",
-    "license": "Etalab 2.0 open license",
-    "body2": "You are particularly free to reproduce, copy, modify, extract, transform, communicate, distribute, redistribute, publish, transmit and exploit them provided you mention their source, their date of last update and do not mislead third parties regarding the information contained therein.",
+    "title": "Intellectual Property",
+    "body1": "All rights reserved Aïobi.",
+    "license": "",
+    "body2": "The contents of this site are the exclusive property of Aïobi. Any reproduction, distribution, or use without prior written authorization is strictly prohibited.",
     "body3": "Any public or private site is authorized to establish, without prior authorization, a link (including deep link) to the information disseminated on this site."
   }
 }
