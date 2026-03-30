@@ -10,7 +10,7 @@ We appreciate your effort to make Aïobi Meet more secure.
 
 ## Vulnerability disclosure policy
 
-Working with security issues in an open source project can be challenging, as we are required to disclose potential problems that could be exploited by attackers. With this in mind, our security fix policy is as follows:
+Working with security issues in a project can be challenging, as we are required to disclose potential problems that could be exploited by attackers. With this in mind, our security fix policy is as follows:
 
 1. The Maintainers team will handle the fix as usual (Pull Request,
    release).
@@ -20,4 +20,4 @@ Working with security issues in an open source project can be challenging, as we
 3. Once this grace period has passed, we will publish the vulnerability.
 
 By adhering to this security policy, we aim to address security concerns
-effectively and responsibly in our open source software project.
+effectively and responsibly in our software project.

@@ -83,3 +83,8 @@ docker/livekit/out
 
 # LiveKit CA configuration
 docker/livekit/rootCA.pem
+
+# Staging secrets and data
+docker/staging/.env
+docker/staging/data/
+.claude/

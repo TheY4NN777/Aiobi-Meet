@@ -1,37 +1,101 @@
 {
-  "title": "Legal Notice",
-  "creator": {
-    "title": "Publisher",
-    "body": "The Aïobi Meet service is published by Aïobi located at:",
-    "contact": {
-      "title": "Contact Information",
-      "address": "[AÏOBI_ADDRESS]",
-      "city": "[AÏOBI_ADDRESS]",
-      "phone": "[AÏOBI_PHONE]",
-      "siret": "SIRET: [AÏOBI_SIRET]",
-      "siren": "SIREN: [AÏOBI_SIREN]"
+  "title": "Politique de Confidentialité",
+  "preamble": {
+    "title": "Préambule",
+    "paragraphs": [
+      "La présente politique de confidentialité s'adresse à vous, en votre qualité d'utilisateur de l'Outil. L'Outil créé par la société BAYBOW rédacteur des présentes, met en œuvre des traitements de données à caractère personnel.",
+      "La Société BAYBOW accorde une grande importance au respect de votre vie privée et à la Protection des données à caractère personnel. A ce titre, nous nous engageons à une application stricte de la règlementation en matière de protection des données personnelles à savoir la loi numéro 2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel, entrée en vigueur depuis août 2013.",
+      "La présente politique de confidentialité a pour objectif de vous informer sur les engagements et les mesures prises par la société BAYBOW afin de veiller au respect de votre vie privée et à la protection de vos données à caractère personnel."
+    ]
+  },
+  "section1": {
+    "title": "1. Responsable de traitement",
+    "content": "La société BAYBOW est le Responsable de traitement des données à caractère personnel mis en œuvre dans le cadre de l'utilisation de l'Outil."
+  },
+  "section2": {
+    "title": "2. Objet du traitement de données",
+    "table": {
+      "headers": ["Données Collectées", "Finalités", "Bases Légales", "Durée de Conservation"],
+      "rows": [
+        ["Données d'identification", "Fournir le service de visioconférence et d'assistance automatisée", "Consentement", "1 an"],
+        ["Données de connexion", "Améliorer la qualité, la précision et la performance de l'Outil", "Intérêt légitime", "1 an"],
+        ["Données techniques et analytiques générées", "Gérer les relations contractuelles et la communication avec les utilisateurs", "Obligation légale", "6 mois"],
+        ["Données de navigation sur le site", "La réalisation d'analyse de fréquentation et d'utilisation d'éléments du Site", "Consentement", "6 mois"],
+        ["Nom, prénom, Adresse postale, email, Carte d'identité", "La gestion des demandes d'exercices de droits", "Obligation légale", "1 an"]
+      ]
     }
   },
-  "director": {
-    "title": "Publication Director",
-    "body": "The publication director is [AÏOBI_DIRECTOR]."
+  "section3": {
+    "title": "3. Destinataires des données",
+    "intro": "Sont destinataires de tout ou partie des données :",
+    "items": [
+      "Les services internes de la société BAYBOW, dans ce cas, seules les données strictement nécessaires à la réalisation du traitement sont transmises aux seuls collaborateurs habilités à les consulter en raison de leurs fonctions. Ces collaborateurs ayant accès à vos données personnelles sont par ailleurs soumis à une obligation de confidentialité ;",
+      "Nos sous-traitants, à la condition qu'ils présentent les garanties suffisantes au regard des exigences du Règlement Général sur la Protection des Données ;",
+      "Les tiers susceptibles de déposer des cookies sur votre terminal lorsque vous y avez consenti."
+    ],
+    "outro": "Vos données ne sont communiquées, échangées à aucune autre personne que celles mentionnées ci-dessus."
   },
-  "hosting": {
-    "title": "Hosting",
-    "body": "The service is hosted by [AÏOBI_HOSTING_PROVIDER]."
+  "section4": {
+    "title": "4. Les cookies",
+    "paragraphs": [
+      "Le Site utilise des cookies. Lors de vos visites sur le Site, des cookies sont déposés sur votre terminal. Vous pouvez vous informer sur la nature des cookies déposés, les accepter ou les refuser.",
+      "Un cookie est un petit fichier texte déposé sur le disque dur de votre terminal lors de votre visite sur un site internet. Il enregistre certaines informations sur votre navigation ou sur votre comportement en ligne.",
+      "Les cookies utilisés sur le Site servent à vous différencier pour améliorer votre navigation et les services que nous proposons. En pratique, les cookies techniques nous permettent de vous authentifier et de vous identifier.",
+      "D'autres cookies de mesure d'audience et traceurs peuvent nous servir à établir des statistiques d'audience du Site (mesure du nombre de visites, du nombre de pages vues, de votre activité, de votre fréquence de retour, etc).",
+      "En tout état de cause, les cookies stockés dans votre terminal ou tout autre élément utilisé pour vous identifier à des fins de statistiques d'audience auront une durée de vie limitée à six (6) mois maximum, cette durée n'étant pas prorogée automatiquement lors de vos nouvelles visites sur le Site.",
+      "Vous disposez du droit de revenir à tout moment sur votre consentement à ce que de tels cookies soient déposés sur votre terminal."
+    ]
   },
-  "accessibility": {
-    "title": "Accessibility",
-    "body": "Compliance with digital accessibility standards is a future objective. The site has not yet been audited. However, the team strives to create a site accessible to all by following RGAA recommendations.",
-    "more": "For more information: ",
-    "link": "link to accessibility page",
-    "status": "Accessibility status: non-compliant"
+  "section5": {
+    "title": "5. Sécurité des données",
+    "paragraphs": [
+      "La société BAYBOW met en place des mesures techniques et organisationnelles afin d'assurer la sécurité des traitements de données à caractère personnel et la confidentialité des données collectées.",
+      "A ce titre, nous prenons toutes les précautions utiles, au regard de la nature des données et des risques représentés par les traitements pour en préserver la sécurité et, notamment, empêcher que les données soient déformées, endommagées, ou que des tiers non autorisés y aient accès (protection physique des locaux, protocole https sécurisé, journalisation et traçabilité des connexions aux logiciels déployés en interne.)",
+      "Cependant, si un incident impactant l'intégrité ou la confidentialité des données de l'utilisateur est porté à la connaissance de BAYBOW, cette dernière s'engage à informer l'utilisateur et lui communiquer les mesures correctives prises."
+    ]
   },
-  "reuse": {
-    "title": "Content Reuse and Links",
-    "body1": "Unless explicitly mentioned of intellectual property held by third parties, the contents of this site are offered under ",
-    "license": "Etalab 2.0 open license",
-    "body2": "You are particularly free to reproduce, copy, modify, extract, transform, communicate, distribute, redistribute, publish, transmit and exploit them provided you mention their source, their date of last update and do not mislead third parties regarding the information contained therein.",
-    "body3": "Any public or private site is authorized to establish, without prior authorization, a link (including deep link) to the information disseminated on this site."
+  "section6": {
+    "title": "6. Vos droits",
+    "intro": "Conformément à la loi numéro 2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel, et au Règlement Général à la Protection des Données Personnelles, vous disposez des droits suivants :",
+    "rights": [
+      {
+        "name": "Droit d'accès et d'information",
+        "description": "vous pouvez demander la consultation de vos données traitées et être informé sur les circonstances de ce traitement."
+      },
+      {
+        "name": "Droit à la limitation du traitement des données personnelles",
+        "description": "vous pouvez obtenir la limitation du traitement de vos données personnelles en contestant leur exactitude, la licéité du traitement, lorsque vous vous opposez à celui-ci, ou lorsque vous souhaitez leur conservation à des fins de preuve."
+      },
+      {
+        "name": "Droit de rectification et d'effacement",
+        "description": "vous pouvez demander la rectification de vos données lorsqu'elles sont inexactes ou incomplètes."
+      },
+      {
+        "name": "Droit d'opposition",
+        "description": "vous pouvez vous opposer au traitement de vos données réalisé sur le Site. Néanmoins, BAYBOW est en droit de ne pas répondre à cette demande si elle dispose de motifs légitimes et impérieux au traitement de vos données."
+      },
+      {
+        "name": "Droit à la portabilité",
+        "description": "vous pouvez obtenir vos données fournies à BAYBOW dans un format structuré, couramment utilisé et lisible par machine ou bien obtenir la transmission de ces données à un autre responsable de traitement."
+      },
+      {
+        "name": "Droit de définir le sort de vos données après votre mort",
+        "description": "et de choisir que nous communiquions ou non vos données à un tiers que vous aurez préalablement désigné. En cas de décès et à défaut d'instructions de votre part, nous nous engageons à détruire vos données, sauf si leur conservation s'avère nécessaire à des fins probatoires ou pour répondre à une obligation légale."
+      },
+      {
+        "name": "Droit d'introduire une réclamation",
+        "description": "vous disposez également du droit d'introduire une réclamation auprès des autorités compétentes."
+      }
+    ]
+  },
+  "section7": {
+    "title": "7. Coordonnées du délégué à la protection des données",
+    "paragraphs": [
+      "Vous pouvez exercer ces droits auprès du Délégué à la protection des données aux adresses suivantes :",
+      "Notre correspondant à la protection des données prendra en charge votre préoccupation dans un délai de 15 jours ouvrables. En cas de nécessité d'enquête sur la réclamation, le délai sera d'un mois, après information de la personne concernée.",
+      "L'auteur de cette demande doit indiquer ses coordonnées (nom, prénom, adresse et une copie d'un titre d'identité signé) et un motif légitime lorsque celui-ci est exigé par la loi (notamment en cas d'opposition).",
+      "En cas de communication d'une copie de pièce d'identité, cette dernière sera conservée un ou trois ans lorsque cette communication est effectuée dans le cadre de l'exercice d'un droit d'opposition.",
+      "En cas d'insatisfaction, vous disposez d'un recours auprès de L'Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire (ARTCI), en sa qualité d'autorité de protection des données à caractère personnel."
+    ]
   }
 }

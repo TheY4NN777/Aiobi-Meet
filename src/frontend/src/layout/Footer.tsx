@@ -62,10 +62,10 @@ export const Footer = () => {
             <Link
               underline={false}
               footer="minor"
-              to="/mentions-legales"
-              aria-label={t('links.legalsTerms')}
+              to="/politique-confidentialite"
+              aria-label={t('links.privacyPolicy')}
             >
-              {t('links.legalsTerms')}
+              {t('links.privacyPolicy')}
             </Link>
           </StyledLi>
           <StyledLi divider>
@@ -76,16 +76,6 @@ export const Footer = () => {
               aria-label={t('links.termsOfService')}
             >
               {t('links.termsOfService')}
-            </Link>
-          </StyledLi>
-          <StyledLi divider>
-            <Link
-              underline={false}
-              footer="minor"
-              to="/accessibilite"
-              aria-label={t('links.accessibility')}
-            >
-              {t('links.accessibility')}
             </Link>
           </StyledLi>
         </SecondRow>

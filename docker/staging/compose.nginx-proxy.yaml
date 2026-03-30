@@ -1,0 +1,41 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "8880:80"
+      - "8443:443"
+    volumes:
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d
+      - ./vhost.d/aiobi-meet.duckdns.org:/etc/nginx/vhost.d/aiobi-meet.duckdns.org:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxy-tier
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    restart: always
+    environment:
+      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy-tier
+
+networks:
+  proxy-tier:
+    name: proxy-tier
+
+volumes:
+  html:
+  certs:
+  vhost:
+  acme:

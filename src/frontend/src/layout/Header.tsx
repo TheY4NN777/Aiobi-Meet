@@ -19,8 +19,8 @@ const Logo = () => (
     src="/assets/logo.svg"
     alt={`${import.meta.env.VITE_APP_TITLE}`}
     className={`Header-logo ${css({
-      maxHeight: { base: '40px', sm: '50px' },
-      marginTop: { base: '10px', sm: '5px' },
+      maxWidth: { base: '160px', sm: '200px' },
+      marginTop: { base: '4px', sm: '2px' },
     })}`}
   />
 )
@@ -87,7 +87,6 @@ export const Header = () => {
   const { t } = useTranslation()
   const isHome = useMatchesRoute('home')
   const isLegalTerms = useMatchesRoute('legalTerms')
-  const isAccessibility = useMatchesRoute('accessibility')
   const isTermsOfService = useMatchesRoute('termsOfService')
   const isRoom = useMatchesRoute('room')
   const { user, isLoggedIn, logout } = useUser()
@@ -150,7 +149,6 @@ export const Header = () => {
               {isLoggedIn === false &&
                 !isHome &&
                 !isLegalTerms &&
-                !isAccessibility &&
                 !isTermsOfService && (
                   <>
                     <LoginButton proConnectHint={false} />

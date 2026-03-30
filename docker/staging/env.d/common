@@ -1,0 +1,50 @@
+# Django
+DJANGO_ALLOWED_HOSTS=${MEET_HOST}
+DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+DJANGO_SETTINGS_MODULE=meet.settings
+DJANGO_CONFIGURATION=Production
+
+# Python
+PYTHONPATH=/app
+
+# Mail — staging utilise mailcatcher (pas de vrai SMTP)
+DJANGO_EMAIL_HOST=mailcatcher
+DJANGO_EMAIL_PORT=1025
+DJANGO_EMAIL_FROM=noreply@aiobi-meet.duckdns.org
+
+DJANGO_EMAIL_BRAND_NAME="Aïobi Meet"
+DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo.svg"
+
+# Backend url
+MEET_BASE_URL="https://${MEET_HOST}:8443"
+
+# OIDC — Keycloak sur le meme domaine (path-based routing)
+# Browser-facing (HTTPS public) — le navigateur appelle ces URLs directement
+OIDC_OP_AUTHORIZATION_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/auth
+OIDC_OP_LOGOUT_ENDPOINT=https://${MEET_HOST}:8443/realms/${REALM_NAME}/protocol/openid-connect/logout
+# Server-to-server (HTTP interne Docker) — evite TLS + DNS + nginx-proxy round-trip
+OIDC_OP_JWKS_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/certs
+OIDC_OP_TOKEN_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/token
+OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-connect/userinfo
+
+OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+OIDC_RP_SIGN_ALGO=RS256
+OIDC_RP_SCOPES="openid email"
+
+LOGIN_REDIRECT_URL=https://${MEET_HOST}:8443
+LOGIN_REDIRECT_URL_FAILURE=https://${MEET_HOST}:8443
+LOGOUT_REDIRECT_URL=https://${MEET_HOST}:8443
+
+OIDC_REDIRECT_ALLOWED_HOSTS=["https://${MEET_HOST}:8443"]
+
+# LiveKit
+LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+LIVEKIT_API_URL=https://${LIVEKIT_HOST}:8443
+ALLOW_UNREGISTERED_ROOMS=False
+
+# Features
+FRONTEND_USE_FRENCH_GOV_FOOTER=False
+FRONTEND_USE_PROCONNECT_BUTTON=False
+EXTERNAL_API_ENABLED=True

@@ -1,18 +1,14 @@
 <p align="center">
-  <img alt="Aïobi Meet logo" src="./docs/assets/banner-meet-fr.png" maxWidth="100%">
+  <img alt="Aïobi Meet logo" src="./src/frontend/public/assets/logo.svg" height="80">
 </p>
 
-
+<h1 align="center">Aïobi Meet</h1>
 <p align="center">
   <a href="https://github.com/TheY4NN777/Aiobi-Meet/stargazers/">
     <img src="https://img.shields.io/github/stars/TheY4NN777/Aiobi-Meet" alt="">
   </a>
-  <a href='http://makeapullrequest.com'><img alt='PRs Welcome' src='https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=shields'/></a>
   <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/TheY4NN777/Aiobi-Meet"/>
   <img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed/TheY4NN777/Aiobi-Meet"/>
-  <a href="https://github.com/TheY4NN777/Aiobi-Meet/blob/main/LICENSE">
-    <img alt="License" src="https://img.shields.io/github/license/TheY4NN777/Aiobi-Meet"/>
-  </a>
 </p>
 
 <p align="center">
@@ -41,7 +37,7 @@ Powered by [LiveKit](https://livekit.io/), Aïobi Meet offers Zoom-level perform
   - SVC codecs (VP9, AV1)
 
 
-Aïobi Meet is fully self-hostable and released under the MIT License, ensuring complete control and flexibility.
+Aïobi Meet is fully self-hostable, ensuring complete control and flexibility.
 
 We're continuously adding new features to enhance your experience, with the latest updates coming soon!
 
@@ -50,9 +46,7 @@ We're continuously adding new features to enhance your experience, with the late
 - [Get started](#get-started)
 - [Docs](#docs)
 - [Self-host](#self-host)
-- [Contributing](#contributing)
 - [Philosophy](#philosophy)
-- [Open source](#open-source)
 
 
 ## Get started
@@ -73,35 +67,19 @@ We support Docker Compose deployment. Check out the [docs](/docs/installation/RE
 > Some advanced features (ex: recording, transcription) lack detailed documentation. We're working hard to provide comprehensive guides soon.
 
 
-## Contributing
-
-We <3 contributions of any kind, big and small:
-
-- Open a PR (see our instructions on [developing Aïobi Meet locally](https://github.com/TheY4NN777/Aiobi-Meet/blob/main/docs/developping_locally.md))
-- Submit a [feature request](https://github.com/TheY4NN777/Aiobi-Meet/issues/new?assignees=&labels=enhancement&template=Feature_request.md) or [bug report](https://github.com/TheY4NN777/Aiobi-Meet/issues/new?assignees=&labels=bug&template=Bug_report.md)
-
-
 ## Philosophy
 
-We're relentlessly focused on building the best open-source video conferencing product—Aïobi Meet. Growth comes from creating something people truly need, not just from chasing metrics.
+We're relentlessly focused on building the best video conferencing product—Aïobi Meet. Growth comes from creating something people truly need, not just from chasing metrics.
 
 Our users come first. We're committed to making Aïobi Meet as accessible and easy to use as proprietary solutions, ensuring it meets the highest standards.
 
 Most of the heavy engineering is handled by the incredible LiveKit team, allowing us to focus on delivering a top-tier product. We follow extreme programming practices, favoring pair programming and quick, iterative releases. Challenge our tech and architecture—simplicity is always our top priority.
 
 
-## Open-source
-
-This project is available under [MIT license](https://github.com/TheY4NN777/Aiobi-Meet/blob/main/LICENSE).
-
-All features we develop will always remain open-source, and we are committed to contributing back to the LiveKit community whenever feasible.
-
 ## Credits
-
-Aïobi Meet is a fork of [La Suite Meet](https://github.com/suitenumerique/meet) by DINUM (Direction interministérielle du numérique).
 
 We're using the awesome [LiveKit](https://livekit.io/) implementation. We're also thankful to the teams behind [Django Rest Framework](https://www.django-rest-framework.org/), [Vite.js](https://vite.dev/), and [React Aria](https://github.com/adobe/react-spectrum) — Thanks for your amazing work!
 
 ## License
 
-Code in this repository is published under the MIT license by Aïobi.
+Copyright (c) 2025-present Aïobi. All rights reserved.

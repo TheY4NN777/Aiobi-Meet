@@ -1,0 +1,396 @@
+# =============================================================================
+# Aiobi Meet — GitLab CI/CD Pipeline
+# =============================================================================
+#
+# Deux environnements :
+#   - STAGING  : push sur develop → build local + deploy sur le serveur de staging
+#   - PRODUCTION : push sur main → build + push GitLab Registry + deploy sur le serveur de prod
+#
+# Runners :
+#   - dev-serv-runner (tags: dev, docker) — serveur de staging
+#   - prod-runner     (tags: prod, docker) — serveur de production
+#
+# Prerequis runner config.toml (staging) :
+#   volumes = ["/var/run/docker.sock:/var/run/docker.sock",
+#              "/home/ogu/theY4NN/AïobiMeet:/home/ogu/theY4NN/AïobiMeet",
+#              "/cache"]
+#
+# Prerequis runner config.toml (production) :
+#   volumes = ["/var/run/docker.sock:/var/run/docker.sock",
+#              "/opt/aiobi-meet:/opt/aiobi-meet",
+#              "/cache"]
+#
+# Le .env doit etre present sur chaque serveur dans le repertoire de deploy
+# =============================================================================
+
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_HOST: unix:///var/run/docker.sock
+  STAGING_DIR: /home/ogu/theY4NN/AïobiMeet/docker/staging
+  PRODUCTION_DIR: /opt/aiobi-meet/production
+
+# =============================================================================
+# ========================== STAGING (develop) ================================
+# =============================================================================
+# Build local sur le serveur de staging (pas de registry).
+# --no-cache garantit que les assets (logo, favicons, config) sont toujours
+# a jour. Le build prend plus de temps mais evite les problemes de cache.
+# =============================================================================
+
+build-backend-staging:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:27
+  script:
+    - docker build
+      --no-cache
+      --target backend-production
+      --tag aiobi-meet/backend:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/backend:latest
+      .
+  only:
+    - develop
+
+build-frontend-staging:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:27
+  script:
+    - docker build
+      --no-cache
+      --file docker/aiobi-frontend/Dockerfile
+      --target frontend-production
+      --tag aiobi-meet/frontend:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/frontend:latest
+      .
+  only:
+    - develop
+
+# =============================================================================
+# DEPLOY STAGING
+# =============================================================================
+# Strategie de deploy :
+#   1. nginx-proxy et acme-companion ne sont JAMAIS recreees (preserve les
+#      certificats TLS dans les volumes Docker). "up -d" est un no-op si
+#      le conteneur tourne deja.
+#   2. keycloak est demarre sans --force-recreate (preserve les sessions
+#      et la DB). Recree seulement si le compose change.
+#   3. Les conteneurs applicatifs (backend, frontend, celery, livekit) sont
+#      force-recreated pour prendre les nouvelles images et le .env a jour.
+#   4. Apres le deploy, on verifie que les certificats TLS sont presents.
+#      Si absents (premier deploy ou volumes perdus), on attend que
+#      acme-companion les genere.
+# =============================================================================
+
+deploy-staging:
+  stage: deploy
+  tags:
+    - dev
+    - docker
+  image: docker:27
+  before_script:
+    - apk add --no-cache docker-cli-compose curl
+  script:
+    # --- Copier les fichiers staging du CI vers le host (sauf .env) ----------
+    - export HOST_STAGING=/home/ogu/theY4NN/AïobiMeet/docker/staging
+    - export HOST_PROJECT=/home/ogu/theY4NN/AïobiMeet
+    - cp docker/staging/compose*.yaml $HOST_STAGING/
+    - cp docker/staging/default.conf.template $HOST_STAGING/
+    - cp docker/staging/livekit-server.yaml $HOST_STAGING/
+    - cp docker/staging/env.d/* $HOST_STAGING/env.d/
+    - mkdir -p $HOST_STAGING/vhost.d
+    - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
+    - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
+    - cp -r docker/keycloak/themes/aiobi/. $HOST_PROJECT/docker/keycloak/themes/aiobi/
+
+    # --- Se placer dans le staging du host -----------------------------------
+    - cd $HOST_STAGING
+
+    # --- 1. nginx-proxy (ne jamais forcer la recreation) ---------------------
+    - echo "=== Deploying nginx-proxy (preserve TLS certs) ==="
+    - docker compose -f compose.nginx-proxy.yaml up -d
+
+    # --- 2. Keycloak (preserve sessions) -------------------------------------
+    - echo "=== Deploying Keycloak ==="
+    - docker compose -f compose.keycloak.yaml up -d
+
+    # --- 3. App containers (force recreate pour nouvelles images + env) ------
+    - echo "=== Deploying app containers (force recreate) ==="
+    - docker compose -f compose.yaml up -d --force-recreate
+
+    # --- 4. Attendre le backend ----------------------------------------------
+    - echo "=== Waiting for backend health check ==="
+    - |
+      for i in $(seq 1 30); do
+        if docker compose -f compose.yaml exec -T backend python manage.py check 2>/dev/null; then
+          echo "Backend is healthy!"
+          break
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 5
+      done
+
+    # --- 5. Migrations automatiques ------------------------------------------
+    - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
+
+    # --- 6. Verifier et reparer les certificats TLS ---------------------------
+    - echo "=== Checking TLS certificates ==="
+    - |
+      CERT_OK=false
+      for i in $(seq 1 12); do
+        if docker exec nginx-proxy-acme sh -c "test -f /etc/nginx/certs/aiobi-meet.duckdns.org/fullchain.pem" 2>/dev/null; then
+          echo "TLS certificate files found!"
+          CERT_OK=true
+          break
+        fi
+        echo "Waiting for TLS certs... ($i/12, next check in 10s)"
+        sleep 10
+      done
+
+      if [ "$CERT_OK" = "true" ]; then
+        echo "Ensuring nginx-proxy symlinks are correct..."
+        docker exec nginx-proxy-acme sh -c '
+          cd /etc/nginx/certs
+          for domain in aiobi-meet.duckdns.org aiobi-livekit.duckdns.org; do
+            if [ -d "$domain" ] && [ -f "${domain}/fullchain.pem" ]; then
+              rm -f ${domain}.crt ${domain}.key ${domain}.chain.pem
+              ln -s ./${domain}/fullchain.pem ${domain}.crt
+              ln -s ./${domain}/key.pem ${domain}.key
+              ln -s ./${domain}/chain.pem ${domain}.chain.pem
+              echo "  ${domain}: symlinks OK"
+            fi
+          done
+          rm -rf _test_*
+          if [ ! -f dhparam.pem ]; then
+            openssl dhparam -out dhparam.pem 2048 2>/dev/null
+          fi
+          for domain in aiobi-meet.duckdns.org aiobi-livekit.duckdns.org; do
+            if [ ! -L ${domain}.dhparam.pem ]; then
+              ln -s ./dhparam.pem ${domain}.dhparam.pem
+            fi
+          done
+        '
+        docker exec nginx-proxy nginx -s reload 2>/dev/null || true
+        echo "TLS certificates ready and nginx reloaded."
+      else
+        echo "No TLS certs found. Forcing acme-companion to re-register..."
+        docker restart nginx-proxy-acme
+        sleep 30
+        if docker exec nginx-proxy-acme sh -c "test -f /etc/nginx/certs/aiobi-meet.duckdns.org/fullchain.pem" 2>/dev/null; then
+          echo "Certs generated after restart!"
+          docker exec nginx-proxy-acme sh -c '
+            cd /etc/nginx/certs
+            for domain in aiobi-meet.duckdns.org aiobi-livekit.duckdns.org; do
+              if [ -d "$domain" ] && [ -f "${domain}/fullchain.pem" ]; then
+                rm -f ${domain}.crt ${domain}.key ${domain}.chain.pem
+                ln -s ./${domain}/fullchain.pem ${domain}.crt
+                ln -s ./${domain}/key.pem ${domain}.key
+                ln -s ./${domain}/chain.pem ${domain}.chain.pem
+              fi
+            done
+            rm -rf _test_*
+          '
+          docker exec nginx-proxy nginx -s reload 2>/dev/null || true
+        else
+          echo "ERROR: TLS certificates could not be generated."
+          echo "Check: docker logs nginx-proxy-acme"
+          exit 1
+        fi
+      fi
+
+    # --- 7. DuckDNS cron (mise a jour IP automatique toutes les 5 min) --------
+    - echo "=== Setting up DuckDNS cron ==="
+    - |
+      chmod +x $HOST_STAGING/duckdns-update.sh
+      CRON_CMD="*/5 * * * * $HOST_STAGING/duckdns-update.sh >> /var/log/duckdns.log 2>&1"
+      if ! crontab -l 2>/dev/null | grep -q "duckdns-update.sh"; then
+        (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
+        echo "DuckDNS cron installed."
+      else
+        echo "DuckDNS cron already exists."
+      fi
+      # Mise a jour immediate
+      $HOST_STAGING/duckdns-update.sh || true
+
+    - echo "=== Deploy complete ==="
+
+  environment:
+    name: staging
+    url: https://aiobi-meet.duckdns.org:8443
+  only:
+    - develop
+  needs:
+    - build-backend-staging
+    - build-frontend-staging
+
+# =============================================================================
+# ========================== PRODUCTION (main) ================================
+# =============================================================================
+# Build + push au GitLab Container Registry, puis deploy par pull.
+# --no-cache garantit que les assets sont a jour.
+# =============================================================================
+
+build-backend-prod:
+  stage: build
+  tags:
+    - prod
+    - docker
+  image: docker:27
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build
+      --no-cache
+      --target backend-production
+      --tag $CI_REGISTRY_IMAGE/backend:${CI_COMMIT_SHORT_SHA}
+      --tag $CI_REGISTRY_IMAGE/backend:latest
+      .
+    - docker push $CI_REGISTRY_IMAGE/backend:${CI_COMMIT_SHORT_SHA}
+    - docker push $CI_REGISTRY_IMAGE/backend:latest
+  only:
+    - main
+
+build-frontend-prod:
+  stage: build
+  tags:
+    - prod
+    - docker
+  image: docker:27
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build
+      --no-cache
+      --file docker/aiobi-frontend/Dockerfile
+      --target frontend-production
+      --tag $CI_REGISTRY_IMAGE/frontend:${CI_COMMIT_SHORT_SHA}
+      --tag $CI_REGISTRY_IMAGE/frontend:latest
+      .
+    - docker push $CI_REGISTRY_IMAGE/frontend:${CI_COMMIT_SHORT_SHA}
+    - docker push $CI_REGISTRY_IMAGE/frontend:latest
+  only:
+    - main
+
+# =============================================================================
+# DEPLOY PRODUCTION
+# =============================================================================
+# Strategie de deploy :
+#   1. Generer .env depuis les variables CI/CD GitLab
+#   2. Keycloak JAMAIS force-recreate (preserve sessions/DB)
+#   3. App containers force-recreated (nouvelles images + env)
+#   4. TLS geree par Traefik automatiquement (Let's Encrypt)
+#
+# Differences vs staging :
+#   - Images pullees depuis le GitLab Registry (pas build local)
+#   - Traefik existant sur le serveur (pas de nginx-proxy)
+#   - .env genere par le CI (pas de fichier manuel sur le serveur)
+#   - Reseau aiobi-public (Traefik) au lieu de proxy-tier
+# =============================================================================
+
+deploy-production:
+  stage: deploy
+  tags:
+    - prod
+    - docker
+  image: docker:27
+  before_script:
+    - apk add --no-cache docker-cli-compose curl
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # --- Copier les fichiers production du CI vers le host -------------------
+    - export HOST_PROD=$PRODUCTION_DIR
+    - export HOST_PROJECT=/opt/aiobi-meet
+    - cp docker/production/compose*.yaml $HOST_PROD/
+    - cp docker/production/default.conf.template $HOST_PROD/
+    - cp docker/production/livekit-server.yaml $HOST_PROD/
+    - cp docker/production/env.d/* $HOST_PROD/env.d/
+    - mkdir -p $HOST_PROJECT/docker/auth
+    - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
+    - mkdir -p $HOST_PROJECT/docker/keycloak/themes/aiobi
+    - cp -r docker/keycloak/themes/aiobi/. $HOST_PROJECT/docker/keycloak/themes/aiobi/
+
+    # --- Se placer dans le production du host --------------------------------
+    - cd $HOST_PROD
+
+    # --- 1. Generer le .env depuis les variables CI/CD -----------------------
+    - echo "=== Generating .env from CI/CD variables ==="
+    - |
+      cat > .env << ENVEOF
+      MEET_HOST=${MEET_HOST}
+      KEYCLOAK_HOST=${KEYCLOAK_HOST}
+      LIVEKIT_HOST=${LIVEKIT_HOST}
+      LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      KC_POSTGRES_DB=${KC_POSTGRES_DB}
+      KC_POSTGRES_USER=${KC_POSTGRES_USER}
+      KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      REALM_NAME=${REALM_NAME}
+      DOCKER_USER=${DOCKER_USER:-1000}
+      IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
+      CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
+      ENVEOF
+    - sed -i 's/^      //' .env
+    - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
+
+    # --- 2. Keycloak (preserve sessions, JAMAIS force-recreate) --------------
+    - echo "=== Deploying Keycloak ==="
+    - docker compose -f compose.keycloak.yaml up -d
+
+    # --- 3. Pull les nouvelles images depuis le registry ---------------------
+    - echo "=== Pulling latest images from registry ==="
+    - docker compose -f compose.yaml pull backend frontend
+
+    # --- 4. App containers (force recreate pour nouvelles images + env) ------
+    - echo "=== Deploying app containers (force recreate) ==="
+    - docker compose -f compose.yaml up -d --force-recreate
+
+    # --- 5. Attendre le backend ----------------------------------------------
+    - echo "=== Waiting for backend health check ==="
+    - |
+      for i in $(seq 1 30); do
+        if docker compose -f compose.yaml exec -T backend python manage.py check 2>/dev/null; then
+          echo "Backend is healthy!"
+          break
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 5
+      done
+
+    # --- 6. Migrations automatiques ------------------------------------------
+    - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
+
+    # --- 7. Verification rapide Traefik (TLS est automatique) ----------------
+    - echo "=== Verifying Traefik routing ==="
+    - |
+      sleep 10
+      for domain in meet.aiobi.world id.aiobi.world lkt.aiobi.world; do
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://${domain}" 2>/dev/null || echo "000")
+        echo "  ${domain}: HTTP ${HTTP_CODE}"
+      done
+
+    - echo "=== Production deploy complete ==="
+
+  environment:
+    name: production
+    url: https://meet.aiobi.world
+  only:
+    - main
+  needs:
+    - build-backend-prod
+    - build-frontend-prod
