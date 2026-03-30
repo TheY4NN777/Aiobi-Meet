@@ -47,7 +47,7 @@ export const routes: Record<
   },
   legalTerms: {
     name: 'legalTerms',
-    path: '/mentions-legales',
+    path: '/politique-confidentialite',
     Component: LegalTermsRoute,
   },
   termsOfService: {

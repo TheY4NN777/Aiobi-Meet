@@ -1,129 +1,86 @@
 {
-  "title": "Terms of Use for Aïobi Meet",
+  "title": "Conditions Générales d'Utilisation - Aïobi Meet",
+  "intro": "Les présentes Conditions Générales d'Utilisation ont pour objet de définir les dispositions applicables à tout usage d'Aïobi Meet ci-dessous appelé \"l'Outil\" ses services et son utilisation.",
   "articles": {
     "article1": {
-      "title": "1. Scope",
-      "content": "This document defines the terms of use of Aïobi Meet (hereinafter \"Aïobi Meet\" or \"the application\"), a videoconferencing application designed for Aïobi users."
+      "title": "Article 1. Identification légale",
+      "content": "La présente plateforme est éditée par la société BAYBOW."
     },
     "article2": {
-      "title": "2. Purpose of the application",
-      "content": "Aïobi Meet helps foster cooperation among teams, supports remote work, and facilitates the organization of meetings, conferences, or training sessions.",
+      "title": "Article 2. Mise en garde de l'utilisateur",
       "paragraphs": [
-        "Aïobi Meet is developed and operated by Aïobi.",
-        "The application is made available by Aïobi to its users, for use by their staff members, partners, and invited service providers.",
-        "Any use of Aïobi Meet must comply with these terms of use."
+        "En utilisant et en parcourant l'outil, vous, en votre qualité d'utilisateur acceptez de vous conformer aux présentes Conditions Générales d'Utilisation (ci-après dénommées « CGU ») que vous reconnaissez avoir lues, comprises et acceptées dans leur intégralité.",
+        "Si vous refusez d'accepter les présentes CGU, nous vous remercions de ne pas utiliser l'Outil et de ne procéder à aucun téléchargement d'éléments y figurant.",
+        "Les présentes CGU sont opposables pendant toute la durée d'utilisation de l'Outil et jusqu'à ce que de nouvelles CGU remplacement les présentes."
       ]
     },
     "article3": {
-      "title": "3. Definitions",
+      "title": "Article 3. Conditions d'utilisation",
       "paragraphs": [
-        "Aïobi Meet is the product whose use is described in these terms and presented on the following page: https://meet.aiobi.world.",
-        "Users of Aïobi Meet are any persons using Aïobi Meet for videoconferencing communication purposes, whether they are staff members, partners, or service providers.",
-        "Room organizers are users who are responsible for a videoconference room after logging in with their account."
+        "L'Outil est en principe accessible 7 jours sur 7 et 24 heures sur 24, de manière libre et gratuite, à tout utilisateur.",
+        "La société BAYBOW s'engage à faire ses meilleurs efforts pour assurer aux utilisateurs une accessibilité de l'Outil à tout moment. Toutefois, elle ne pourra être tenue pour responsable en cas d'indisponibilité de l'Outil, en cas d'opération de maintenance, de test de sécurité, de réparation ou pour quelque cause que ce soit.",
+        "Par dérogation à l'alinéa précédent, BAYBOW se réserve le droit de rendre temporairement l'Outil indisponible pour des raisons de maintenance ou de violation des présentes CGU par l'utilisateur.",
+        "Il est précisé qu'à des fins de maintenance, de mise à jour, d'amélioration des infrastructures, de défaillance des infrastructures ou de toute autre raison notamment d'ordre technique, l'accès à l'Outil pourra être interrompu.",
+        "BAYBOW n'est en aucun cas responsable de ces interruptions et des conséquences pouvant en découler pour l'utilisateur. L'interruption de l'accès à l'Outil ne peut en aucun cas avoir pour conséquence le versement de dommages et intérêts au profit de l'utilisateur.",
+        "BAYBOW et l'hébergeur ne pourront être tenus pour responsables en cas de dysfonctionnement du réseau internet, des lignes téléphoniques ou du matériel informatique et de téléphonie liée notamment à l'encombrement du réseau empêchant toute utilisation de l'Outil.",
+        "L'utilisateur reconnait disposer de la compétence et des moyens nécessaires pour accéder à l'Outil et l'utiliser. Il reconnait également avoir vérifié que la configuration utilisée ne contient aucun virus et est en parfait état de fonctionnement.",
+        "BAYBOW s'engage à faire ses meilleurs efforts pour offrir aux utilisateurs un Outil disponible, vérifié et sécurisé, pour procéder aux mises à jour et pour délivrer aux utilisateurs des informations exactes, dont elle se réserve le droit de corriger à tout moment et sans préavis le contenu.",
+        "Toutefois BAYBOW ne peut garantir l'exactitude, la précision ou l'exhaustivité des informations de l'Outil.",
+        "BAYBOW ne saurait être tenue responsable des erreurs, d'une absence de disponibilité des informations et/ou de la présence de virus ou autres infections logiques de l'Outil.",
+        "L'utilisateur reconnaît utiliser les informations et l'Outil disponibles sous sa responsabilité exclusive."
       ]
     },
     "article4": {
-      "title": "4. Access to the application",
-      "definition": "Aïobi Meet is made available to users. Organizers may then share a link granting access to the room with any person, under their responsibility."
+      "title": "Article 4. Propriété intellectuelle",
+      "paragraphs": [
+        "L'Outil pris dans sa globalité ainsi que chacun des éléments qui le compose pris indépendamment, notamment les programmes et développements spécifiques et les contenus incluant des données, textes, images fixes ou animées, sons, graphiques, illustrations, logotypes, icônes, fichiers disponibles en téléchargement, sont la propriété exclusive de BAYBOW.",
+        "Toute représentation et/ou reproduction et/ou exploitation partielle ou totale de l'Outil ou d'un des éléments qui le composent, par quelque procédé que ce soit, sans l'autorisation préalable et écrite de la société BAYBOW est strictement interdite et constituerait une contrefaçon sanctionnée par les dispositions légales applicables.",
+        "Les marques et les logotypes utilisés par l'Outil sont des marques déposés par BAYBOW. Toute reproduction, imitation ou usage, total ou partiel, de ces signes distinctifs sans l'autorisation expresse et en violation des interdictions prévues par les dispositions législatives engage la responsabilité de leur auteur.",
+        "L'accès à l'Outil ne confère aucun droit autre que celui de son utilisation.",
+        "Toute utilisation de l'Outil et/ou des éléments le composant à des fins différentes, notamment à des fins publiques, commerciales ou humoristiques, fera l'objet de poursuites judiciaires.",
+        "L'utilisateur s'engage à informer sans délai BAYBOW de toute atteinte aux droits de propriété intellectuelle de ce dernier qu'il pourra éventuellement constater."
+      ]
     },
     "article5": {
-      "title": "5. Features",
-      "sections": {
-        "section1": {
-          "title": "5.1. Features available to organizers",
-          "content": "Aïobi Meet allows users to create a videoconference room from a standard workstation, linked to their account.",
-          "paragraph1": "Any user whose activities are compatible with the use of Aïobi Meet or who is not subject to specific confidentiality or professional secrecy obligations, may create and organize a videoconference. They may then share the meeting link with other persons, users, whether or not they belong to the organization.",
-          "paragraph2": "For this purpose, each room organizer may:",
-          "capabilities": [
-            "Protect access to the room with a waiting room;",
-            "Authorize each user's entry into the room;",
-            "Mute users' microphones and cameras;",
-            "Remove a user from the room;",
-            "Use the meeting transcription tool after obtaining the consent of users, under their responsibility."
-          ],
-          "paragraph3": "Only users whose account belongs to a domain authorized to organize rooms on Aïobi Meet or who are not subject to specific confidentiality or professional secrecy obligations may use or have control over the application and its features.",
-          "paragraph4": "The automatic transcription tool can be used by organizers from the room settings menu. Organizers are responsible for ensuring the consent of users participating in the transcribed meeting. The transcription language can be changed from the same menu. At the end of the meeting, a link is sent to the organizer to access the transcription stored in the Docs tool operated by Aïobi."
-        },
-        "section2": {
-          "title": "5.2. Features available to users",
-          "content": "Aïobi Meet allows any user, to participate in any Aïobi Meet room to which they are invited by an organizer and to benefit from its features.",
-          "paragraph": "For this purpose, each user may:",
-          "capabilities": [
-            "Provide a display name when entering the room;",
-            "Communicate remotely via audio and/or video;",
-            "Share their screen;",
-            "Exchange messages during the session publicly with all users in the room;",
-            "Access technical information about the room and accessibility features;",
-            "Turn their camera and/or microphone on or off at any time;",
-            "Protect the privacy of their surroundings when the camera is on by selecting and activating a background before entering the room or during the videoconference."
-          ]
-        }
-      }
+      "title": "Article 5. Données personnelles",
+      "content": "Les engagements de BAYBOW s'agissant de la collecte, du traitement, de la sécurisation, de la conservation des Données Personnelles de l'Utilisation et les modalités de mise en œuvre des droits de ce dernier sont déterminés au sein de la Politique de Confidentialité de BAYBOW accessible sur le site de l'Outil."
     },
     "article6": {
-      "title": "6. Commitments and responsibilities of users",
-      "sections": {
-        "section1": {
-          "title": "6.1 Permitted uses",
-          "paragraphs": [
-            "Aïobi Meet is provided to facilitate professional exchanges between users and external collaborators.",
-            "Users are responsible for the images and sounds they make accessible in the videoconference room. This responsibility applies both to what their camera or microphone may broadcast and to what their device may make accessible to third parties. To this end, users must use the application in a professional environment and must not disclose any information covered by professional confidentiality obligations to third parties (for example: use of privacy filters, headphones, etc.).",
-            "Users are responsible for the data or content they enter into the room's messaging service. They must ensure that only appropriate messages are entered."
-          ]
-        },
-        "section2": {
-          "title": "6.2 Prohibited uses",
-          "paragraphs": [
-            "Users undertake not to enter into the Aïobi Meet room messaging service, or make accessible via image or sound, any content or information that violates applicable laws and regulations."
-          ]
-        }
-      }
+      "title": "Article 6. Responsabilité",
+      "paragraphs": [
+        "L'utilisation de l'Outil, de ses services et de tout élément ou information obtenue via celui-ci, relève de la responsabilité exclusive de l'utilisateur.",
+        "BAYBOW ne fournit à l'utilisateur aucune garantie d'aucune sorte, expresse ou implicite, quant à la conformité du résultat recherché aux attentes de l'utilisateur, et décline toute responsabilité quant aux éventuelles contestations, actions ou recours de tiers qui viendraient à se prévaloir de droits, notamment privatifs, sur tout contenu non créé par BAYBOW.",
+        "Par ailleurs, la responsabilité de BAYBOW ne pourra être retenue directement ou indirectement à quelque titre que ce soit, et pour quelque cause que ce soit en ce qui concerne :"
+      ],
+      "items": [
+        "Le manque de performances de l'Outil.",
+        "La perte de données ou de services résultant de la non-tenue de délais, de la modification, de la suspension ou de l'interruption de ses services.",
+        "L'exactitude, la qualité ou la nature des informations obtenues par le biais de ses services.",
+        "L'interruption de l'utilisation de l'Outil motivée par des opérations de maintenance ou par les comportements des utilisateurs du Site.",
+        "Les conséquences découlant directement ou indirectement de la transmission de virus par le biais de ses serveurs.",
+        "L'inaccessibilité à l'Outil.",
+        "La contamination des matériels informatiques des internautes résultant de la propagation d'un virus ou autres infections informatiques."
+      ],
+      "paragraphs2": [
+        "En tant qu'utilisateur de l'Outil, il vous appartient de prendre toutes les mesures appropriées de façon à protéger vos propres données et/ou logiciels de la contamination par des éventuels virus circulant sur Internet.",
+        "BAYBOW ne pourra également être tenue responsable de tout dommage direct ou indirect pouvant survenir de l'utilisation ou au contraire de l'impossibilité d'accéder au Site, suite à une utilisation fautive de l'utilisateur.",
+        "L'utilisateur s'engage à dédommager BAYBOW et à la garantir contre toute action en responsabilité, recours, pertes, coûts, manque à gagner, perte de données, et tout autre dommage direct et indirect découlant de la violation de sa part de l'une quelconque des dispositions des présentes conditions générales."
+      ]
     },
     "article7": {
-      "title": "7. Commitments and responsibilities of Aïobi",
-      "sections": {
-        "section1": {
-          "title": "7.1. Application security",
-          "paragraphs": [
-            "Aïobi undertakes to secure Aïobi Meet, in particular by taking all necessary measures to ensure the security and confidentiality of exchanges.",
-            "The application is certified under the conditions provided for by [APPLICABLE_LAW]."
-          ]
-        },
-        "section2": {
-          "title": "7.2. Access to the application",
-          "paragraphs": [
-            "Aïobi undertakes to provide the necessary and reasonable means to ensure continuous access to the application.",
-            "The application is available 24/7, except during maintenance downtime.",
-            "Aïobi aims for an annual application availability rate of [AÏOBI_SLA], excluding planned downtime. In the event of an incident or maintenance, it aims for a restoration time of 72 hours outside business hours.",
-            "As part of maintenance of the application's runtime environment, Aïobi reserves the right to temporarily suspend the operation of the application. Whenever possible, users will be informed at least 48 hours in advance. In emergencies, such suspension may occur without prior notice.",
-            "These exceptional outages may be required, for example, for data management operations, production releases, or architectural changes.",
-            "Application unavailability does not entitle users to any form of compensation."
-          ]
-        },
-        "section3": {
-          "title": "7.3. Support management",
-          "paragraphs": [
-            "Aïobi provides first-level support to users, exclusively on the technical aspects of the application.",
-            "This support can be reached via the online contact form.",
-            "The target response time to requests is two business days from the sending of the email; this timeframe may vary depending on the complexity and number of requests to be processed."
-          ]
-        },
-        "section4": {
-          "title": "7.4. Monitoring application use",
-          "paragraphs": [
-            "Aïobi reserves the right to suspend or delete a user account that has failed to comply with these terms of use, without prejudice to any criminal or civil liability actions that may be brought against the person concerned.",
-            "The suspension or revocation of one or more accounts does not give rise to any compensation of any kind."
-          ]
-        },
-        "section5": {
-          "title": "7.5. Intellectual Property",
-          "content": "The service and its source code are the exclusive property of Aïobi. All rights reserved. Content provided by Aïobi is proprietary, with the exception of logos and iconographic or photographic representations, which may be governed by their own licenses."
-        }
-      }
+      "title": "Article 7. Évolutions",
+      "paragraphs": [
+        "BAYBOW se réserve le droit de modifier les présentes CGU, selon l'évolution de l'Outil ou en raison de l'évolution de la législation, à sa seule discrétion.",
+        "D'une manière générale, l'utilisation de l'Outil par l'utilisateur est toujours soumise à la version la plus récente des CGU accessible au moment de cette utilisation. Il appartient à l'utilisateur de consulter aussi souvent que nécessaire les CGU accessibles sur l'Outil."
+      ]
     },
     "article8": {
-      "title": "8. Changes to the terms of use",
-      "content": "The terms of these conditions of use may be modified or supplemented at any time, without notice, depending on changes made to the service, developments in legislation, or for any other reason deemed necessary.\nThese changes and updates are binding on the user, who must therefore regularly refer to this section to verify the current terms."
+      "title": "Article 8. Litiges et juridictions",
+      "paragraphs": [
+        "Les présentes CGU seront soumises et interprétées conformément au droit Français. De même, tous litiges, autres que ceux se rapportant aux données à caractère personnelles, non réglés de manière transactionnelle seront porté devant les tribunaux Français.",
+        "S'agissant des données à caractère personnelles, elles seront portées devant les juridictions compétentes en Côte d'Ivoire.",
+        "Dans l'éventualité où l'une quelconque des dispositions des conditions générales serait déclarée nulle ou sans effet, une telle disposition devra être interprétée de manière à refléter au mieux les intentions de BAYBOW et les dispositions restantes seront considérées comme applicables de plein droit."
+      ]
     }
   }
 }

@@ -1,3 +1,4 @@
+lets go
 # Aiobi Meet — Guide de deploiement production
 
 > **Serveur** : Aiobi Master (207.180.255.229) — serveur applicatif partage (1.8 TB, 251 GB RAM, 20 cores)

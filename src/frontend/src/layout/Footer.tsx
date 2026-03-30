@@ -62,10 +62,10 @@ export const Footer = () => {
             <Link
               underline={false}
               footer="minor"
-              to="/mentions-legales"
-              aria-label={t('links.legalsTerms')}
+              to="/politique-confidentialite"
+              aria-label={t('links.privacyPolicy')}
             >
-              {t('links.legalsTerms')}
+              {t('links.privacyPolicy')}
             </Link>
           </StyledLi>
           <StyledLi divider>
