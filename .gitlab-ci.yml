@@ -281,16 +281,17 @@ build-frontend-prod:
 # =============================================================================
 # DEPLOY PRODUCTION
 # =============================================================================
-# Meme strategie que le staging :
-#   1. nginx-proxy JAMAIS force-recreate (preserve TLS certs)
+# Strategie de deploy :
+#   1. Generer .env depuis les variables CI/CD GitLab
 #   2. Keycloak JAMAIS force-recreate (preserve sessions/DB)
 #   3. App containers force-recreated (nouvelles images + env)
+#   4. TLS geree par Traefik automatiquement (Let's Encrypt)
 #
 # Differences vs staging :
 #   - Images pullees depuis le GitLab Registry (pas build local)
-#   - Pas de DuckDNS (vrais DNS A records)
-#   - Ports standard 80/443 (pas 8880/8443)
-#   - Domaines : meet.aiobi.world, id.aiobi.world, lkt.aiobi.world
+#   - Traefik existant sur le serveur (pas de nginx-proxy)
+#   - .env genere par le CI (pas de fichier manuel sur le serveur)
+#   - Reseau aiobi-public (Traefik) au lieu de proxy-tier
 # =============================================================================
 
 deploy-production:
@@ -310,8 +311,6 @@ deploy-production:
     - cp docker/production/default.conf.template $HOST_PROD/
     - cp docker/production/livekit-server.yaml $HOST_PROD/
     - cp docker/production/env.d/* $HOST_PROD/env.d/
-    - mkdir -p $HOST_PROD/vhost.d
-    - cp docker/production/vhost.d/* $HOST_PROD/vhost.d/
     - mkdir -p $HOST_PROJECT/docker/auth
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
     - mkdir -p $HOST_PROJECT/docker/keycloak/themes/aiobi
@@ -320,11 +319,36 @@ deploy-production:
     # --- Se placer dans le production du host --------------------------------
     - cd $HOST_PROD
 
-    # --- 1. nginx-proxy (ne jamais forcer la recreation) ---------------------
-    - echo "=== Deploying nginx-proxy (preserve TLS certs) ==="
-    - docker compose -f compose.nginx-proxy.yaml up -d
+    # --- 1. Generer le .env depuis les variables CI/CD -----------------------
+    - echo "=== Generating .env from CI/CD variables ==="
+    - |
+      cat > .env << ENVEOF
+      MEET_HOST=${MEET_HOST}
+      KEYCLOAK_HOST=${KEYCLOAK_HOST}
+      LIVEKIT_HOST=${LIVEKIT_HOST}
+      LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      KC_POSTGRES_DB=${KC_POSTGRES_DB}
+      KC_POSTGRES_USER=${KC_POSTGRES_USER}
+      KC_POSTGRES_PASSWORD=${KC_POSTGRES_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME=${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
+      OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      REALM_NAME=${REALM_NAME}
+      DOCKER_USER=${DOCKER_USER:-1000}
+      IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
+      CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
+      ENVEOF
+    - sed -i 's/^      //' .env
+    - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
 
-    # --- 2. Keycloak (preserve sessions) -------------------------------------
+    # --- 2. Keycloak (preserve sessions, JAMAIS force-recreate) --------------
     - echo "=== Deploying Keycloak ==="
     - docker compose -f compose.keycloak.yaml up -d
 
@@ -351,70 +375,14 @@ deploy-production:
     # --- 6. Migrations automatiques ------------------------------------------
     - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
 
-    # --- 7. Verifier les certificats TLS -------------------------------------
-    - echo "=== Checking TLS certificates ==="
+    # --- 7. Verification rapide Traefik (TLS est automatique) ----------------
+    - echo "=== Verifying Traefik routing ==="
     - |
-      CERT_OK=false
-      for i in $(seq 1 12); do
-        if docker exec nginx-proxy-acme sh -c "test -f /etc/nginx/certs/meet.aiobi.world/fullchain.pem" 2>/dev/null; then
-          echo "TLS certificate files found!"
-          CERT_OK=true
-          break
-        fi
-        echo "Waiting for TLS certs... ($i/12, next check in 10s)"
-        sleep 10
+      sleep 10
+      for domain in meet.aiobi.world id.aiobi.world lkt.aiobi.world; do
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://${domain}" 2>/dev/null || echo "000")
+        echo "  ${domain}: HTTP ${HTTP_CODE}"
       done
-
-      if [ "$CERT_OK" = "true" ]; then
-        echo "Ensuring nginx-proxy symlinks are correct..."
-        docker exec nginx-proxy-acme sh -c '
-          cd /etc/nginx/certs
-          for domain in meet.aiobi.world id.aiobi.world lkt.aiobi.world; do
-            if [ -d "$domain" ] && [ -f "${domain}/fullchain.pem" ]; then
-              rm -f ${domain}.crt ${domain}.key ${domain}.chain.pem
-              ln -s ./${domain}/fullchain.pem ${domain}.crt
-              ln -s ./${domain}/key.pem ${domain}.key
-              ln -s ./${domain}/chain.pem ${domain}.chain.pem
-              echo "  ${domain}: symlinks OK"
-            fi
-          done
-          rm -rf _test_*
-          if [ ! -f dhparam.pem ]; then
-            openssl dhparam -out dhparam.pem 2048 2>/dev/null
-          fi
-          for domain in meet.aiobi.world id.aiobi.world lkt.aiobi.world; do
-            if [ ! -L ${domain}.dhparam.pem ]; then
-              ln -s ./dhparam.pem ${domain}.dhparam.pem
-            fi
-          done
-        '
-        docker exec nginx-proxy nginx -s reload 2>/dev/null || true
-        echo "TLS certificates ready and nginx reloaded."
-      else
-        echo "No TLS certs found. Forcing acme-companion to re-register..."
-        docker restart nginx-proxy-acme
-        sleep 30
-        if docker exec nginx-proxy-acme sh -c "test -f /etc/nginx/certs/meet.aiobi.world/fullchain.pem" 2>/dev/null; then
-          echo "Certs generated after restart!"
-          docker exec nginx-proxy-acme sh -c '
-            cd /etc/nginx/certs
-            for domain in meet.aiobi.world id.aiobi.world lkt.aiobi.world; do
-              if [ -d "$domain" ] && [ -f "${domain}/fullchain.pem" ]; then
-                rm -f ${domain}.crt ${domain}.key ${domain}.chain.pem
-                ln -s ./${domain}/fullchain.pem ${domain}.crt
-                ln -s ./${domain}/key.pem ${domain}.key
-                ln -s ./${domain}/chain.pem ${domain}.chain.pem
-              fi
-            done
-            rm -rf _test_*
-          '
-          docker exec nginx-proxy nginx -s reload 2>/dev/null || true
-        else
-          echo "ERROR: TLS certificates could not be generated."
-          echo "Check: docker logs nginx-proxy-acme"
-          exit 1
-        fi
-      fi
 
     - echo "=== Production deploy complete ==="
 

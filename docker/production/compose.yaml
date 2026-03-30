@@ -134,17 +134,19 @@ services:
       - .env
       - env.d/common
       - env.d/hosts
-    environment:
-      - VIRTUAL_HOST=${MEET_HOST}
-      - VIRTUAL_PORT=8083
-      - LETSENCRYPT_HOST=${MEET_HOST}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.meet.rule=Host(`${MEET_HOST}`)"
+      - "traefik.http.routers.meet.entrypoints=websecure"
+      - "traefik.http.routers.meet.tls.certresolver=letsencrypt"
+      - "traefik.http.services.meet.loadbalancer.server.port=8083"
     volumes:
       - ./default.conf.template:/etc/nginx/templates/default.conf.template
     depends_on:
       backend:
         condition: service_healthy
     networks:
-      - proxy-tier
+      - aiobi-public
       - default
       - prod-app
 
@@ -171,22 +173,25 @@ services:
     ports:
       - "47881:47881/tcp"
       - "47882:47882/udp"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.livekit.rule=Host(`${LIVEKIT_HOST}`)"
+      - "traefik.http.routers.livekit.entrypoints=websecure"
+      - "traefik.http.routers.livekit.tls.certresolver=letsencrypt"
+      - "traefik.http.services.livekit.loadbalancer.server.port=47880"
     volumes:
       - ./livekit-server.yaml:/config.template.yaml:ro
     environment:
       - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
-      - VIRTUAL_HOST=${LIVEKIT_HOST}
-      - VIRTUAL_PORT=47880
-      - LETSENCRYPT_HOST=${LIVEKIT_HOST}
     depends_on:
       redis:
         condition: service_started
     networks:
-      - proxy-tier
+      - aiobi-public
       - default
 
 networks:
-  proxy-tier:
+  aiobi-public:
     external: true
   prod-app:
     name: prod-app

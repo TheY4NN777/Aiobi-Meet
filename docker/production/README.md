@@ -1,12 +1,12 @@
 # Aiobi Meet — Guide de deploiement production
 
-> **Serveur** : Serveur applicatif partage Aiobi (1.8 TB, 200+ GB RAM)
+> **Serveur** : Aiobi Master (207.180.255.229) — serveur applicatif partage (1.8 TB, 251 GB RAM, 20 cores)
 > **Domaines** : `meet.aiobi.world` / `id.aiobi.world` / `lkt.aiobi.world`
-> **Derniere mise a jour** : 29 mars 2026
+> **Derniere mise a jour** : 30 mars 2026
 >
-> **Note importante** : Ce serveur est le serveur applicatif principal d'Aiobi.
-> Il heberge(ra) toutes les apps Aiobi. Meet est la premiere app deployee.
-> nginx-proxy Docker ecoute sur les ports standard **80/443** (pas de proxy natif).
+> **Note importante** : Ce serveur heberge toutes les apps Aiobi. Meet est la premiere
+> app deployee. Le reverse proxy **Traefik v3.3** est deja en place sur 80/443 et gere
+> le TLS automatiquement via Let's Encrypt. Meet s'integre via des labels Docker.
 
 ---
 
@@ -14,7 +14,7 @@
 
 1. [Vue d'ensemble](#1-vue-densemble)
 2. [Architecture technique](#2-architecture-technique)
-3. [Les trois compose files et pourquoi](#3-les-trois-compose-files-et-pourquoi)
+3. [Les deux compose files et pourquoi](#3-les-deux-compose-files-et-pourquoi)
 4. [Reseaux Docker](#4-reseaux-docker)
 5. [Decisions d'architecture et justifications](#5-decisions-darchitecture-et-justifications)
 6. [Routing HTTP — comment le trafic circule](#6-routing-http--comment-le-trafic-circule)
@@ -44,7 +44,7 @@ Il est le point d'acces principal pour les utilisateurs finaux.
 Developpeur (branche develop)
         |
         v
-    GitLab CI/CD
+    GitLab CI/CD (self-hosted, VPN)
         |
         v
     Staging (aiobi-meet.duckdns.org:8443)
@@ -55,8 +55,8 @@ Developpeur (branche develop)
 
 ### Workflow CI/CD
 
-- **Push sur `develop`** → build local + deploy staging (runner tag: `dev`)
-- **Push sur `main`** → build + push GitLab Registry + deploy production (runner tag: `prod`)
+- **Push sur `develop`** -> build local + deploy staging (runner tag: `dev`)
+- **Push sur `main`** -> build + push GitLab Registry + deploy production (runner tag: `prod`)
 
 Les images sont buildees, poussees au GitLab Container Registry, puis pullees sur
 le serveur de prod. Cela permet le versioning et le rollback facile.
@@ -72,8 +72,8 @@ le serveur de prod. Cela permet le versioning et le rollback facile.
                            |
                            v
                     +--------------+
-                    | nginx-proxy  |  :80 (HTTP redirect)
-                    |              |  :443 (HTTPS TLS termination)
+                    |   Traefik    |  :80 (HTTP redirect)
+                    |   (existant) |  :443 (HTTPS TLS termination)
                     +------+-------+
                            |
               +------------+------------+------------+
@@ -103,17 +103,14 @@ le serveur de prod. Cela permet le versioning et le rollback facile.
 
 ### Difference majeure vs staging
 
-En staging, **Keycloak est route par le frontend nginx** (path-based : `/realms/`, `/js/`,
-`/resources/`). En production, **Keycloak a son propre sous-domaine** (`id.aiobi.world`)
-et est route directement par nginx-proxy. Cela simplifie la config nginx du frontend
-et rend Keycloak independant.
+- **Staging** : nginx-proxy Docker dedie sur ports 8880/8443, Keycloak route par le frontend (path-based)
+- **Production** : **Traefik existant** sur 80/443 (partage avec les autres apps Aiobi), Keycloak sur sous-domaine dedie (`id.aiobi.world`), integration via labels Docker
 
 ### Composants
 
 | Composant | Role | Image Docker |
 |-----------|------|-------------|
-| **nginx-proxy** | Reverse proxy TLS, decouverte automatique via Docker socket | `nginxproxy/nginx-proxy` |
-| **acme-companion** | Generation et renouvellement automatique des certificats Let's Encrypt | `nginxproxy/acme-companion` |
+| **Traefik** | Reverse proxy TLS existant, routing par labels Docker | `traefik:v3.3` (gere separement) |
 | **frontend** | SPA React servie par Nginx, reverse proxy interne vers le backend et MinIO | GitLab Registry |
 | **backend** | API Django avec Gunicorn (6 workers, timeout 90s) | GitLab Registry |
 | **celery** | Worker asynchrone (emails, traitement) — concurrency 4 | Meme image que backend |
@@ -127,22 +124,13 @@ et rend Keycloak independant.
 
 ---
 
-## 3. Les trois compose files et pourquoi
+## 3. Les deux compose files et pourquoi
 
-Le deploiement est decoupe en **trois fichiers Docker Compose** independants. Chaque
-fichier peut etre redemarre sans impacter les autres.
+Le deploiement est decoupe en **deux fichiers Docker Compose** independants. Chaque
+fichier peut etre redemarre sans impacter l'autre.
 
-### `compose.nginx-proxy.yaml` — Le point d'entree
-
-Reverse proxy + Let's Encrypt. Premier a demarrer, dernier a s'arreter.
-
-- Ecoute sur les ports **80** (HTTP) et **443** (HTTPS) de la machine hote.
-- Detecte automatiquement les conteneurs avec `VIRTUAL_HOST` et genere la config Nginx.
-- acme-companion demande et renouvelle les certificats TLS pour 3 domaines :
-  `meet.aiobi.world`, `id.aiobi.world`, `lkt.aiobi.world`.
-
-**IMPORTANT** : Ne jamais `--force-recreate` ce compose. Les certificats TLS sont dans
-les volumes Docker. Recreer le conteneur ne les supprime pas, mais peut casser les symlinks.
+**Pas de compose.nginx-proxy.yaml** — Traefik est deja en place sur le serveur et gere
+par l'infra Aiobi. Meet s'integre via des labels Docker sur les conteneurs.
 
 ### `compose.keycloak.yaml` — L'authentification
 
@@ -151,8 +139,9 @@ Keycloak + sa base de donnees dediee. Separe parce que :
 - Keycloak a son propre cycle de vie (mises a jour de securite independantes).
 - Sa base de donnees ne doit pas etre mixee avec celle de l'application.
 - On peut le redemarrer sans couper la visioconference en cours.
-- **En production, Keycloak est sur le reseau `proxy-tier`** pour avoir son propre sous-domaine
-  (`id.aiobi.world`). En staging, il etait route par le frontend nginx (path-based).
+- Keycloak est sur le reseau `aiobi-public` avec un label Traefik pour `id.aiobi.world`.
+
+**IMPORTANT** : Ne jamais `--force-recreate` ce compose (preserve les sessions et la DB).
 
 ### `compose.yaml` — L'application
 
@@ -162,13 +151,10 @@ C'est le compose qu'on redemarre le plus souvent lors des mises a jour.
 ### Ordre de demarrage
 
 ```bash
-# 1. Reverse proxy (prerequis pour TLS)
-docker compose -f compose.nginx-proxy.yaml up -d
-
-# 2. Keycloak (prerequis pour l'auth OIDC)
+# 1. Keycloak (prerequis pour l'auth OIDC)
 docker compose -f compose.keycloak.yaml up -d
 
-# 3. Application (depend de Keycloak pour fonctionner)
+# 2. Application (depend de Keycloak pour fonctionner)
 docker compose -f compose.yaml up -d
 ```
 
@@ -178,20 +164,40 @@ docker compose -f compose.yaml up -d
 
 | Reseau | Cree par | Services | Role |
 |--------|----------|----------|------|
-| `proxy-tier` | compose.nginx-proxy.yaml | nginx-proxy, acme, frontend, keycloak, livekit | Permet a nginx-proxy de decouvrir et router vers les services |
-| `prod-app` | compose.keycloak.yaml | keycloak, backend, frontend | Communication Keycloak ↔ Backend (OIDC server-to-server) |
-| `default` | chaque compose | tous sauf nginx-proxy | Communication interne entre services du meme compose |
+| `aiobi-public` | Infra Aiobi (externe) | Traefik, frontend, keycloak, livekit | Traefik route le trafic Internet vers les services avec labels |
+| `prod-app` | compose.keycloak.yaml | keycloak, backend, frontend | Communication Keycloak - Backend (OIDC server-to-server) |
+| `default` | chaque compose | tous les services internes | Communication interne entre services du meme compose |
 
 **Points cles :**
-- Le backend n'est **PAS** sur `proxy-tier` — il est accessible uniquement via le frontend nginx.
-- Keycloak est sur `proxy-tier` **ET** `prod-app` — il doit etre accessible par nginx-proxy
+- Le backend n'est **PAS** sur `aiobi-public` — il est accessible uniquement via le frontend nginx.
+- Keycloak est sur `aiobi-public` **ET** `prod-app` — il doit etre accessible par Traefik
   (pour le sous-domaine) ET par le backend (pour les appels OIDC internes).
+- `aiobi-public` est un reseau **externe** partage avec les autres apps Aiobi sur le serveur.
 
 ---
 
 ## 5. Decisions d'architecture et justifications
 
-### 5.1 Pourquoi Keycloak sur un sous-domaine dedie ?
+### 5.1 Pourquoi Traefik au lieu de nginx-proxy ?
+
+Le serveur Aiobi Master a deja Traefik v3.3 en place sur les ports 80/443, partage entre
+toutes les apps Aiobi (GitLab, Teleport, Vault, etc.). Deployer un deuxieme reverse proxy
+serait un conflit de ports et une duplication inutile.
+
+L'integration se fait via des **labels Docker** sur les conteneurs :
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.meet.rule=Host(`meet.aiobi.world`)"
+  - "traefik.http.routers.meet.entrypoints=websecure"
+  - "traefik.http.routers.meet.tls.certresolver=letsencrypt"
+  - "traefik.http.services.meet.loadbalancer.server.port=8083"
+```
+
+Traefik detecte automatiquement les conteneurs avec `traefik.enable=true` sur le reseau
+`aiobi-public` et genere la configuration de routing + TLS.
+
+### 5.2 Pourquoi Keycloak sur un sous-domaine dedie ?
 
 En staging, Keycloak est route par le frontend nginx via des paths (`/realms/`, `/js/`,
 `/resources/`, `/admin/master/`, `/admin/realms/`). Cela fonctionne mais :
@@ -200,45 +206,43 @@ En staging, Keycloak est route par le frontend nginx via des paths (`/realms/`, 
 - 5 blocs de routing supplementaires dans la config nginx.
 - Conflits potentiels entre `/admin` Django et `/admin` Keycloak.
 
-En production, Keycloak a son propre sous-domaine (`id.aiobi.world`). nginx-proxy le
-route directement. Le nginx du frontend ne connait plus Keycloak du tout.
+En production, Keycloak a son propre sous-domaine (`id.aiobi.world`). Traefik le route
+directement via label. Le nginx du frontend ne connait plus Keycloak du tout.
 
-### 5.2 Pourquoi les endpoints OIDC server-to-server sont en HTTP ?
+### 5.3 Pourquoi les endpoints OIDC server-to-server sont en HTTP ?
 
 Les endpoints OIDC se divisent en deux categories :
 
 - **Browser-facing** (authorization, logout) : le navigateur appelle directement Keycloak
-  → doit utiliser HTTPS public (`https://id.aiobi.world/realms/...`).
+  -> doit utiliser HTTPS public (`https://id.aiobi.world/realms/...`).
 - **Server-to-server** (JWKS, token, userinfo) : le backend Django appelle Keycloak
-  en interne dans le reseau Docker → utilise HTTP interne (`http://keycloak:8080/realms/...`).
+  en interne dans le reseau Docker -> utilise HTTP interne (`http://keycloak:8080/realms/...`).
 
 Utiliser HTTPS pour le server-to-server causerait des erreurs `SSL_CERTIFICATE_VERIFY_FAILED`
-car le backend essaierait de verifier le certificat Let's Encrypt en passant par nginx-proxy
+car le backend essaierait de verifier le certificat Let's Encrypt en passant par Traefik
 au lieu d'appeler directement Keycloak. Cette lecon a ete apprise en staging (erreur #1).
 
-### 5.3 Pourquoi le placeholder `__LIVEKIT_API_SECRET__` dans livekit-server.yaml ?
+### 5.4 Pourquoi le placeholder `__LIVEKIT_API_SECRET__` dans livekit-server.yaml ?
 
 L'image LiveKit est basee sur scratch (pas de shell). Cependant, l'entrypoint est
 overridee dans le compose pour utiliser `/bin/sh` avec `sed` pour remplacer le placeholder
 par la vraie valeur au demarrage. La variable `${VARIABLE}` ne fonctionne pas car
 LiveKit ne fait pas de substitution d'env dans son YAML.
 
-### 5.4 Pourquoi les proxy buffers 16k ?
+### 5.5 Pourquoi les proxy buffers 16k ?
 
 Les tokens JWT de Keycloak font ~2KB. Lors du logout, le token est passe dans l'URL.
 Les buffers par defaut de Nginx (4KB) sont trop petits, causant une erreur 502
-"upstream sent too big header". Les buffers 16k sont configures a deux niveaux :
+"upstream sent too big header". Les buffers 16k sont configures dans
+`default.conf.template` (nginx interne du frontend).
 
-- Dans `vhost.d/` (pour nginx-proxy → frontend/keycloak).
-- Dans `default.conf.template` (pour le nginx interne du frontend → backend).
-
-### 5.5 Pourquoi les ports LiveKit custom (47880/47881/47882) ?
+### 5.6 Pourquoi les ports LiveKit custom (47880/47881/47882) ?
 
 Les ports par defaut de LiveKit (7880/7881/7882) sont bien connus. Utiliser des ports
 custom est une mesure de securite supplementaire (security through obscurity) qui
 reduit la surface d'attaque contre les scans automatises.
 
-### 5.6 Pourquoi GitLab Container Registry en production ?
+### 5.7 Pourquoi GitLab Container Registry en production ?
 
 En staging, les images sont buildees localement sur le serveur. En production :
 
@@ -247,6 +251,15 @@ En staging, les images sont buildees localement sur le serveur. En production :
 - Le serveur de prod **ne fait pas de build** (moins de charge CPU pendant le deploy).
 - Les images sont **reproductibles** (meme image testee en CI = image deployee).
 
+### 5.8 Pourquoi le .env est genere par le CI ?
+
+Les secrets sont stockes dans les **variables CI/CD de GitLab** (proteges, masques).
+Le pipeline genere le fichier `.env` a chaque deploy. Avantages :
+
+- Pas de fichier de secrets qui traine sur le serveur a maintenir manuellement.
+- Source unique de verite (GitLab CI/CD Variables).
+- Changement de secret = changer la variable GitLab + re-deploy.
+
 ---
 
 ## 6. Routing HTTP — comment le trafic circule
@@ -254,30 +267,30 @@ En staging, les images sont buildees localement sur le serveur. En production :
 ### meet.aiobi.world (frontend + backend)
 
 ```
-Client → nginx-proxy (:443) → frontend nginx (:8083)
-    / → SPA React (:8080, try_files)
-    /api → backend Django (:8000)
-    /admin → backend Django (:8000)
-    /static → backend Django (:8000)
-    /media/ → MinIO (:9000) via auth_request
+Client -> Traefik (:443) -> frontend nginx (:8083)
+    / -> SPA React (:8080, try_files)
+    /api -> backend Django (:8000)
+    /admin -> backend Django (:8000)
+    /static -> backend Django (:8000)
+    /media/ -> MinIO (:9000) via auth_request
 ```
 
 ### id.aiobi.world (Keycloak)
 
 ```
-Client → nginx-proxy (:443) → keycloak (:8080)
-    /realms/ → Keycloak OIDC
-    /resources/ → Keycloak static
-    /js/ → Keycloak JS
-    /admin/ → Keycloak admin console
+Client -> Traefik (:443) -> keycloak (:8080)
+    /realms/ -> Keycloak OIDC
+    /resources/ -> Keycloak static
+    /js/ -> Keycloak JS
+    /admin/ -> Keycloak admin console
 ```
 
 ### lkt.aiobi.world (LiveKit)
 
 ```
-Client → nginx-proxy (:443) → livekit (:47880) [signaling WebSocket]
-Client → livekit (:47882/udp) [media direct, pas de proxy]
-Client → livekit (:47881/tcp) [ICE TCP fallback]
+Client -> Traefik (:443) -> livekit (:47880) [signaling WebSocket]
+Client -> livekit (:47882/udp) [media direct, pas de proxy]
+Client -> livekit (:47881/tcp) [ICE TCP fallback]
 ```
 
 ---
@@ -286,7 +299,7 @@ Client → livekit (:47881/tcp) [ICE TCP fallback]
 
 ### backend
 
-- **Image** : GitLab Registry (`$CI_REGISTRY_IMAGE/backend:latest`)
+- **Image** : GitLab Registry (`$CI_REGISTRY_IMAGE/backend:$SHA`)
 - **Workers** : 6 Gunicorn workers (via `GUNICORN_CMD_ARGS=--workers=6`)
 - **Timeout** : 90s (graceful shutdown)
 - **Healthcheck** : `python manage.py check` toutes les 15s
@@ -294,23 +307,23 @@ Client → livekit (:47881/tcp) [ICE TCP fallback]
 
 ### frontend
 
-- **Image** : GitLab Registry (`$CI_REGISTRY_IMAGE/frontend:latest`)
+- **Image** : GitLab Registry (`$CI_REGISTRY_IMAGE/frontend:$SHA`)
 - **Ports internes** : 8080 (SPA), 8083 (routing proxy)
-- **VIRTUAL_HOST** : `meet.aiobi.world`
+- **Traefik** : label `Host(meet.aiobi.world)` -> port 8083
 - **Volumes** : `default.conf.template` monte depuis le host
 
 ### keycloak
 
 - **Image** : `quay.io/keycloak/keycloak:20.0.1`
-- **VIRTUAL_HOST** : `id.aiobi.world` (sous-domaine dedie)
+- **Traefik** : label `Host(id.aiobi.world)` -> port 8080
 - **Volumes** : `realm.json` (import initial), theme Aiobi (login branding)
-- **Reseau** : `proxy-tier` + `prod-app` + `default`
+- **Reseau** : `aiobi-public` + `prod-app` + `default`
 
 ### livekit
 
 - **Image** : `livekit/livekit-server:latest`
 - **Ports exposes** : 47881/tcp, 47882/udp (ICE, pas de proxy)
-- **VIRTUAL_HOST** : `lkt.aiobi.world` (signaling WebSocket via proxy)
+- **Traefik** : label `Host(lkt.aiobi.world)` -> port 47880 (signaling)
 - **Config** : `livekit-server.yaml` avec placeholder sed
 
 ### postgresql
@@ -338,22 +351,18 @@ Client → livekit (:47881/tcp) [ICE TCP fallback]
 
 ```
 docker/production/
-├── .env                          # Secrets (NON versionne)
-├── .env.example                  # Template des secrets
-├── env.d/
-│   ├── hosts                     # Domaines et noms de services
-│   ├── common                    # Django, OIDC, LiveKit, features
-│   ├── keycloak                  # Config Keycloak (KC_HOSTNAME, proxy)
-│   ├── postgresql                # DB backend (credentials, host)
-│   └── kc_postgresql             # DB Keycloak (credentials, host)
-├── compose.yaml                  # Services applicatifs
-├── compose.keycloak.yaml         # Keycloak + sa DB
-├── compose.nginx-proxy.yaml      # Reverse proxy + Let's Encrypt
-├── default.conf.template         # Config nginx frontend
-├── livekit-server.yaml           # Config LiveKit (placeholder sed)
-└── vhost.d/
-    ├── meet.aiobi.world          # Proxy buffers nginx-proxy
-    └── id.aiobi.world            # Proxy buffers nginx-proxy
++-- .env                          # Genere par le CI (NON versionne)
++-- .env.example                  # Template de reference
++-- env.d/
+|   +-- hosts                     # Domaines et noms de services
+|   +-- common                    # Django, OIDC, LiveKit, features
+|   +-- keycloak                  # Config Keycloak (KC_HOSTNAME, proxy)
+|   +-- postgresql                # DB backend (credentials, host)
+|   +-- kc_postgresql             # DB Keycloak (credentials, host)
++-- compose.yaml                  # Services applicatifs
++-- compose.keycloak.yaml         # Keycloak + sa DB
++-- default.conf.template         # Config nginx frontend
++-- livekit-server.yaml           # Config LiveKit (placeholder sed)
 ```
 
 ### Variables cles dans `env.d/common`
@@ -370,56 +379,42 @@ docker/production/
 
 ## 9. Gestion des secrets
 
-Tous les secrets sont dans le fichier `.env` (non versionne). Generer chaque secret avec :
+Les secrets sont stockes dans les **variables CI/CD de GitLab** (Settings -> CI/CD -> Variables).
+Le pipeline genere le `.env` a chaque deploy.
 
-```bash
-openssl rand -base64 32
-```
+Variables a configurer dans GitLab :
 
-Secrets a generer :
-- `DJANGO_SECRET_KEY`
-- `POSTGRES_PASSWORD`
-- `KC_POSTGRES_PASSWORD`
-- `KC_BOOTSTRAP_ADMIN_PASSWORD`
-- `OIDC_RP_CLIENT_SECRET`
-- `LIVEKIT_API_SECRET`
+| Variable | Type | Protege | Masque |
+|----------|------|---------|--------|
+| `MEET_HOST` | Variable | Oui | Non |
+| `KEYCLOAK_HOST` | Variable | Oui | Non |
+| `LIVEKIT_HOST` | Variable | Oui | Non |
+| `DJANGO_SECRET_KEY` | Variable | Oui | Oui |
+| `POSTGRES_PASSWORD` | Variable | Oui | Oui |
+| `KC_POSTGRES_PASSWORD` | Variable | Oui | Oui |
+| `KC_BOOTSTRAP_ADMIN_PASSWORD` | Variable | Oui | Oui |
+| `OIDC_RP_CLIENT_SECRET` | Variable | Oui | Oui |
+| `LIVEKIT_API_SECRET` | Variable | Oui | Oui |
 
-**Important** : Les memes variables doivent etre configurees dans les variables CI/CD
-de GitLab pour que le pipeline puisse deployer. Si les valeurs divergent entre `.env`
-et GitLab, les variables GitLab prennent la priorite (les variables d'env du runner
-overrident celles du `.env`).
+Generer chaque secret avec : `openssl rand -base64 32`
 
 ---
 
 ## 10. TLS / Let's Encrypt
 
-Les certificats sont generes automatiquement par acme-companion pour les 3 domaines :
+Les certificats sont generes **automatiquement par Traefik** via le certresolver `letsencrypt`
+configure dans `/opt/aiobi/traefik/config/traefik.yml`.
 
+Chaque conteneur avec un label `traefik.http.routers.*.tls.certresolver=letsencrypt`
+obtient automatiquement un certificat Let's Encrypt pour son domaine.
+
+Domaines certifies :
 - `meet.aiobi.world` (frontend)
 - `id.aiobi.world` (keycloak)
 - `lkt.aiobi.world` (livekit)
 
-Les certificats sont stockes dans le volume Docker `certs` et renouveles automatiquement.
-
-**Pas de `LETSENCRYPT_TEST`** — les vrais certificats Let's Encrypt sont generes
-des le premier deploy (pas de certificats de test comme en staging).
-
-### Depannage TLS
-
-Si les certificats ne se generent pas :
-
-```bash
-# Verifier les logs acme-companion
-docker logs nginx-proxy-acme
-
-# Verifier que les domaines pointent vers le serveur
-dig meet.aiobi.world
-dig id.aiobi.world
-dig lkt.aiobi.world
-
-# Forcer la regeneration
-docker restart nginx-proxy-acme
-```
+**Aucune action manuelle requise** — Traefik demande et renouvelle les certificats
+automatiquement. Les certificats sont stockes dans `/opt/aiobi/traefik/certs/acme.json`.
 
 ---
 
@@ -427,17 +422,13 @@ docker restart nginx-proxy-acme
 
 | Port | Protocole | Service | Expose sur Internet |
 |------|-----------|---------|---------------------|
-| 80 | TCP | nginx-proxy (HTTP redirect) | Oui |
-| 443 | TCP | nginx-proxy (HTTPS) | Oui |
+| 80 | TCP | Traefik (HTTP redirect) | Oui (gere par infra) |
+| 443 | TCP | Traefik (HTTPS) | Oui (gere par infra) |
 | 47881 | TCP | LiveKit ICE TCP | Oui |
 | 47882 | UDP | LiveKit media | Oui |
 
-```bash
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow 47881/tcp
-sudo ufw allow 47882/udp
-```
+Les ports 80/443 sont geres par l'infra Aiobi (Traefik). Seuls 47881/47882 sont
+specifiques a Meet.
 
 ---
 
@@ -449,83 +440,45 @@ sudo ufw allow 47882/udp
 |---------|--------|--------|----------|
 | **Gunicorn** | workers | 6 | 6 requetes API en parallele (via `GUNICORN_CMD_ARGS`) |
 | **PostgreSQL** | shared_buffers | 4GB | Cache des donnees en RAM, reduit les lectures disque |
-| **PostgreSQL** | effective_cache_size | 12GB | Indique au planner combien de RAM est disponible pour le cache OS |
+| **PostgreSQL** | effective_cache_size | 12GB | Indique au planner combien de RAM est disponible |
 | **PostgreSQL** | work_mem | 64MB | Memoire par operation de tri/jointure |
 | **PostgreSQL** | maintenance_work_mem | 512MB | Pour VACUUM, CREATE INDEX, etc. |
 | **Redis** | maxmemory | 2GB | Limite la consommation memoire, eviction LRU |
 | **Celery** | concurrency | 4 | 4 taches asynchrones en parallele |
-| **LiveKit** | Pas de limite | - | Utilise autant de CPU/RAM que necessaire pour les flux video |
+| **LiveKit** | Pas de limite | - | Utilise autant de CPU/RAM que necessaire |
 
-### Sysctl (a configurer sur le host)
+### Sysctl (configure sur le host)
 
 ```bash
-# Buffer UDP pour LiveKit — ameliore les performances WebRTC
-echo "net.core.rmem_max=5000000" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
+net.core.rmem_max=5000000   # Buffer UDP pour LiveKit
 ```
 
 ### Scaler si necessaire
 
-Si la charge augmente :
-
-1. **Backend** : augmenter `GUNICORN_CMD_ARGS=--workers=9` (ou plus)
+1. **Backend** : augmenter `GUNICORN_CMD_ARGS=--workers=9`
 2. **Celery** : augmenter `--concurrency=8`
-3. **Replicas** : `docker compose up -d --scale backend=3` (nginx-proxy load balance auto)
-4. **LiveKit** : scaler verticalement (plus de CPU/RAM) — LiveKit ne se scale pas en replicas
+3. **Replicas** : `docker compose up -d --scale backend=3` (Traefik load balance auto)
+4. **LiveKit** : scaler verticalement (plus de CPU/RAM)
 
 ---
 
 ## 13. Procedure de deploiement pas a pas
 
-### Prerequis serveur
+### Prerequis serveur (deja fait)
 
-```bash
-# 1. Installer Docker
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-
-# 2. Installer GitLab Runner
-curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
-sudo apt-get install gitlab-runner
-
-# 3. Enregistrer le runner
-sudo gitlab-runner register \
-  --url https://gitlab.com \
-  --token $RUNNER_TOKEN \
-  --executor docker \
-  --docker-image docker:27 \
-  --tag-list "prod,docker" \
-  --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
-  --docker-volumes "/opt/aiobi-meet:/opt/aiobi-meet" \
-  --docker-volumes "/cache"
-
-# 4. Creer la structure de repertoires
-sudo mkdir -p /opt/aiobi-meet/production/{env.d,vhost.d,data/{databases/{backend,keycloak},media}}
-
-# 5. Copier le .env.example et remplir les secrets
-cp .env.example /opt/aiobi-meet/production/.env
-# Editer et remplir chaque secret avec : openssl rand -base64 32
-
-# 6. Configurer sysctl
-echo "net.core.rmem_max=5000000" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
-
-# 7. Configurer le firewall
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow 47881/tcp
-sudo ufw allow 47882/udp
-
-# 8. Configurer les DNS A records
-# meet.aiobi.world    A    <IP_SERVEUR>
-# id.aiobi.world      A    <IP_SERVEUR>
-# lkt.aiobi.world     A    <IP_SERVEUR>
-```
+- [x] Docker installe (v29.3)
+- [x] GitLab Runner enregistre (aiobi-master-prod, tags: prod/docker)
+- [x] Repertoires `/opt/aiobi-meet/production/` crees
+- [x] Sysctl `net.core.rmem_max=5000000`
+- [x] Firewall : 47881/tcp + 47882/udp
+- [x] DNS : meet/id/lkt.aiobi.world -> 207.180.255.229
+- [ ] Variables CI/CD configurees dans GitLab
 
 ### Premier deploiement
 
-Merger `develop` dans `main` et pusher. Le pipeline CI/CD fait le reste :
-build → push registry → deploy.
+1. Configurer les variables CI/CD dans GitLab (section 9)
+2. Merger `develop` dans `main` et pusher
+3. Le pipeline CI/CD fait le reste : build -> push registry -> deploy
 
 ---
 
@@ -537,24 +490,25 @@ Chaque push sur `main` declenche automatiquement :
    - Build Docker `--no-cache` (assets toujours a jour)
    - Push au GitLab Registry avec tags `:$SHA` et `:latest`
 2. **Deploy** : `deploy-production` (apres les builds)
+   - Genere `.env` depuis les variables CI/CD GitLab
    - Copie les configs du CI vers le host
-   - nginx-proxy : `up -d` (preserve certs)
    - Keycloak : `up -d` (preserve sessions)
    - Pull les nouvelles images
    - App : `up -d --force-recreate` (nouvelles images + env)
    - Migrations Django automatiques
-   - Verification TLS + reparation symlinks si necessaire
+   - Verification Traefik routing
 
 ### Rollback
 
 ```bash
 cd /opt/aiobi-meet/production
 
-# Voir les tags disponibles
-docker image ls $CI_REGISTRY_IMAGE/backend
+# Changer IMAGE_TAG dans .env vers un SHA precedent
+sed -i 's/IMAGE_TAG=.*/IMAGE_TAG=abc123de/' .env
 
-# Revenir a une version precedente
-IMAGE_TAG=abc123de docker compose -f compose.yaml up -d --force-recreate
+# Pull et relancer
+docker compose -f compose.yaml pull backend frontend
+docker compose -f compose.yaml up -d --force-recreate
 ```
 
 ---
@@ -567,13 +521,12 @@ cd /opt/aiobi-meet/production
 # --- Etat des services ---
 docker compose -f compose.yaml ps
 docker compose -f compose.keycloak.yaml ps
-docker compose -f compose.nginx-proxy.yaml ps
 
 # --- Logs ---
-docker compose -f compose.yaml logs -f backend        # Backend Django
-docker compose -f compose.yaml logs -f frontend        # Frontend nginx
-docker compose -f compose.yaml logs -f livekit         # LiveKit
-docker compose -f compose.keycloak.yaml logs -f keycloak  # Keycloak
+docker compose -f compose.yaml logs -f backend
+docker compose -f compose.yaml logs -f frontend
+docker compose -f compose.yaml logs -f livekit
+docker compose -f compose.keycloak.yaml logs -f keycloak
 
 # --- Redemarrer un service ---
 docker compose -f compose.yaml restart backend
@@ -589,6 +542,9 @@ docker compose -f compose.yaml exec postgresql psql -U aiobi -d meet
 
 # --- Stats ressources ---
 docker stats --no-stream
+
+# --- Traefik routing ---
+docker logs traefik 2>&1 | grep "meet\|keycloak\|livekit" | tail -20
 ```
 
 ---
@@ -598,15 +554,28 @@ docker stats --no-stream
 ### Erreur 502 au logout
 
 Cause : buffers nginx trop petits pour le JWT Keycloak dans l'URL de logout.
-Solution : verifier que `vhost.d/meet.aiobi.world` et `vhost.d/id.aiobi.world`
-contiennent `proxy_buffer_size 16k`.
+Solution : verifier que `default.conf.template` contient `proxy_buffer_size 16k`.
 
 ### SSL_CERTIFICATE_VERIFY_FAILED sur le callback OIDC
 
-Cause : le backend essaie d'appeler Keycloak via HTTPS public au lieu de HTTP interne.
+Cause : le backend essaie d'appeler Keycloak via HTTPS au lieu de HTTP interne.
 Solution : verifier que `OIDC_OP_JWKS_ENDPOINT`, `OIDC_OP_TOKEN_ENDPOINT` et
-`OIDC_OP_USER_ENDPOINT` dans `env.d/common` utilisent `http://keycloak:8080/...`
-et pas `https://id.aiobi.world/...`.
+`OIDC_OP_USER_ENDPOINT` dans `env.d/common` utilisent `http://keycloak:8080/...`.
+
+### Traefik ne route pas vers un service
+
+Cause : le conteneur n'est pas sur le reseau `aiobi-public` ou n'a pas le label `traefik.enable=true`.
+Solution :
+```bash
+# Verifier les reseaux du conteneur
+docker inspect <conteneur> --format '{{json .NetworkSettings.Networks}}' | python3 -m json.tool
+
+# Verifier les labels
+docker inspect <conteneur> --format '{{json .Config.Labels}}' | python3 -m json.tool
+
+# Verifier que Traefik voit le service
+docker logs traefik 2>&1 | tail -50
+```
 
 ### LiveKit "livekit-server: not found"
 
@@ -618,12 +587,6 @@ Solution : utiliser le chemin absolu dans l'entrypoint du compose.
 Cause : Firefox ne supporte pas `navigator.permissions.query({name: 'camera'})`.
 Solution : le frontend catch l'erreur et set la permission a `'prompt'` (deja corrige).
 
-### Images pas a jour apres un deploy
-
-Cause : cache Docker.
-Solution : les builds CI utilisent `--no-cache`. Si le probleme persiste, verifier
-que `IMAGE_TAG` dans `.env` est bien `latest` et que `docker compose pull` fonctionne.
-
 ---
 
 ## 17. Replication DB (futur)
@@ -632,15 +595,12 @@ La replication PostgreSQL vers un serveur de backup est prevue. Les configs sont
 preparees pour faciliter le branchement :
 
 - `DB_HOST` dans `env.d/postgresql` pointe vers `postgresql` (conteneur local).
-  Pour basculer vers un replica externe, changer en l'IP du serveur de backup.
+  Pour basculer vers le PG centralise du serveur, changer en `postgresql` du reseau `aiobi-internal`.
 - `DB_PORT` est explicitement declare (5432).
-- La configuration PostgreSQL (shared_buffers, etc.) est passee via `command:` dans
-  le compose, pas dans un fichier monte — facile a adapter par serveur.
 
-Pour activer la replication :
-1. Configurer le serveur de backup avec PostgreSQL streaming replication
-2. Changer `DB_HOST` dans `env.d/postgresql` vers l'IP du primary/replica
-3. Relancer le backend : `docker compose -f compose.yaml up -d --force-recreate backend`
+Migration prevue : quand l'infra de backup sera en place, les bases Meet et Keycloak
+seront migrees vers le PostgreSQL centralise du serveur (actuellement sur le reseau
+`aiobi-internal`, port 15432). Cela permettra un backup unifie de toutes les apps Aiobi.
 
 ---
 
@@ -649,15 +609,17 @@ Pour activer la replication :
 | Aspect | Staging | Production |
 |--------|---------|------------|
 | Domaines | `aiobi-meet.duckdns.org` | `meet.aiobi.world`, `id.aiobi.world`, `lkt.aiobi.world` |
-| Ports | 8880/8443 (non-standard) | 80/443 (standard) |
-| Keycloak routing | Path-based via frontend nginx | Sous-domaine dedie (`id.aiobi.world`) |
+| Ports | 8880/8443 (non-standard) | 80/443 (standard, via Traefik) |
+| Reverse proxy | nginx-proxy Docker dedie | Traefik existant (partage) |
+| Keycloak routing | Path-based via frontend nginx | Sous-domaine dedie via Traefik labels |
 | Images | Build local sur le serveur | GitLab Container Registry (push/pull) |
 | DNS | DuckDNS dynamique (cron 5min) | A records fixes |
-| TLS | `LETSENCRYPT_TEST=true` au debut | Vrais certs des le depart |
+| TLS | acme-companion + nginx-proxy | Traefik certresolver automatique |
+| Secrets | `.env` manuel sur le serveur | Genere par CI depuis variables GitLab |
 | Gunicorn | 3 workers (defaut) | 6 workers |
 | PostgreSQL | Config defaut | shared_buffers=4GB, cache=12GB |
 | Redis | Config defaut | maxmemory 2GB, LRU |
 | Celery | Concurrency defaut | Concurrency 4 |
 | CI trigger | Push sur `develop` | Push sur `main` |
 | Runner tag | `dev` | `prod` |
-| Proxy host natif | Oui (port 80 → 8880) | Non (nginx-proxy direct sur 80/443) |
+| Serveur | Partage avec autres apps (nginx natif) | Partage avec autres apps (Traefik) |
