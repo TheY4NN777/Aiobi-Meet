@@ -8,7 +8,7 @@
 #
 # Runners :
 #   - dev-serv-runner (tags: dev, docker) — serveur de staging
-#   - prod-runner     (tags: prod, docker) — serveur de production
+#   - aiobi-master-prod (tags: aiobi-prod, docker) — serveur de production
 #
 # Prerequis runner config.toml (staging) :
 #   volumes = ["/var/run/docker.sock:/var/run/docker.sock",
@@ -240,7 +240,7 @@ deploy-staging:
 build-backend-prod:
   stage: build
   tags:
-    - prod
+    - aiobi-prod
     - docker
   image: docker:27
   before_script:
@@ -260,7 +260,7 @@ build-backend-prod:
 build-frontend-prod:
   stage: build
   tags:
-    - prod
+    - aiobi-prod
     - docker
   image: docker:27
   before_script:
@@ -297,7 +297,7 @@ build-frontend-prod:
 deploy-production:
   stage: deploy
   tags:
-    - prod
+    - aiobi-prod
     - docker
   image: docker:27
   before_script:
