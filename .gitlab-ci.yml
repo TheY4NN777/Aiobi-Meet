@@ -394,3 +394,48 @@ deploy-production:
   needs:
     - build-backend-prod
     - build-frontend-prod
+
+# =============================================================================
+# DIAGNOSTIC (temporaire — a supprimer apres le premier deploy reussi)
+# =============================================================================
+
+debug-production:
+  stage: deploy
+  tags:
+    - aiobi-prod
+    - docker
+  image: docker:27
+  before_script:
+    - apk add --no-cache docker-cli-compose curl
+  script:
+    - cd $PRODUCTION_DIR
+
+    - echo "=== Docker containers ==="
+    - docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -30
+
+    - echo "=== aiobi-public network ==="
+    - docker network inspect aiobi-public --format '{{range .Containers}}{{.Name}} {{end}}' 2>&1 || echo "Network not found"
+
+    - echo "=== prod-app network ==="
+    - docker network inspect prod-app --format '{{range .Containers}}{{.Name}} {{end}}' 2>&1 || echo "Network not found"
+
+    - echo "=== Traefik routers ==="
+    - curl -s http://localhost:8080/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable"
+
+    - echo "=== Frontend logs ==="
+    - docker logs --tail 20 $(docker ps -qf "name=frontend" | head -1) 2>&1 || echo "No frontend container"
+
+    - echo "=== Backend logs ==="
+    - docker logs --tail 20 $(docker ps -qf "name=backend" | head -1) 2>&1 || echo "No backend container"
+
+    - echo "=== .env check ==="
+    - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG" .env 2>/dev/null || echo "No .env found"
+
+    - echo "=== Curl tests ==="
+    - curl -sk -o /dev/null -w "meet.aiobi.world -> %{http_code}\n" https://meet.aiobi.world --max-time 10 2>&1 || echo "Failed"
+    - curl -sk -o /dev/null -w "id.aiobi.world -> %{http_code}\n" https://id.aiobi.world --max-time 10 2>&1 || echo "Failed"
+  when: manual
+  only:
+    - main
+  needs:
+    - deploy-production
