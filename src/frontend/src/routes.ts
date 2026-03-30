@@ -5,7 +5,6 @@ import {
 } from '@/features/rooms'
 import { HomeRoute } from '@/features/home'
 import { LegalTermsRoute } from '@/features/legalsTerms/LegalTermsRoute'
-import { AccessibilityRoute } from '@/features/legalsTerms/Accessibility'
 import { TermsOfServiceRoute } from '@/features/legalsTerms/TermsOfService'
 import { CreatePopup } from '@/features/sdk/routes/CreatePopup'
 import { CreateMeetingButton } from '@/features/sdk/routes/CreateMeetingButton'
@@ -18,7 +17,6 @@ export const routes: Record<
   | 'room'
   | 'feedback'
   | 'legalTerms'
-  | 'accessibility'
   | 'termsOfService'
   | 'sdkCreatePopup'
   | 'sdkCreateButton'
@@ -49,13 +47,8 @@ export const routes: Record<
   },
   legalTerms: {
     name: 'legalTerms',
-    path: '/mentions-legales',
+    path: '/politique-confidentialite',
     Component: LegalTermsRoute,
-  },
-  accessibility: {
-    name: 'accessibility',
-    path: '/accessibilite',
-    Component: AccessibilityRoute,
   },
   termsOfService: {
     name: 'termsOfService',

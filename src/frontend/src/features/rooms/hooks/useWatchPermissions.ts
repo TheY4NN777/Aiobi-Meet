@@ -143,6 +143,14 @@ export const useWatchPermissions = () => {
       } catch (error) {
         if (!isCancelled) {
           console.error('Error checking permissions:', error)
+          // If Permissions API fails (e.g. Firefox for camera/microphone),
+          // treat as 'prompt' so the UI shows permission request instead of loading
+          if (permissionsStore.cameraPermission === undefined) {
+            permissionsStore.cameraPermission = 'prompt'
+          }
+          if (permissionsStore.microphonePermission === undefined) {
+            permissionsStore.microphonePermission = 'prompt'
+          }
         }
       } finally {
         if (!isCancelled) {
