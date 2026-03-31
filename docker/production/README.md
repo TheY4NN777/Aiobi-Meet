@@ -1,12 +1,11 @@
-lets go
 # Aiobi Meet — Guide de deploiement production
 
 > **Serveur** : Aiobi Master (207.180.255.229) — serveur applicatif partage (1.8 TB, 251 GB RAM, 20 cores)
 > **Domaines** : `meet.aiobi.world` / `id.aiobi.world` / `lkt.aiobi.world`
-> **Derniere mise a jour** : 30 mars 2026
+> **Derniere mise a jour** : 31 mars 2026
 >
 > **Note importante** : Ce serveur heberge toutes les apps Aiobi. Meet est la premiere
-> app deployee. Le reverse proxy **Traefik v3.3** est deja en place sur 80/443 et gere
+> app deployee. Le reverse proxy **Traefik v3.6** est deja en place sur 80/443 et gere
 > le TLS automatiquement via Let's Encrypt. Meet s'integre via des labels Docker.
 
 ---
@@ -31,6 +30,7 @@ lets go
 16. [Diagnostic et depannage](#16-diagnostic-et-depannage)
 17. [Replication DB (futur)](#17-replication-db-futur)
 18. [Differences avec le staging](#18-differences-avec-le-staging)
+19. [Modifications manuelles serveur](#19-modifications-manuelles-serveur)
 
 ---
 
@@ -57,7 +57,7 @@ Developpeur (branche develop)
 ### Workflow CI/CD
 
 - **Push sur `develop`** -> build local + deploy staging (runner tag: `dev`)
-- **Push sur `main`** -> build + push GitLab Registry + deploy production (runner tag: `prod`)
+- **Push sur `main`** -> build + push GitLab Registry + deploy production (runner tag: `aiobi-prod`)
 
 Les images sont buildees, poussees au GitLab Container Registry, puis pullees sur
 le serveur de prod. Cela permet le versioning et le rollback facile.
@@ -111,7 +111,7 @@ le serveur de prod. Cela permet le versioning et le rollback facile.
 
 | Composant | Role | Image Docker |
 |-----------|------|-------------|
-| **Traefik** | Reverse proxy TLS existant, routing par labels Docker | `traefik:v3.3` (gere separement) |
+| **Traefik** | Reverse proxy TLS existant, routing par labels Docker | `traefik:v3.6` (gere separement) |
 | **frontend** | SPA React servie par Nginx, reverse proxy interne vers le backend et MinIO | GitLab Registry |
 | **backend** | API Django avec Gunicorn (6 workers, timeout 90s) | GitLab Registry |
 | **celery** | Worker asynchrone (emails, traitement) — concurrency 4 | Meme image que backend |
@@ -181,9 +181,16 @@ docker compose -f compose.yaml up -d
 
 ### 5.1 Pourquoi Traefik au lieu de nginx-proxy ?
 
-Le serveur Aiobi Master a deja Traefik v3.3 en place sur les ports 80/443, partage entre
+Le serveur Aiobi Master a deja Traefik v3.6 en place sur les ports 80/443, partage entre
 toutes les apps Aiobi (GitLab, Teleport, Vault, etc.). Deployer un deuxieme reverse proxy
 serait un conflit de ports et une duplication inutile.
+
+> **Note (31 mars 2026)** : Traefik a ete mis a jour de v3.3 a v3.6 suite a l'upgrade
+> du daemon Docker vers v29.x (API 1.54). Traefik v3.3 embarque un client Docker trop
+> ancien (API 1.24) qui est rejete par le daemon v29.x avec l'erreur
+> `client version 1.24 is too old. Minimum supported API version is 1.40`.
+> La mise a jour vers Traefik v3.6 resout le probleme nativement. La variable
+> `DOCKER_API_VERSION=1.45` a egalement ete ajoutee par securite.
 
 L'integration se fait via des **labels Docker** sur les conteneurs :
 ```yaml
@@ -417,6 +424,33 @@ Domaines certifies :
 **Aucune action manuelle requise** — Traefik demande et renouvelle les certificats
 automatiquement. Les certificats sont stockes dans `/opt/aiobi/traefik/certs/acme.json`.
 
+### 10.1 Prerequis iptables pour ACME (outbound Internet)
+
+Traefik doit pouvoir joindre les serveurs Let's Encrypt (ACME) depuis le reseau Docker
+`aiobi-public` (subnet `172.18.0.0/16`). Si `"iptables": false` est configure dans
+`/etc/docker/daemon.json` ou si un restart Docker a reinitialise les regles, Traefik
+echouera avec `dial tcp 172.65.32.248:443: i/o timeout`.
+
+Regles iptables necessaires :
+
+```bash
+# Autoriser le trafic sortant et entrant pour le reseau aiobi-public
+iptables -I DOCKER-USER -s 172.18.0.0/16 -j ACCEPT
+iptables -I DOCKER-USER -d 172.18.0.0/16 -j ACCEPT
+
+# NAT pour le trafic sortant (acces Internet depuis les conteneurs)
+iptables -t nat -A POSTROUTING -s 172.18.0.0/16 ! -o docker0 -j MASQUERADE
+```
+
+Pour persister ces regles apres un reboot :
+
+```bash
+apt install iptables-persistent
+netfilter-persistent save
+```
+
+Les fichiers sauvegardes sont dans `/etc/iptables/rules.v4` et `/etc/iptables/rules.v6`.
+
 ---
 
 ## 11. Ports et firewall
@@ -468,7 +502,10 @@ net.core.rmem_max=5000000   # Buffer UDP pour LiveKit
 ### Prerequis serveur (deja fait)
 
 - [x] Docker installe (v29.3)
-- [x] GitLab Runner enregistre (aiobi-master-prod, tags: prod/docker)
+- [x] GitLab Runner enregistre (aiobi-master-prod, tags: `aiobi-prod`/`docker`)
+- [x] `network_mode = "host"` dans `/etc/gitlab-runner/config.toml` (runner accede au host network pour GitLab)
+- [x] `insecure-registries: ["10.13.13.1:5050"]` dans `/etc/docker/daemon.json` (GitLab Registry HTTP)
+- [x] `iptables-persistent` installe et regles sauvegardees (section 10.1)
 - [x] Repertoires `/opt/aiobi-meet/production/` crees
 - [x] Sysctl `net.core.rmem_max=5000000`
 - [x] Firewall : 47881/tcp + 47882/udp
@@ -588,6 +625,37 @@ Solution : utiliser le chemin absolu dans l'entrypoint du compose.
 Cause : Firefox ne supporte pas `navigator.permissions.query({name: 'camera'})`.
 Solution : le frontend catch l'erreur et set la permission a `'prompt'` (deja corrige).
 
+### Traefik API version mismatch apres upgrade Docker
+
+Cause : apres un upgrade du daemon Docker vers v29.x (API 1.54), Traefik v3.3 utilise un
+client Docker avec API 1.24, rejete par le daemon (`client version 1.24 is too old`).
+Solution : mettre a jour Traefik vers v3.6 dans `/opt/aiobi/docker-compose.yml`. Ajouter
+`DOCKER_API_VERSION=1.45` en variable d'environnement par securite.
+
+### iptables rules perdues apres restart Docker
+
+Cause : quand `"iptables": false` est dans `daemon.json` et que Docker redemarre, les
+regles iptables manuelles pour les reseaux custom (ex: `172.18.0.0/16`) sont perdues.
+Les conteneurs perdent l'acces a Internet (ACME timeout, pas de DNS, etc.).
+Solution : re-appliquer les regles (voir section 10.1) et persister avec
+`iptables-persistent` / `netfilter-persistent save`.
+
+### Volume bind mount cree comme dossier au lieu de fichier
+
+Cause : si le fichier source d'un bind mount n'existe pas sur le host au moment du
+`docker compose up`, Docker cree un **dossier** a la place. Le conteneur voit alors un
+dossier vide au lieu du fichier attendu (ex: `realm.json` monte comme dossier).
+Solution : s'assurer que le fichier existe sur le host avant le premier `up`. Verifier
+les chemins relatifs dans le compose (attention aux `../../` qui se resolvent depuis
+le working directory du compose, pas depuis la racine du repo).
+
+### Silent login cause un ecran blanc de 5 secondes
+
+Cause : `FRONTEND_IS_SILENT_LOGIN_ENABLED=True` (valeur par defaut) provoque une
+redirection pleine page vers Keycloak pour un check d'auth silencieux avant le rendu
+de l'application. L'utilisateur voit un ecran blanc pendant ~5 secondes.
+Solution : desactiver avec `FRONTEND_IS_SILENT_LOGIN_ENABLED=False` dans `env.d/common`.
+
 ---
 
 ## 17. Replication DB (futur)
@@ -622,5 +690,66 @@ seront migrees vers le PostgreSQL centralise du serveur (actuellement sur le res
 | Redis | Config defaut | maxmemory 2GB, LRU |
 | Celery | Concurrency defaut | Concurrency 4 |
 | CI trigger | Push sur `develop` | Push sur `main` |
-| Runner tag | `dev` | `prod` |
+| Runner tag | `dev` | `aiobi-prod` |
 | Serveur | Partage avec autres apps (nginx natif) | Partage avec autres apps (Traefik) |
+
+---
+
+## 19. Modifications manuelles serveur
+
+Ce registre documente toutes les modifications faites directement sur le serveur
+Aiobi Master (207.180.255.229) en dehors du pipeline CI/CD, avec leur justification.
+
+### 19.1 `/etc/gitlab-runner/config.toml`
+
+| Parametre | Valeur | Justification |
+|-----------|--------|---------------|
+| `url` | `http://127.0.0.1:8929` | Le runner avec `network_mode = "host"` accede a GitLab via localhost |
+| `clone_url` | `http://127.0.0.1:8929` | Meme raison — evite le VPN IP `10.13.13.1` inaccessible depuis le conteneur |
+| `network_mode` | `"host"` | Le runner doit acceder a GitLab sur `127.0.0.1:8929` et au Docker socket |
+| `tags` | `["aiobi-prod", "docker"]` | Tag `prod` renomme en `aiobi-prod` pour eviter les conflits avec `bbs-master-runner` |
+
+### 19.2 `/etc/docker/daemon.json`
+
+```json
+{
+  "insecure-registries": ["10.13.13.1:5050"]
+}
+```
+
+**Justification** : le GitLab Container Registry ecoute en HTTP sur `10.13.13.1:5050`.
+Sans cette config, Docker refuse de pull/push avec `http: server gave HTTP response to
+HTTPS client`. Necessite un restart du daemon Docker (`systemctl restart docker`).
+
+### 19.3 `/opt/aiobi/docker-compose.yml` (Traefik)
+
+| Modification | Avant | Apres | Justification |
+|-------------|-------|-------|---------------|
+| Image Traefik | `traefik:v3.3` | `traefik:v3.6` | Traefik v3.3 embarque un client Docker API 1.24, rejete par Docker v29.x (minimum API 1.40) |
+| Env var | — | `DOCKER_API_VERSION=1.45` | Securite supplementaire pour forcer la version API (non strictement necessaire avec v3.6) |
+
+### 19.4 iptables (persiste via `iptables-persistent`)
+
+```bash
+# Trafic entrant/sortant pour le reseau aiobi-public (172.18.0.0/16)
+iptables -I DOCKER-USER -s 172.18.0.0/16 -j ACCEPT
+iptables -I DOCKER-USER -d 172.18.0.0/16 -j ACCEPT
+
+# NAT pour l'acces Internet (ACME Let's Encrypt, DNS, etc.)
+iptables -t nat -A POSTROUTING -s 172.18.0.0/16 ! -o docker0 -j MASQUERADE
+```
+
+**Justification** : avec `"iptables": false` dans `daemon.json`, Docker ne gere pas
+les regles iptables. Les conteneurs sur le reseau custom `aiobi-public` n'ont pas acces
+a Internet par defaut. Sans ces regles, Traefik ne peut pas resoudre le challenge ACME
+(`dial tcp: i/o timeout`). Regles persistees avec `netfilter-persistent save`.
+
+### 19.5 `/opt/docker/` (copies manuelles interim)
+
+| Fichier | Source | Justification |
+|---------|--------|---------------|
+| `/opt/docker/auth/realm.json` | `docker/auth/realm.json` du repo | Le compose.keycloak.yaml utilisait `../../docker/auth/realm.json` qui se resout a `/opt/docker/auth/realm.json` depuis `/opt/aiobi-meet/production/`. Copie manuelle en attendant le fix du path dans le compose. |
+| `/opt/docker/keycloak/themes/aiobi/` | `docker/keycloak/themes/aiobi/` du repo | Meme probleme de path `../../`. Copie manuelle pour que le theme Aiobi s'affiche sur la page login Keycloak. |
+
+> **A retirer** : ces copies manuelles devront etre supprimees une fois que les paths
+> dans `compose.keycloak.yaml` seront corriges (`../../` -> `../`) et redeployes via CI.
