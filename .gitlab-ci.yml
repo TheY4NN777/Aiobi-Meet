@@ -466,9 +466,17 @@ debug-production:
     - echo "=== .env check ==="
     - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG" .env 2>/dev/null || echo "No .env found"
 
-    - echo "=== Curl tests ==="
+    - echo "=== Restarting Traefik ==="
+    - docker restart traefik
+    - sleep 10
+
+    - echo "=== Traefik logs after restart ==="
+    - docker logs --tail 30 traefik 2>&1 || echo "No logs"
+
+    - echo "=== Curl tests after Traefik restart ==="
     - curl -sk -o /dev/null -w "meet.aiobi.world -> %{http_code}\n" https://meet.aiobi.world --max-time 10 2>&1 || echo "Failed"
     - curl -sk -o /dev/null -w "id.aiobi.world -> %{http_code}\n" https://id.aiobi.world --max-time 10 2>&1 || echo "Failed"
+    - curl -sk -o /dev/null -w "lkt.aiobi.world -> %{http_code}\n" https://lkt.aiobi.world --max-time 10 2>&1 || echo "Failed"
   when: manual
   only:
     - main
