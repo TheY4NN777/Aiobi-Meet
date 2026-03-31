@@ -205,7 +205,59 @@ deploy-staging:
         fi
       fi
 
-    # --- 7. DuckDNS cron (mise a jour IP automatique toutes les 5 min) --------
+    # --- 7. Configuration Keycloak post-deploy ---------------------------------
+    - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
+    - |
+      echo "Waiting for Keycloak to be ready..."
+      for i in $(seq 1 30); do
+        if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
+          echo "Keycloak realm meet is ready!"
+          break
+        fi
+        echo "Waiting for Keycloak... ($i/30)"
+        sleep 5
+      done
+
+      TOKEN=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+        'curl -sf -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+        -d "client_id=admin-cli" \
+        -d "username=$KEYCLOAK_ADMIN" \
+        -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
+        -d "grant_type=password"' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+      if [ -n "$TOKEN" ]; then
+        CLIENT_UUID=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+          "curl -sf 'http://localhost:8080/admin/realms/meet/clients' \
+          -H 'Authorization: Bearer $TOKEN'" | grep -o '"id":"[^"]*","clientId":"meet"' | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+
+        if [ -n "$CLIENT_UUID" ]; then
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet/clients/$CLIENT_UUID' \
+            -H 'Authorization: Bearer $TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              \"id\":\"$CLIENT_UUID\",
+              \"clientId\":\"meet\",
+              \"secret\":\"${OIDC_RP_CLIENT_SECRET}\",
+              \"redirectUris\":[\"https://${MEET_HOST}:8443/*\",\"http://localhost:3000/*\",\"http://localhost:8070/*\"],
+              \"webOrigins\":[\"https://${MEET_HOST}:8443\",\"http://localhost:3000\",\"http://localhost:8070\"],
+              \"attributes\":{\"post.logout.redirect.uris\":\"https://${MEET_HOST}:8443/*\"}
+            }'" && echo "  Client secret + URIs updated"
+
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
+            -H 'Authorization: Bearer $TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
+            && echo "  Realm locale set to FR"
+        else
+          echo "WARNING: Client 'meet' not found."
+        fi
+      else
+        echo "WARNING: Could not get Keycloak admin token."
+      fi
+
+    # --- 8. DuckDNS cron (mise a jour IP automatique toutes les 5 min) --------
     - echo "=== Setting up DuckDNS cron ==="
     - |
       chmod +x $HOST_STAGING/duckdns-update.sh
@@ -375,7 +427,68 @@ deploy-production:
     # --- 6. Migrations automatiques ------------------------------------------
     - docker compose -f compose.yaml exec -T backend python manage.py migrate --noinput
 
-    # --- 7. Verification rapide Traefik (TLS est automatique) ----------------
+    # --- 7. Configuration Keycloak post-deploy ---------------------------------
+    # Le realm.json est un template d'import initial (secrets de dev).
+    # Apres chaque deploy, on synchronise la config reelle via l'API REST.
+    # Cela garantit que meme apres un destroy+recreate, Keycloak est configure.
+    - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
+    - |
+      echo "Waiting for Keycloak to be ready..."
+      for i in $(seq 1 30); do
+        if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
+          echo "Keycloak realm meet is ready!"
+          break
+        fi
+        echo "Waiting for Keycloak... ($i/30)"
+        sleep 5
+      done
+
+      echo "Getting admin token..."
+      TOKEN=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+        'curl -sf -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+        -d "client_id=admin-cli" \
+        -d "username=$KEYCLOAK_ADMIN" \
+        -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
+        -d "grant_type=password"' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+      if [ -z "$TOKEN" ]; then
+        echo "WARNING: Could not get Keycloak admin token. Skipping OIDC config."
+      else
+        echo "Got admin token. Configuring client..."
+
+        # Get client internal ID
+        CLIENT_UUID=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+          "curl -sf 'http://localhost:8080/admin/realms/meet/clients' \
+          -H 'Authorization: Bearer $TOKEN'" | grep -o '"id":"[^"]*","clientId":"meet"' | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+
+        if [ -n "$CLIENT_UUID" ]; then
+          # Update client secret + redirect URIs + post_logout_redirect_uris
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet/clients/$CLIENT_UUID' \
+            -H 'Authorization: Bearer $TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              \"id\":\"$CLIENT_UUID\",
+              \"clientId\":\"meet\",
+              \"secret\":\"${OIDC_RP_CLIENT_SECRET}\",
+              \"redirectUris\":[\"https://${MEET_HOST}/*\",\"http://localhost:3000/*\",\"http://localhost:8070/*\"],
+              \"webOrigins\":[\"https://${MEET_HOST}\",\"http://localhost:3000\",\"http://localhost:8070\"],
+              \"attributes\":{\"post.logout.redirect.uris\":\"https://${MEET_HOST}/*\"}
+            }'" && echo "  Client secret + URIs updated"
+
+          # Set realm locale to FR only (no language dropdown)
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
+            -H 'Authorization: Bearer $TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
+            && echo "  Realm locale set to FR"
+        else
+          echo "WARNING: Could not find client 'meet'. First deploy? Realm may need import."
+        fi
+      fi
+
+    # --- 8. Verification rapide Traefik (TLS est automatique) ----------------
     - echo "=== Verifying Traefik routing ==="
     - |
       sleep 10
