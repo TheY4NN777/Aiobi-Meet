@@ -268,6 +268,20 @@ Le pipeline genere le fichier `.env` a chaque deploy. Avantages :
 - Source unique de verite (GitLab CI/CD Variables).
 - Changement de secret = changer la variable GitLab + re-deploy.
 
+### 5.9 Pourquoi la CI configure Keycloak via API REST apres chaque deploy ?
+
+Le fichier `realm.json` sert uniquement a l'import initial du realm (premiere creation).
+Il contient des secrets de developpement qui ne doivent pas etre utilises en production.
+
+Apres chaque deploy, la CI configure automatiquement Keycloak via son API REST admin :
+- **Secret OIDC** : synchronise depuis la variable CI `OIDC_RP_CLIENT_SECRET`
+- **Redirect URIs** : configurees pour l'environnement (meet.aiobi.world en prod)
+- **Locale** : francais uniquement, pas de dropdown de langue
+
+Cela garantit que meme apres un destroy+recreate complet de Keycloak (perte du volume
+PostgreSQL), un simple re-deploy via la CI reconfigure tout automatiquement sans
+intervention manuelle. Le realm.json reste un template propre sans secrets en dur.
+
 ---
 
 ## 6. Routing HTTP — comment le trafic circule
@@ -534,6 +548,10 @@ Chaque push sur `main` declenche automatiquement :
    - Pull les nouvelles images
    - App : `up -d --force-recreate` (nouvelles images + env)
    - Migrations Django automatiques
+   - **Configuration Keycloak automatique** via API REST :
+     - Synchronise le secret OIDC client depuis la variable CI `OIDC_RP_CLIENT_SECRET`
+     - Configure les redirect URIs et post_logout_redirect_uris pour l'environnement
+     - Met la locale du realm en francais uniquement (pas de dropdown de langue)
    - Verification Traefik routing
 
 ### Rollback

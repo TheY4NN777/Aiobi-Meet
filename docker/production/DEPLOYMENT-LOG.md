@@ -209,10 +209,14 @@ Le login se fait desormais uniquement quand l'utilisateur clique sur le bouton d
 5. `/opt/docker/auth/realm.json` — Copie manuelle (fix interim pour le path `../../`)
 6. `/opt/docker/keycloak/themes/aiobi/` — Copie manuelle (meme raison)
 
+### Ameliorations appliquees (commitees, en attente de deploy)
+
+1. Fix chemin `../../` → `../` dans `compose.keycloak.yaml` (les copies manuelles dans /opt/docker/ ne seront plus necessaires)
+2. Fix `KC_HOSTNAME_URL` dans `env.d/keycloak`
+3. `FRONTEND_IS_SILENT_LOGIN_ENABLED=False` dans `env.d/common`
+4. Configuration automatique de Keycloak post-deploy via API REST dans la CI (secret OIDC, redirect URIs, locale FR) — plus besoin d'intervention manuelle apres un deploy
+
 ### Ce qui reste
 
-1. Commiter et deployer le fix du chemin `../../` → `../` dans `compose.keycloak.yaml`
-2. Commiter et deployer le fix `KC_HOSTNAME_URL` dans `env.d/keycloak`
-3. Tester une visioconference complete (appel WebRTC multi-participants)
-4. Configurer le buffer UDP : `net.core.rmem_max=5000000` (sysctl pour LiveKit)
-5. Ajouter `post_logout_redirect_uris` pour la production dans `realm.json`
+1. Tester une visioconference complete (appel WebRTC multi-participants)
+2. Supprimer le job `debug-production` du `.gitlab-ci.yml` quand la prod est stable
