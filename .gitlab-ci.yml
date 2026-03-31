@@ -470,8 +470,18 @@ debug-production:
     - docker restart traefik
     - sleep 10
 
-    - echo "=== Traefik logs after restart ==="
-    - docker logs --tail 30 traefik 2>&1 || echo "No logs"
+    - echo "=== Traefik file logs ==="
+    - docker exec traefik cat /logs/traefik.log 2>/dev/null | tail -50 || echo "No traefik.log"
+
+    - echo "=== Traefik access logs ==="
+    - docker exec traefik cat /logs/access.log 2>/dev/null | tail -20 || echo "No access.log"
+
+    - echo "=== Traefik dynamic config ==="
+    - docker exec traefik ls /config/dynamic/ 2>/dev/null || echo "No dynamic dir"
+    - docker exec traefik cat /config/dynamic/*.yml 2>/dev/null || docker exec traefik cat /config/dynamic/*.yaml 2>/dev/null || echo "No dynamic files"
+
+    - echo "=== Connectivity test (Traefik -> frontend on aiobi-public) ==="
+    - docker exec traefik wget -q -O- --timeout=5 http://production-frontend-1:8083/ 2>&1 | head -5 || echo "Cannot reach frontend from traefik"
 
     - echo "=== Curl tests after Traefik restart ==="
     - curl -sk -o /dev/null -w "meet.aiobi.world -> %{http_code}\n" https://meet.aiobi.world --max-time 10 2>&1 || echo "Failed"
