@@ -422,12 +422,31 @@ debug-production:
     - echo "=== Traefik config ==="
     - docker inspect traefik --format '{{json .Args}}' 2>&1 || echo "No traefik container"
 
-    - echo "=== Traefik logs (last 30) ==="
-    - docker logs --tail 30 traefik 2>&1 || echo "No traefik logs"
+    - echo "=== Traefik env ==="
+    - docker inspect traefik --format '{{json .Config.Env}}' 2>&1 | tr ',' '\n' || echo "No traefik env"
+
+    - echo "=== Traefik volumes ==="
+    - docker inspect traefik --format '{{json .HostConfig.Binds}}' 2>&1 || echo "No traefik binds"
+
+    - echo "=== Traefik networks ==="
+    - docker inspect traefik --format '{{json .NetworkSettings.Networks}}' 2>&1 | tr ',' '\n' || echo "No traefik networks"
+
+    - echo "=== Traefik compose (if exists) ==="
+    - docker inspect traefik --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' 2>&1 || echo "Not from compose"
+    - cat /opt/aiobi-meet/traefik/docker-compose.yml 2>/dev/null || cat /opt/traefik/docker-compose.yml 2>/dev/null || echo "No traefik compose found in common paths"
+
+    - echo "=== Traefik static config ==="
+    - docker exec traefik cat /etc/traefik/traefik.yml 2>/dev/null || docker exec traefik cat /etc/traefik/traefik.toml 2>/dev/null || echo "No static config found"
+
+    - echo "=== Traefik logs (last 50) ==="
+    - docker logs --tail 50 traefik 2>&1 || echo "No traefik logs"
 
     - echo "=== Traefik routers ==="
     - curl -s http://localhost:8080/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable on 8080"
     - curl -s http://localhost:8888/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable on 8888"
+
+    - echo "=== Traefik listening ports ==="
+    - ss -tlnp 2>/dev/null | grep -E "80|443|8080|8888" || echo "Cannot check ports"
 
     - echo "=== Frontend labels ==="
     - docker inspect production-frontend-1 --format '{{json .Config.Labels}}' 2>&1 | tr ',' '\n' || echo "No frontend"
