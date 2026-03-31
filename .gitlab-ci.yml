@@ -419,8 +419,24 @@ debug-production:
     - echo "=== prod-app network ==="
     - docker network inspect prod-app --format '{{range .Containers}}{{.Name}} {{end}}' 2>&1 || echo "Network not found"
 
+    - echo "=== Traefik config ==="
+    - docker inspect traefik --format '{{json .Args}}' 2>&1 || echo "No traefik container"
+
+    - echo "=== Traefik logs (last 30) ==="
+    - docker logs --tail 30 traefik 2>&1 || echo "No traefik logs"
+
     - echo "=== Traefik routers ==="
-    - curl -s http://localhost:8080/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable"
+    - curl -s http://localhost:8080/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable on 8080"
+    - curl -s http://localhost:8888/api/http/routers 2>/dev/null | head -200 || echo "Traefik API not reachable on 8888"
+
+    - echo "=== Frontend labels ==="
+    - docker inspect production-frontend-1 --format '{{json .Config.Labels}}' 2>&1 | tr ',' '\n' || echo "No frontend"
+
+    - echo "=== Keycloak labels ==="
+    - docker inspect production-keycloak-1 --format '{{json .Config.Labels}}' 2>&1 | tr ',' '\n' || echo "No keycloak"
+
+    - echo "=== Livekit labels ==="
+    - docker inspect production-livekit-1 --format '{{json .Config.Labels}}' 2>&1 | tr ',' '\n' || echo "No livekit"
 
     - echo "=== Frontend logs ==="
     - docker logs --tail 20 $(docker ps -qf "name=frontend" | head -1) 2>&1 || echo "No frontend container"
