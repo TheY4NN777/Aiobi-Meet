@@ -21,6 +21,7 @@ const Logo = () => (
     className={`Header-logo ${css({
       maxWidth: { base: '160px', sm: '200px' },
       marginTop: { base: '4px', sm: '2px' },
+      flexShrink: 0,
     })}`}
   />
 )
