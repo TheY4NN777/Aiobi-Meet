@@ -1246,13 +1246,21 @@
     justify-content: center;
     overflow: hidden;
     pointer-events: none;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 2s ease-out, transform 2s ease-out;
 }
 
-.landing-page .footer-africa img {
+.landing-page .footer-africa.revealed {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.landing-page .footer-africa object {
     max-height: 90%;
     width: auto;
-    opacity: 0.08;
-    filter: brightness(1.5);
+    opacity: 0.12;
+    filter: brightness(1.8);
 }
 
 .landing-page .footer-content {
