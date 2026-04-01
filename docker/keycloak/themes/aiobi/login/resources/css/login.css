@@ -190,7 +190,7 @@ body.login-pf .card-pf:has(#kc-register-form) {
 .login-pf input[type="email"]:focus,
 .login-pf .form-control:focus {
   border-color: var(--aiobi-violet);
-  box-shadow: 0 0 0 3px rgba(74, 60, 92, 0.12);
+  box-shadow: 0 0 0 3px rgba(162, 81, 252, 0.12);
   outline: none;
 }
 
@@ -232,7 +232,7 @@ body.login-pf .card-pf:has(#kc-register-form) {
   background-color: var(--aiobi-violet-hover);
   border-color: var(--aiobi-violet-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 60, 92, 0.25);
+  box-shadow: 0 4px 12px rgba(162, 81, 252, 0.25);
 }
 
 #kc-login:active,
@@ -525,7 +525,7 @@ body.login-pf .card-pf:has(#kc-register-form) {
   background-color: var(--aiobi-violet-hover) !important;
   border-color: var(--aiobi-violet-hover) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 60, 92, 0.25);
+  box-shadow: 0 4px 12px rgba(162, 81, 252, 0.25);
 }
 
 .login-pf input[type="submit"]:active,
