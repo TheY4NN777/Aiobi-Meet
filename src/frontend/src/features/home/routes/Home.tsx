@@ -38,7 +38,7 @@ const LandingContent = () => {
 
   useFontshare()
 
-  const loginUrl = authUrl()
+  const loginUrl = authUrl({ returnTo: `${window.location.origin}/home` })
 
   // State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
