@@ -51,7 +51,7 @@ export const Footer = () => {
   return (
     <footer
       className={css({
-        borderTop: '2px solid #4A3C5C',
+        borderTop: '2px solid #a251fc',
         paddingY: '2rem',
         marginTop: { base: '50px', sm: '100px' },
       })}

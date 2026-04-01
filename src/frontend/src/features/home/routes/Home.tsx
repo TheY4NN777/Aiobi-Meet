@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware, authUrl } from '@/features/auth'
-import { generateRoomId, useCreateRoom } from '@/features/rooms'
-import { navigateTo } from '@/navigation/navigateTo'
-import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
-import { isRoomValid } from '@/features/rooms'
 import './Landing.css'
 
 const AIOBI_FLAT = 13750
@@ -29,12 +25,17 @@ const useFontshare = () => {
 
 const LandingContent = () => {
   const { isLoggedIn } = useUser()
-  const { mutateAsync: createRoom } = useCreateRoom()
-  const {
-    userChoices: { username },
-  } = usePersistentUserChoices()
+
+  // Redirect logged-in users to the app dashboard
+  useEffect(() => {
+    if (isLoggedIn) {
+      window.location.replace('/home')
+    }
+  }, [isLoggedIn])
 
   useFontshare()
+
+  const loginUrl = authUrl()
 
   // State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -42,7 +43,6 @@ const LandingContent = () => {
   const [backToTopVisible, setBackToTopVisible] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [teamSize, setTeamSize] = useState(10)
-  const [joinCode, setJoinCode] = useState('')
 
   // Refs for scroll reveal
   const revealRefs = useRef<(HTMLElement | null)[]>([])
@@ -84,26 +84,6 @@ const LandingContent = () => {
     }
   }, [])
 
-  // Actions
-  const handleCreateInstant = async () => {
-    if (!isLoggedIn) {
-      window.location.href = authUrl()
-      return
-    }
-    const slug = generateRoomId()
-    const data = await createRoom({ slug, username })
-    navigateTo('room', data.slug, {
-      state: { create: true, initialRoomData: data },
-    })
-  }
-
-  const handleJoinRoom = () => {
-    const code = joinCode.trim()
-    if (code && isRoomValid(code)) {
-      navigateTo('room', code)
-    }
-  }
-
   // Simulator calculations
   const zoomPrice = PER_USER.zoom * teamSize
   const googlePrice = PER_USER.google * teamSize
@@ -130,13 +110,7 @@ const LandingContent = () => {
           </ul>
           <div className="nav-actions">
             <a href="#action-bar" className="btn btn-ghost">Rejoindre</a>
-            {isLoggedIn ? (
-              <button className="btn btn-primary" onClick={handleCreateInstant}>
-                Créer une réunion
-              </button>
-            ) : (
-              <a href={authUrl()} className="btn btn-primary">Se connecter</a>
-            )}
+            <a href={loginUrl} className="btn btn-primary">Se connecter</a>
           </div>
           <button
             className="hamburger"
@@ -158,13 +132,7 @@ const LandingContent = () => {
         <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Tarifs</a>
         <a href="#about" onClick={() => setMobileMenuOpen(false)}>À propos</a>
         <a href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
-        {isLoggedIn ? (
-          <button className="btn btn-primary btn-lg" onClick={handleCreateInstant}>
-            Créer une réunion
-          </button>
-        ) : (
-          <a href={authUrl()} className="btn btn-primary btn-lg">Se connecter</a>
-        )}
+        <a href={loginUrl} className="btn btn-primary btn-lg">Se connecter</a>
       </div>
 
       {/* ===== HERO ===== */}
@@ -179,10 +147,10 @@ const LandingContent = () => {
             Aïobi Meet est la première solution de vidéoconférence conçue en Afrique. Simple, sécurisée, sans compromis sur vos données.
           </p>
           <div className="hero-ctas reveal reveal-delay-3" ref={addRevealRef}>
-            <button className="btn btn-primary btn-lg" onClick={handleCreateInstant}>
+            <a href={loginUrl} className="btn btn-primary btn-lg">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
               Lancer une réunion
-            </button>
+            </a>
             <a href="#pricing" className="btn btn-ghost btn-lg">Découvrir l&apos;offre entreprise</a>
           </div>
           <p className="hero-note reveal reveal-delay-4" ref={addRevealRef}>
@@ -234,21 +202,12 @@ const LandingContent = () => {
       {/* ===== ACTION BAR ===== */}
       <div className="action-bar" id="action-bar">
         <div className="lp-container">
-          <button className="btn btn-primary btn-lg" onClick={handleCreateInstant}>
+          <a href={loginUrl} className="btn btn-primary btn-lg">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
             Lancer une réunion instantanée
-          </button>
+          </a>
           <div className="action-divider"></div>
-          <div className="join-group">
-            <input
-              type="text"
-              placeholder="Entrez le code de réunion"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
-            />
-            <button className="btn btn-primary" onClick={handleJoinRoom}>Rejoindre</button>
-          </div>
+          <a href={loginUrl} className="btn btn-ghost btn-lg">Rejoindre une réunion</a>
         </div>
       </div>
 
@@ -381,11 +340,7 @@ const LandingContent = () => {
                 <li>Aucune installation</li>
                 <li>Durée max 1h30</li>
               </ul>
-              {isLoggedIn ? (
-                <button className="btn btn-ghost btn-lg" onClick={handleCreateInstant}>Créer une réunion</button>
-              ) : (
-                <a href={authUrl()} className="btn btn-ghost btn-lg">Créer un compte gratuit</a>
-              )}
+              <a href={loginUrl} className="btn btn-ghost btn-lg">Créer un compte gratuit</a>
             </div>
             <div className="pricing-card reveal reveal-delay-1" ref={addRevealRef}>
               <h3>Entreprise</h3>
@@ -585,13 +540,7 @@ const LandingContent = () => {
           <h2>Prêt à communiquer<br />en toute souveraineté ?</h2>
           <p>Accédez gratuitement à toutes les fonctionnalités de base. Sans engagement, sans carte bancaire.</p>
           <div className="cta-buttons">
-            {isLoggedIn ? (
-              <button className="btn btn-primary btn-lg" onClick={handleCreateInstant}>
-                Créer une réunion
-              </button>
-            ) : (
-              <a href={authUrl()} className="btn btn-primary btn-lg">Créer un compte gratuit</a>
-            )}
+            <a href={loginUrl} className="btn btn-primary btn-lg">Créer un compte gratuit</a>
             <a href="#pricing" className="btn btn-ghost btn-lg" style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}>Voir les tarifs</a>
           </div>
         </div>

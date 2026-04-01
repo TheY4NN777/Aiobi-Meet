@@ -25,7 +25,7 @@ const tableStyle = css({
     fontSize: '0.9rem',
   },
   '& th': {
-    backgroundColor: '#4A3C5C',
+    backgroundColor: '#a251fc',
     color: '#F8F8F9',
     fontWeight: 'bold',
   },

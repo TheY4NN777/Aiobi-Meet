@@ -44,7 +44,7 @@
           </mj-text>
           <mj-button
             href="{{link}}"
-            background-color="#4A3C5C"
+            background-color="#a251fc"
             color="white"
             padding-bottom="30px"
           >

@@ -1,5 +1,5 @@
 /* Aïobi Meet — Keycloak Login Theme
-   Brand: Blanc #F8F8F9 · Noir #0F1010 · Violet #4A3C5C · Lilas #E4D3E6
+   Brand: Blanc #F8F8F9 · Noir #0F1010 · Violet #a251fc · Lilas #E4D3E6
    Fonts: HK Grotesk (headings) · Roboto (body)
    ────────────────────────────────────────────────────────────────────── */
 
@@ -10,11 +10,11 @@
 :root {
   --aiobi-blanc: #F8F8F9;
   --aiobi-noir: #0F1010;
-  --aiobi-violet: #4A3C5C;
-  --aiobi-violet-hover: #3A2E4A;
-  --aiobi-violet-active: #2B2138;
-  --aiobi-lilas: #E4D3E6;
-  --aiobi-lilas-soft: rgba(228, 211, 230, 0.4);
+  --aiobi-violet: #a251fc;
+  --aiobi-violet-hover: #8b3ae0;
+  --aiobi-violet-active: #742cbd;
+  --aiobi-lilas: #f0e4ff;
+  --aiobi-lilas-soft: rgba(162, 81, 252, 0.12);
   --aiobi-card-shadow: 0 8px 32px rgba(15, 16, 16, 0.06),
                         0 2px 8px rgba(15, 16, 16, 0.04);
   --aiobi-radius: 16px;
