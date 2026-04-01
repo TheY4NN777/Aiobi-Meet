@@ -1256,11 +1256,11 @@
     transform: scale(1);
 }
 
-.landing-page .footer-africa img {
-    height: 420px;
+.landing-page .footer-africa object {
+    height: 450px;
     width: auto;
-    opacity: 0.08;
-    filter: brightness(2);
+    max-width: 400px;
+    opacity: 0.1;
 }
 
 .landing-page .footer-content {
