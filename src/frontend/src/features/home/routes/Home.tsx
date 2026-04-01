@@ -568,7 +568,7 @@ const LandingContent = () => {
               </div>
             </div>
             <div className="about-visual reveal" ref={addRevealRef}>
-              <img src="/assets/logo.svg" alt="Aïobi" className="about-logo-large" />
+              <img src="/assets/aiobi-head.svg" alt="Aïobi" className="about-logo-large" />
             </div>
           </div>
         </div>
