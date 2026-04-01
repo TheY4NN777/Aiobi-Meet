@@ -46,6 +46,15 @@ const LandingContent = () => {
   const [backToTopVisible, setBackToTopVisible] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [teamSize, setTeamSize] = useState(10)
+  const [joinOpen, setJoinOpen] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+
+  const handleJoinRoom = () => {
+    const code = joinCode.trim().replace(/^https?:\/\/[^/]+\//, '')
+    if (code) {
+      window.location.href = `/${code}`
+    }
+  }
 
   // Refs for scroll reveal
   const revealRefs = useRef<(HTMLElement | null)[]>([])
@@ -111,6 +120,7 @@ const LandingContent = () => {
             <li><a href="#faq">FAQ</a></li>
           </ul>
           <div className="nav-actions">
+            <button className="btn btn-ghost" onClick={() => setJoinOpen(true)}>Rejoindre</button>
             {isLoggedIn ? (
               <a href="/home" className="btn btn-primary">Mon espace</a>
             ) : (
@@ -163,7 +173,9 @@ const LandingContent = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
               Lancer une réunion
             </a>
-            <a href="#pricing" className="btn btn-ghost btn-lg">Découvrir l&apos;offre entreprise</a>
+            <button className="btn btn-ghost btn-lg" onClick={() => setJoinOpen(true)}>
+              Rejoindre une réunion
+            </button>
           </div>
           <p className="hero-note reveal reveal-delay-4" ref={addRevealRef}>
             Gratuit, sans installation, depuis votre navigateur
@@ -610,6 +622,30 @@ const LandingContent = () => {
       </section>
 
       {/* ===== FOOTER ===== */}
+      {/* ===== JOIN POPUP ===== */}
+      {joinOpen && (
+        <div className="join-overlay" onClick={() => setJoinOpen(false)}>
+          <div className="join-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="join-modal-close" onClick={() => setJoinOpen(false)}>&times;</button>
+            <h3>Rejoindre une réunion</h3>
+            <p>Entrez le code ou le lien de la réunion</p>
+            <div className="join-modal-input">
+              <input
+                type="text"
+                placeholder="ex: abc-defg-hij ou https://meet.aiobi.world/abc-defg-hij"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                autoFocus
+              />
+              <button className="btn btn-primary" onClick={handleJoinRoom}>
+                Rejoindre
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="lp-footer">
         <div className="footer-africa reveal" ref={addRevealRef}>
           <img src="/assets/africa-map-v2.png" alt="" aria-hidden="true" />
