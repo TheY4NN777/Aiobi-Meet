@@ -20,6 +20,16 @@ const useFontshare = () => {
     link.rel = 'stylesheet'
     link.href = 'https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500,400&f[]=satoshi@700,500,400,300&display=swap'
     document.head.appendChild(link)
+
+    // Space Mono for sword art
+    const id2 = 'spacemono-landing'
+    if (!document.getElementById(id2)) {
+      const link2 = document.createElement('link')
+      link2.id = id2
+      link2.rel = 'stylesheet'
+      link2.href = 'https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&display=swap'
+      document.head.appendChild(link2)
+    }
   }, [])
 }
 
@@ -40,18 +50,17 @@ const LandingContent = () => {
   // Refs for scroll reveal
   const revealRefs = useRef<(HTMLElement | null)[]>([])
 
-  // Scroll handler — main element has overflow:auto, not window
+  // Scroll handler — Layout's <main id="main-content"> has overflow:auto
   useEffect(() => {
-    const main = document.getElementById('main-content') || document.querySelector('main')
-    const target = main && main.scrollHeight > main.clientHeight ? main : window
+    const main = document.getElementById('main-content')
+    if (!main) return
 
     const onScroll = () => {
-      const scrollY = target === window ? window.scrollY : (target as HTMLElement).scrollTop
-      setNavScrolled(scrollY > 50)
-      setBackToTopVisible(scrollY > 600)
+      setNavScrolled(main.scrollTop > 50)
+      setBackToTopVisible(main.scrollTop > 600)
     }
-    target.addEventListener('scroll', onScroll)
-    return () => target.removeEventListener('scroll', onScroll)
+    main.addEventListener('scroll', onScroll)
+    return () => main.removeEventListener('scroll', onScroll)
   }, [])
 
   // Scroll reveal with IntersectionObserver
@@ -271,9 +280,42 @@ const LandingContent = () => {
               </div>
             </div>
             <div className="sovereignty-visual reveal" ref={addRevealRef}>
-              <object type="image/svg+xml" data="/assets/sword-art.svg" className="sword-art-svg" aria-hidden="true">
-                Sword art
-              </object>
+              <svg viewBox="0 0 700 950" className="sword-art-svg" aria-hidden="true">
+                <text x="350" y="60" textAnchor="middle" xmlSpace="preserve">
+                  {[
+                    'xYYx#$xYYx', 'aA@#Aa', 'bB^&Bb', 'c@#$c*vC#$c', 'd*&d#pD&*d',
+                    'e#$e@yE$#e', 'f&*f$hF*&f', 'g#$g&jG$#g', 'h*&h#lH&*h',
+                    'vDDvMMMM$#@DDv*MM*vDD', 'oUUUUUxYYx@oU*UUUxYYxU*UUo',
+                    'zZZxxYYnnnnYYbMMbY*^$nnYYxxZZz_bMMb',
+                    'cYY hhPheeccccKKK#@$KKK_dMMMdK*&^KKcehPhh YYc',
+                    'r UeY^Y^Y    YYY@#$dM&MMk  kM$MMd   YYY    ^Y^Yr',
+                    'x##ww@#ZNa**qQ####qqQqq####qQ**aZNa#@ww##x',
+                    'mDm@#uIIu#$dJ####Jd$####Jd$#uIIu@#mDm',
+                    'p#P#$xLp$#lVl  b OO b  lVl#$pLx#$P#p',
+                    'l UUUhh#$YeHHe#$bMNooNMb#$eHHe#$hhUUU l',
+                    'vN#$d#$#$vVMMVv#$#$#$d#$Nv',
+                    'z#$#h#$kYaE#$rR#$#$Rr#$EaYk#$h#$Z',
+                    'g#$#f#f#$#t tH#$#$Ht t#$#f#f#$#G',
+                    'bK#$uU#$o WW#$xX#$#$Xx#$WW o#$Uu#$Kb',
+                    's RRR#$#$aL#Yd sS#$#$Ss dY#La#$#$RRR s',
+                    'mTm#$#$#$#$x zZ#$#$Zz x#$#$#$#$mTm',
+                    'w i#$#$#$#$fF#$#$Ff#$#$#$#$i w',
+                    'jKj#$#sHnA#$kK#$#$Kk#$AnHs#$#jKj',
+                    'e E#n#nUUUw#mM#$#Mm#wUUUn#n#E e',
+                    'oMoV#$r#$#$vV#$#$Vv#$#$r#$VoMo',
+                    'q#$#$#$y#$#cC#$#$Cc#$y#$#$#$Q',
+                    'jLh#$oP#$#$uU#$#$Uu#$#$Po#$hLj',
+                    'dNeGfVjj#bB#$#Bb#jjVfGeNd',
+                    'xZk#Z#cC#$#$Cc#Z#kZx',
+                    'rV#aA#$#$Aa#Vr', 'yY#$#$Yy', 'mM#$#$Mm',
+                    'p Ww#P', 'l Nn#L', 'o Oo', 'vV',
+                  ].map((line, i) => (
+                    <tspan key={i} x="350" dy="1.2em" className={`sword-line sword-l${i + 1}`}>
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              </svg>
             </div>
           </div>
         </div>
@@ -618,11 +660,9 @@ const LandingContent = () => {
         className={`back-to-top ${backToTopVisible ? 'visible' : ''}`}
         aria-label="Retour en haut"
         onClick={() => {
-          const main = document.getElementById('main-content') || document.querySelector('main')
-          if (main && main.scrollHeight > main.clientHeight) {
+          const main = document.getElementById('main-content')
+          if (main) {
             main.scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
           }
         }}
       >

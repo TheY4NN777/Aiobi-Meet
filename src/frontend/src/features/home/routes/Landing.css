@@ -630,6 +630,59 @@
     height: auto;
 }
 
+.landing-page .sword-art-svg text {
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    fill: var(--accent);
+    white-space: pre;
+}
+
+.landing-page .sword-line {
+    opacity: 0;
+    transform-origin: center;
+}
+
+.landing-page .revealed .sword-line {
+    animation: lp-sword-form 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes lp-sword-form {
+    0% { opacity: 0; transform: translateY(-40px) scale(0.9); filter: blur(8px); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.landing-page .revealed .sword-l1 { animation-delay: 0.05s; }
+.landing-page .revealed .sword-l2 { animation-delay: 0.08s; }
+.landing-page .revealed .sword-l3 { animation-delay: 0.11s; }
+.landing-page .revealed .sword-l4 { animation-delay: 0.14s; }
+.landing-page .revealed .sword-l5 { animation-delay: 0.17s; }
+.landing-page .revealed .sword-l6 { animation-delay: 0.20s; }
+.landing-page .revealed .sword-l7 { animation-delay: 0.23s; }
+.landing-page .revealed .sword-l8 { animation-delay: 0.26s; }
+.landing-page .revealed .sword-l9 { animation-delay: 0.29s; }
+.landing-page .revealed .sword-l10 { animation-delay: 0.32s; }
+.landing-page .revealed .sword-l11 { animation-delay: 0.35s; }
+.landing-page .revealed .sword-l12 { animation-delay: 0.38s; }
+.landing-page .revealed .sword-l13 { animation-delay: 0.41s; }
+.landing-page .revealed .sword-l14 { animation-delay: 0.44s; }
+.landing-page .revealed .sword-l15 { animation-delay: 0.47s; }
+.landing-page .revealed .sword-l16 { animation-delay: 0.50s; }
+.landing-page .revealed .sword-l17 { animation-delay: 0.53s; }
+.landing-page .revealed .sword-l18 { animation-delay: 0.56s; }
+.landing-page .revealed .sword-l19 { animation-delay: 0.59s; }
+.landing-page .revealed .sword-l20 { animation-delay: 0.62s; }
+.landing-page .revealed .sword-l21 { animation-delay: 0.65s; }
+.landing-page .revealed .sword-l22 { animation-delay: 0.68s; }
+.landing-page .revealed .sword-l23 { animation-delay: 0.71s; }
+.landing-page .revealed .sword-l24 { animation-delay: 0.74s; }
+.landing-page .revealed .sword-l25 { animation-delay: 0.77s; }
+.landing-page .revealed .sword-l26 { animation-delay: 0.80s; }
+.landing-page .revealed .sword-l27 { animation-delay: 0.83s; }
+.landing-page .revealed .sword-l28 { animation-delay: 0.86s; }
+.landing-page .revealed .sword-l29 { animation-delay: 0.89s; }
+.landing-page .revealed .sword-l30 { animation-delay: 0.92s; }
+
 /* ===== ROADMAP ===== */
 .landing-page .roadmap { background: var(--bg); }
 
