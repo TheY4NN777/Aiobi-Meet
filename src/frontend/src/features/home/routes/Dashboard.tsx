@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware } from '@/features/auth'
 import { generateRoomId, useCreateRoom, isRoomValid } from '@/features/rooms'
@@ -64,6 +64,48 @@ const DashboardContent = () => {
 
   const displayName = user?.full_name || username || ''
 
+  const headlines = [
+    'Prêt pour votre prochaine réunion ?',
+    'Votre équipe vous attend.',
+    'Un appel, et tout avance.',
+    'À qui parlez-vous aujourd\'hui ?',
+    'Connectez-vous à vos collaborateurs.',
+    'Votre salle de réunion est prête.',
+    'Lancez la discussion.',
+    'Qui rejoint la table aujourd\'hui ?',
+    'Tout commence par un appel.',
+    'Vos collaborateurs sont à un clic.',
+    'C\'est le moment de se retrouver.',
+    'Vos idées n\'attendent que vous.',
+    'La réunion peut commencer.',
+    'On y va ?',
+    'Rassemblez votre équipe en un instant.',
+    'Parlez, partagez, avancez.',
+    'Qui sera autour de la table ?',
+    'Prêt à faire avancer les choses ?',
+    'Votre prochain échange commence ici.',
+    'Simplifiez, connectez, créez.',
+    'Le bon moment pour se parler.',
+    'Vos projets avancent quand vos équipes se parlent.',
+    'Une réunion peut tout changer.',
+    'Faites le premier pas, lancez l\'appel.',
+    'Ensemble, même à distance.',
+  ]
+
+  const [headlineIndex, setHeadlineIndex] = useState(() => Math.floor(Math.random() * headlines.length))
+  const [headlineFade, setHeadlineFade] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeadlineFade(false)
+      setTimeout(() => {
+        setHeadlineIndex((prev) => (prev + 1) % headlines.length)
+        setHeadlineFade(true)
+      }, 400)
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [headlines.length])
+
   return (
     <div className="app-dashboard">
       {/* Hero */}
@@ -71,8 +113,8 @@ const DashboardContent = () => {
         <div className="dash-greeting">
           {displayName ? `Bonjour, ${displayName}` : 'Bienvenue'}
         </div>
-        <h1>
-          Prêt à <span className="accent">communiquer</span> ?
+        <h1 className={`dash-headline ${headlineFade ? 'visible' : ''}`}>
+          {headlines[headlineIndex]}
         </h1>
         <p className="dash-subtitle">
           Lancez une réunion instantanée, planifiez pour plus tard ou rejoignez un appel en cours.
