@@ -102,11 +102,13 @@ const LandingContent = () => {
             <li><a href="#faq">FAQ</a></li>
           </ul>
           <div className="nav-actions">
-            <a href="#action-bar" className="btn btn-ghost">Rejoindre</a>
             {isLoggedIn ? (
               <a href="/home" className="btn btn-primary">Mon espace</a>
             ) : (
-              <a href={loginUrl} className="btn btn-primary">Se connecter</a>
+              <>
+                <a href={loginUrl} className="btn btn-ghost">Créer son compte</a>
+                <a href={loginUrl} className="btn btn-primary">Se connecter</a>
+              </>
             )}
           </div>
           <button
@@ -199,18 +201,6 @@ const LandingContent = () => {
           </div>
         </div>
       </section>
-
-      {/* ===== ACTION BAR ===== */}
-      <div className="action-bar" id="action-bar">
-        <div className="lp-container">
-          <a href={loginUrl} className="btn btn-primary btn-lg">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
-            Lancer une réunion instantanée
-          </a>
-          <div className="action-divider"></div>
-          <a href={loginUrl} className="btn btn-ghost btn-lg">Rejoindre une réunion</a>
-        </div>
-      </div>
 
       {/* ===== FEATURES ===== */}
       <section className="features" id="features">
