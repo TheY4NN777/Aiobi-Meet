@@ -317,7 +317,9 @@ const LandingContent = () => {
               </div>
             </div>
             <div className="sovereignty-visual reveal" ref={addRevealRef}>
-              <img src="/assets/sword-art.svg" alt="" className="sword-art-svg" />
+              <object type="image/svg+xml" data="/assets/sword-art.svg" className="sword-art-svg" aria-hidden="true">
+                Sword art
+              </object>
             </div>
           </div>
         </div>
@@ -624,7 +626,7 @@ const LandingContent = () => {
       {/* ===== FOOTER ===== */}
       <footer className="lp-footer">
         <div className="footer-africa">
-          <img src="/assets/africa-map.png" alt="" aria-hidden="true" />
+          <img src="/assets/africa-map-v2.png" alt="" aria-hidden="true" />
         </div>
         <div className="footer-content lp-container">
           <div className="footer-grid">
