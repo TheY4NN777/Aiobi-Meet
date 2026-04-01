@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware, authUrl } from '@/features/auth'
 import { generateRoomId, useCreateRoom } from '@/features/rooms'
@@ -14,12 +14,27 @@ function formatPrice(n: number) {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA'
 }
 
+// Load Fontshare fonts for the landing page
+const useFontshare = () => {
+  useLayoutEffect(() => {
+    const id = 'fontshare-landing'
+    if (document.getElementById(id)) return
+    const link = document.createElement('link')
+    link.id = id
+    link.rel = 'stylesheet'
+    link.href = 'https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500,400&f[]=satoshi@700,500,400,300&display=swap'
+    document.head.appendChild(link)
+  }, [])
+}
+
 const LandingContent = () => {
   const { isLoggedIn } = useUser()
   const { mutateAsync: createRoom } = useCreateRoom()
   const {
     userChoices: { username },
   } = usePersistentUserChoices()
+
+  useFontshare()
 
   // State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -196,7 +211,7 @@ const LandingContent = () => {
                   </div>
                 ))}
                 <div className="mockup-user">
-                  <div className="mockup-avatar" style={{ background: 'rgba(74,60,92,0.3)' }}>+12</div>
+                  <div className="mockup-avatar" style={{ background: 'rgba(162,81,252,0.3)' }}>+12</div>
                   <span className="mockup-user-name">12 autres participants</span>
                 </div>
               </div>
