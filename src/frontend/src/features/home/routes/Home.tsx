@@ -47,14 +47,18 @@ const LandingContent = () => {
   // Refs for scroll reveal
   const revealRefs = useRef<(HTMLElement | null)[]>([])
 
-  // Scroll handler
+  // Scroll handler — main element has overflow:auto, not window
   useEffect(() => {
+    const main = document.getElementById('main-content') || document.querySelector('main')
+    const target = main && main.scrollHeight > main.clientHeight ? main : window
+
     const onScroll = () => {
-      setNavScrolled(window.scrollY > 50)
-      setBackToTopVisible(window.scrollY > 600)
+      const scrollY = target === window ? window.scrollY : (target as HTMLElement).scrollTop
+      setNavScrolled(scrollY > 50)
+      setBackToTopVisible(scrollY > 600)
     }
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
+    target.addEventListener('scroll', onScroll)
+    return () => target.removeEventListener('scroll', onScroll)
   }, [])
 
   // Scroll reveal with IntersectionObserver
@@ -673,7 +677,14 @@ const LandingContent = () => {
       <button
         className={`back-to-top ${backToTopVisible ? 'visible' : ''}`}
         aria-label="Retour en haut"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onClick={() => {
+          const main = document.getElementById('main-content') || document.querySelector('main')
+          if (main && main.scrollHeight > main.clientHeight) {
+            main.scrollTo({ top: 0, behavior: 'smooth' })
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
+        }}
       >
         <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15" /></svg>
       </button>
