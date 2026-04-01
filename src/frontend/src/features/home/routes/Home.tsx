@@ -36,9 +36,17 @@ const useFontshare = () => {
 const LandingContent = () => {
   const { isLoggedIn } = useUser()
 
+  // After OIDC login, redirect to dashboard
+  // Only redirect if user just logged in (not if they navigated to / manually)
+  useEffect(() => {
+    if (isLoggedIn && document.referrer.includes('/callback')) {
+      window.location.replace('/home')
+    }
+  }, [isLoggedIn])
+
   useFontshare()
 
-  const loginUrl = authUrl({ returnTo: `${window.location.origin}/home` })
+  const loginUrl = authUrl()
 
   // State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
