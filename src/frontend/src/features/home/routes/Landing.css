@@ -153,14 +153,18 @@
     z-index: 1000;
     padding: 1.25rem 0;
     transition: all var(--transition);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .landing-page .lp-navbar.scrolled {
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0.75rem 0;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
 }
 
 .landing-page .lp-navbar .lp-container {
@@ -644,7 +648,7 @@
 }
 
 .landing-page .revealed .sword-line {
-    animation: lp-sword-form 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: lp-sword-form 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes lp-sword-form {
@@ -652,36 +656,36 @@
     100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
-.landing-page .revealed .sword-l1 { animation-delay: 0.05s; }
-.landing-page .revealed .sword-l2 { animation-delay: 0.08s; }
-.landing-page .revealed .sword-l3 { animation-delay: 0.11s; }
-.landing-page .revealed .sword-l4 { animation-delay: 0.14s; }
-.landing-page .revealed .sword-l5 { animation-delay: 0.17s; }
-.landing-page .revealed .sword-l6 { animation-delay: 0.20s; }
-.landing-page .revealed .sword-l7 { animation-delay: 0.23s; }
-.landing-page .revealed .sword-l8 { animation-delay: 0.26s; }
-.landing-page .revealed .sword-l9 { animation-delay: 0.29s; }
-.landing-page .revealed .sword-l10 { animation-delay: 0.32s; }
-.landing-page .revealed .sword-l11 { animation-delay: 0.35s; }
-.landing-page .revealed .sword-l12 { animation-delay: 0.38s; }
-.landing-page .revealed .sword-l13 { animation-delay: 0.41s; }
-.landing-page .revealed .sword-l14 { animation-delay: 0.44s; }
-.landing-page .revealed .sword-l15 { animation-delay: 0.47s; }
-.landing-page .revealed .sword-l16 { animation-delay: 0.50s; }
-.landing-page .revealed .sword-l17 { animation-delay: 0.53s; }
-.landing-page .revealed .sword-l18 { animation-delay: 0.56s; }
-.landing-page .revealed .sword-l19 { animation-delay: 0.59s; }
-.landing-page .revealed .sword-l20 { animation-delay: 0.62s; }
-.landing-page .revealed .sword-l21 { animation-delay: 0.65s; }
-.landing-page .revealed .sword-l22 { animation-delay: 0.68s; }
-.landing-page .revealed .sword-l23 { animation-delay: 0.71s; }
-.landing-page .revealed .sword-l24 { animation-delay: 0.74s; }
-.landing-page .revealed .sword-l25 { animation-delay: 0.77s; }
-.landing-page .revealed .sword-l26 { animation-delay: 0.80s; }
-.landing-page .revealed .sword-l27 { animation-delay: 0.83s; }
-.landing-page .revealed .sword-l28 { animation-delay: 0.86s; }
-.landing-page .revealed .sword-l29 { animation-delay: 0.89s; }
-.landing-page .revealed .sword-l30 { animation-delay: 0.92s; }
+.landing-page .revealed .sword-l1 { animation-delay: 0.1s; }
+.landing-page .revealed .sword-l2 { animation-delay: 0.16s; }
+.landing-page .revealed .sword-l3 { animation-delay: 0.22s; }
+.landing-page .revealed .sword-l4 { animation-delay: 0.28s; }
+.landing-page .revealed .sword-l5 { animation-delay: 0.34s; }
+.landing-page .revealed .sword-l6 { animation-delay: 0.40s; }
+.landing-page .revealed .sword-l7 { animation-delay: 0.46s; }
+.landing-page .revealed .sword-l8 { animation-delay: 0.52s; }
+.landing-page .revealed .sword-l9 { animation-delay: 0.58s; }
+.landing-page .revealed .sword-l10 { animation-delay: 0.64s; }
+.landing-page .revealed .sword-l11 { animation-delay: 0.70s; }
+.landing-page .revealed .sword-l12 { animation-delay: 0.76s; }
+.landing-page .revealed .sword-l13 { animation-delay: 0.82s; }
+.landing-page .revealed .sword-l14 { animation-delay: 0.88s; }
+.landing-page .revealed .sword-l15 { animation-delay: 0.94s; }
+.landing-page .revealed .sword-l16 { animation-delay: 1.00s; }
+.landing-page .revealed .sword-l17 { animation-delay: 1.06s; }
+.landing-page .revealed .sword-l18 { animation-delay: 1.12s; }
+.landing-page .revealed .sword-l19 { animation-delay: 1.18s; }
+.landing-page .revealed .sword-l20 { animation-delay: 1.24s; }
+.landing-page .revealed .sword-l21 { animation-delay: 1.30s; }
+.landing-page .revealed .sword-l22 { animation-delay: 1.36s; }
+.landing-page .revealed .sword-l23 { animation-delay: 1.42s; }
+.landing-page .revealed .sword-l24 { animation-delay: 1.48s; }
+.landing-page .revealed .sword-l25 { animation-delay: 1.54s; }
+.landing-page .revealed .sword-l26 { animation-delay: 1.60s; }
+.landing-page .revealed .sword-l27 { animation-delay: 1.66s; }
+.landing-page .revealed .sword-l28 { animation-delay: 1.72s; }
+.landing-page .revealed .sword-l29 { animation-delay: 1.78s; }
+.landing-page .revealed .sword-l30 { animation-delay: 1.84s; }
 
 /* ===== ROADMAP ===== */
 .landing-page .roadmap { background: var(--bg); }
