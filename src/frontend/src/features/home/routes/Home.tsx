@@ -595,7 +595,7 @@ const LandingContent = () => {
               { q: 'Est-ce que ça marche sur mobile ?', a: 'Oui, Aïobi Meet fonctionne directement depuis le navigateur de votre téléphone ou tablette, sans aucune installation. Une application mobile native Android et iOS est également prévue dans notre roadmap.' },
               { q: 'Comment contacter le support ?', a: 'Vous pouvez nous contacter à tout moment via l\'adresse support-meet@aiobi.world. Les utilisateurs de la version entreprise bénéficient d\'un support dédié avec des temps de réponse garantis.' },
             ].map((item, i) => (
-              <div className={`faq-item ${openFaq === i ? 'open' : ''} reveal ${i > 0 ? `reveal-delay-${Math.min(i, 3)}` : ''}`} key={i} ref={addRevealRef}>
+              <div className={`faq-item ${openFaq === i ? 'open' : ''}`} key={i}>
                 <button className="faq-question" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   {item.q}
                   <div className="faq-icon"></div>
@@ -612,9 +612,7 @@ const LandingContent = () => {
       {/* ===== FOOTER ===== */}
       <footer className="lp-footer">
         <div className="footer-africa reveal" ref={addRevealRef}>
-          <object type="image/svg+xml" data="/assets/africa-map.svg" aria-hidden="true">
-            Africa
-          </object>
+          <img src="/assets/africa-map-v3.png" alt="" aria-hidden="true" />
         </div>
         <div className="footer-content lp-container">
           <div className="footer-grid">
@@ -647,6 +645,11 @@ const LandingContent = () => {
                 <a href="mailto:contact@aiobi.world">contact@aiobi.world</a>
                 <a href="mailto:support-meet@aiobi.world">support-meet@aiobi.world</a>
                 <a href="https://aiobi.world" target="_blank" rel="noopener noreferrer">aiobi.world</a>
+              </div>
+              <h5 style={{ marginTop: '2rem' }}>Légal</h5>
+              <div className="footer-contact-links">
+                <a href="/politique-confidentialite">Politique de confidentialité</a>
+                <a href="/conditions-utilisation">Conditions d&apos;utilisation</a>
               </div>
             </div>
           </div>
