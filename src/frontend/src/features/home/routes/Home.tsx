@@ -630,6 +630,9 @@ const LandingContent = () => {
 
       {/* ===== FOOTER ===== */}
       <footer className="lp-footer">
+        <div className="footer-africa">
+          <img src="/assets/africa-map.png" alt="" aria-hidden="true" />
+        </div>
         <div className="footer-content lp-container">
           <div className="footer-grid">
             <div className="footer-col-intro">
