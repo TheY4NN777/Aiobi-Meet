@@ -26,13 +26,6 @@ const useFontshare = () => {
 const LandingContent = () => {
   const { isLoggedIn } = useUser()
 
-  // Redirect logged-in users to the app dashboard
-  useEffect(() => {
-    if (isLoggedIn) {
-      window.location.replace('/home')
-    }
-  }, [isLoggedIn])
-
   useFontshare()
 
   const loginUrl = authUrl()
@@ -110,7 +103,11 @@ const LandingContent = () => {
           </ul>
           <div className="nav-actions">
             <a href="#action-bar" className="btn btn-ghost">Rejoindre</a>
-            <a href={loginUrl} className="btn btn-primary">Se connecter</a>
+            {isLoggedIn ? (
+              <a href="/home" className="btn btn-primary">Mon espace</a>
+            ) : (
+              <a href={loginUrl} className="btn btn-primary">Se connecter</a>
+            )}
           </div>
           <button
             className="hamburger"
@@ -132,7 +129,11 @@ const LandingContent = () => {
         <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Tarifs</a>
         <a href="#about" onClick={() => setMobileMenuOpen(false)}>À propos</a>
         <a href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
-        <a href={loginUrl} className="btn btn-primary btn-lg">Se connecter</a>
+        {isLoggedIn ? (
+          <a href="/home" className="btn btn-primary btn-lg">Mon espace</a>
+        ) : (
+          <a href={loginUrl} className="btn btn-primary btn-lg">Se connecter</a>
+        )}
       </div>
 
       {/* ===== HERO ===== */}
