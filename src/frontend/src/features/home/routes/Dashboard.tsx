@@ -62,7 +62,7 @@ const DashboardContent = () => {
     setTimeout(() => setCopied(false), 2000)
   }, [laterRoom])
 
-  const displayName = user?.full_name || user?.short_name || username || ''
+  const displayName = user?.full_name || username || ''
 
   return (
     <div className="app-dashboard">
