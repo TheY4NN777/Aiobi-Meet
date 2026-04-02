@@ -48,8 +48,15 @@ const DashboardContent = () => {
   }, [createRoom, username])
 
   const handleJoinRoom = useCallback(() => {
-    const code = joinCode.trim()
-    if (code && isRoomValid(code)) {
+    let code = joinCode.trim()
+    // Extract room code from full URL (e.g. https://meet.aiobi.world/abc-defg-hij)
+    try {
+      const url = new URL(code)
+      code = url.pathname.replace(/^\//, '')
+    } catch {
+      // Not a URL, use as-is
+    }
+    if (code) {
       navigateTo('room', code)
     }
   }, [joinCode])
