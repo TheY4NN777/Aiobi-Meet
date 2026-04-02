@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware } from '@/features/auth'
-import { generateRoomId, useCreateRoom, isRoomValid } from '@/features/rooms'
+import { generateRoomId, useCreateRoom } from '@/features/rooms'
 import { navigateTo } from '@/navigation/navigateTo'
 import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
