@@ -4,7 +4,7 @@ import { useUser, UserAware, authUrl } from '@/features/auth'
 import './Landing.css'
 
 const AIOBI_FLAT = 13750
-const PER_USER = { zoom: 13200, google: 8600, teams: 3600 }
+const PER_USER = { zoom: 13200, google: 8640, teams: 3600 }
 
 function formatPrice(n: number) {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA'
@@ -516,17 +516,17 @@ const LandingContent = () => {
             </div>
             <div className="simulator-bars">
               <div className="sim-row">
-                <span className="sim-label">Zoom Business</span>
+                <span className="sim-label">Zoom Workplace</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: '100%' }}></div></div>
                 <span className="sim-price">{formatPrice(zoomPrice)}</span>
               </div>
               <div className="sim-row">
-                <span className="sim-label">Google Standard</span>
+                <span className="sim-label">Google Workspace</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: `${(googlePrice / maxPrice) * 100}%` }}></div></div>
                 <span className="sim-price">{formatPrice(googlePrice)}</span>
               </div>
               <div className="sim-row">
-                <span className="sim-label">Microsoft Teams</span>
+                <span className="sim-label">Microsoft 365</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: `${(teamsPrice / maxPrice) * 100}%` }}></div></div>
                 <span className="sim-price">{formatPrice(teamsPrice)}</span>
               </div>
