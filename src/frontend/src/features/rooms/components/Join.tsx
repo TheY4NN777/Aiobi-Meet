@@ -347,6 +347,20 @@ export const Join = ({
   const isCameraDeniedOrPrompted = useCannotUseDevice('videoinput')
   const isMicrophoneDeniedOrPrompted = useCannotUseDevice('audioinput')
 
+  // Auto-open permissions dialog after 5s if devices are not accessible
+  const [permDialogTriggered, setPermDialogTriggered] = useState(false)
+  useEffect(() => {
+    if (permDialogTriggered) return
+    if (!isCameraDeniedOrPrompted && !isMicrophoneDeniedOrPrompted) return
+    const timer = setTimeout(() => {
+      if (isCameraDeniedOrPrompted || isMicrophoneDeniedOrPrompted) {
+        openPermissionsDialog(isCameraDeniedOrPrompted ? 'videoinput' : 'audioinput')
+        setPermDialogTriggered(true)
+      }
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [isCameraDeniedOrPrompted, isMicrophoneDeniedOrPrompted, permDialogTriggered])
+
   const hintMessage = useMemo(() => {
     if (isCameraDeniedOrPrompted) {
       return isMicrophoneDeniedOrPrompted
