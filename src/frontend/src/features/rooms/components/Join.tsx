@@ -347,19 +347,18 @@ export const Join = ({
   const isCameraDeniedOrPrompted = useCannotUseDevice('videoinput')
   const isMicrophoneDeniedOrPrompted = useCannotUseDevice('audioinput')
 
-  // Auto-open permissions dialog after 5s if devices are not accessible
-  const [permDialogTriggered, setPermDialogTriggered] = useState(false)
+  // Auto-open permissions dialog after 5s if no tracks are available
+  const [showPermBanner, setShowPermBanner] = useState(false)
   useEffect(() => {
-    if (permDialogTriggered) return
-    if (!isCameraDeniedOrPrompted && !isMicrophoneDeniedOrPrompted) return
     const timer = setTimeout(() => {
-      if (isCameraDeniedOrPrompted || isMicrophoneDeniedOrPrompted) {
-        openPermissionsDialog(isCameraDeniedOrPrompted ? 'videoinput' : 'audioinput')
-        setPermDialogTriggered(true)
+      // If after 5s we still have no video and no audio tracks, permissions are likely blocked
+      if (!videoTrack && !audioTrack) {
+        openPermissionsDialog('videoinput')
+        setShowPermBanner(true)
       }
     }, 5000)
     return () => clearTimeout(timer)
-  }, [isCameraDeniedOrPrompted, isMicrophoneDeniedOrPrompted, permDialogTriggered])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const hintMessage = useMemo(() => {
     if (isCameraDeniedOrPrompted) {
@@ -474,6 +473,40 @@ export const Join = ({
 
   return (
     <Screen footer={false}>
+      {showPermBanner && (
+        <div
+          className={css({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1.5rem',
+            background: '#faf5ff',
+            borderBottom: '1px solid rgba(162, 81, 252, 0.2)',
+            fontSize: '0.875rem',
+            color: '#4a4a68',
+            flexWrap: 'wrap',
+            textAlign: 'center',
+          })}
+        >
+          <span>{t('permissionsBanner.message')}</span>
+          <button
+            onClick={() => openPermissionsDialog('videoinput')}
+            className={css({
+              background: 'none',
+              border: 'none',
+              color: '#a251fc',
+              fontWeight: '600',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+            })}
+          >
+            {t('permissionsBanner.action')}
+          </button>
+        </div>
+      )}
       <div
         className={css({
           display: 'flex',

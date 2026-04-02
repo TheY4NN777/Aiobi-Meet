@@ -8,10 +8,15 @@
     "home": "Retourner à l'accueil",
     "back": "Réintégrer la réunion"
   },
+  "permissionsBanner": {
+    "message": "Votre caméra et micro semblent bloqués. Vérifiez les autorisations de votre navigateur.",
+    "action": "Voir comment activer"
+  },
   "selectDevice": {
     "loading": "Chargement…",
     "select": "Sélectionnez une valeur",
     "permissionsNeeded": "Autorisations nécessaires",
+    "noDevice": "Vérifiez vos paramètres",
     "settings": {
       "audio": "Paramètres audio",
       "video": "Paramètres video"

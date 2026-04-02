@@ -5,6 +5,7 @@ import { Select, SelectProps } from '@/primitives/Select'
 import { Placement } from '@react-types/overlays'
 import { useCannotUseDevice } from '../../../hooks/useCannotUseDevice'
 import { useDeviceIcons } from '@/features/rooms/livekit/hooks/useDeviceIcons'
+import { openPermissionsDialog } from '@/stores/permissions'
 
 type DeviceItems = Array<{ value: string; label: string }>
 
@@ -106,16 +107,19 @@ export const SelectDevice = ({
   const cannotUseDevice = useCannotUseDevice(kind)
 
   if (cannotUseDevice) {
+    const deviceOrigin = kind === 'videoinput' ? 'videoinput' : 'audioinput'
     return (
-      <Select
-        aria-label={t(`${kind}.permissionsNeeded`)}
-        label=""
-        isDisabled={true}
-        items={[]}
-        placeholder={t('permissionsNeeded')}
-        iconComponent={deviceIcons.select}
-        {...contextProps}
-      />
+      <div onClick={() => openPermissionsDialog(deviceOrigin)} style={{ cursor: 'pointer' }}>
+        <Select
+          aria-label={t(`${kind}.permissionsNeeded`)}
+          label=""
+          isDisabled={true}
+          items={[]}
+          placeholder={t('permissionsNeeded')}
+          iconComponent={deviceIcons.select}
+          {...contextProps}
+        />
+      </div>
     )
   }
 
