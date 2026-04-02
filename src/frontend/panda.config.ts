@@ -271,10 +271,10 @@ const config: Config = {
         2: { value: '2' },
       },
       radii: {
-        4: { value: '0.25rem' },
-        6: { value: '0.375rem' },
-        8: { value: '0.5rem' },
-        16: { value: '1rem' },
+        4: { value: '0.625rem' },
+        6: { value: '0.75rem' },
+        8: { value: '1rem' },
+        16: { value: '1.5rem' },
         full: { value: '9999px' },
       },
       sizes: {
