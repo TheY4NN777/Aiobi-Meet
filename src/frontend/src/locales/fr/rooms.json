@@ -8,10 +8,6 @@
     "home": "Retourner à l'accueil",
     "back": "Réintégrer la réunion"
   },
-  "permissionsBanner": {
-    "message": "Votre caméra et micro semblent bloqués. Vérifiez les autorisations de votre navigateur.",
-    "action": "Voir comment activer"
-  },
   "selectDevice": {
     "loading": "Chargement…",
     "select": "Sélectionnez une valeur",
@@ -47,6 +43,10 @@
     }
   },
   "join": {
+    "permissionsBanner": {
+      "message": "Votre caméra et micro semblent bloqués. Vérifiez les autorisations de votre navigateur.",
+      "action": "Voir comment activer"
+    },
     "heading": "Rejoindre la réunion ?",
     "effects": {
       "description": "Arrière-plans et effets",

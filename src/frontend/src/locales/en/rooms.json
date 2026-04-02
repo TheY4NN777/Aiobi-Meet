@@ -8,10 +8,6 @@
     "home": "Return to home",
     "back": "Rejoin the meeting"
   },
-  "permissionsBanner": {
-    "message": "Your camera and microphone seem blocked. Check your browser permissions.",
-    "action": "See how to enable"
-  },
   "selectDevice": {
     "loading": "Loading…",
     "select": "Select a value",
@@ -46,6 +42,10 @@
     }
   },
   "join": {
+    "permissionsBanner": {
+      "message": "Your camera and microphone seem blocked. Check your browser permissions.",
+      "action": "See how to enable"
+    },
     "effects": {
       "description": "Apply backgrounds and effects",
       "title": "Effects",
