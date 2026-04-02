@@ -42,6 +42,10 @@
     }
   },
   "join": {
+    "permissionsBanner": {
+      "message": "Your camera and microphone seem blocked. Check your browser permissions.",
+      "action": "See how to enable"
+    },
     "effects": {
       "description": "Apply backgrounds and effects",
       "title": "Effects",

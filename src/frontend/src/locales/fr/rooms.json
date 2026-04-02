@@ -12,6 +12,7 @@
     "loading": "Chargement…",
     "select": "Sélectionnez une valeur",
     "permissionsNeeded": "Autorisations nécessaires",
+    "noDevice": "Vérifiez vos paramètres",
     "settings": {
       "audio": "Paramètres audio",
       "video": "Paramètres video"
@@ -42,6 +43,10 @@
     }
   },
   "join": {
+    "permissionsBanner": {
+      "message": "Votre caméra et micro semblent bloqués. Vérifiez les autorisations de votre navigateur.",
+      "action": "Voir comment activer"
+    },
     "heading": "Rejoindre la réunion ?",
     "effects": {
       "description": "Arrière-plans et effets",

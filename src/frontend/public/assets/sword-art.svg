@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 950" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&amp;display=swap');
+      
+      text {
+        font-family: 'Space Mono', monospace;
+        font-size: 16px;
+        fill: #a251fc;
+        white-space: pre;
+      }
+      
+      .line {
+        opacity: 0;
+        transform-origin: center;
+        animation: formFullShield 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      
+      @keyframes formFullShield {
+        0% { opacity: 0; transform: translateY(-40px) scale(0.9); filter: blur(8px); letter-spacing: -5px; }
+        100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); letter-spacing: 0px; text-shadow: 0 0 10px #a251fc; }
+      }
+      
+      /* Délais ultra-rapides pour l'effet d'assemblage fluide */
+      .l1 {animation-delay: 0.05s;} .l2 {animation-delay: 0.08s;} .l3 {animation-delay: 0.11s;}
+      .l4 {animation-delay: 0.14s;} .l5 {animation-delay: 0.17s;} .l6 {animation-delay: 0.20s;}
+      .l7 {animation-delay: 0.23s;} .l8 {animation-delay: 0.26s;} .l9 {animation-delay: 0.29s;}
+      .l10 {animation-delay: 0.32s;} .l11 {animation-delay: 0.35s;} .l12 {animation-delay: 0.38s;}
+      .l13 {animation-delay: 0.41s;} .l14 {animation-delay: 0.44s;} .l15 {animation-delay: 0.47s;}
+      .l16 {animation-delay: 0.50s;} .l17 {animation-delay: 0.53s;} .l18 {animation-delay: 0.56s;}
+      .l19 {animation-delay: 0.59s;} .l20 {animation-delay: 0.62s;} .l21 {animation-delay: 0.65s;}
+      .l22 {animation-delay: 0.68s;} .l23 {animation-delay: 0.71s;} .l24 {animation-delay: 0.74s;}
+      .l25 {animation-delay: 0.77s;} .l26 {animation-delay: 0.80s;} .l27 {animation-delay: 0.83s;}
+      .l28 {animation-delay: 0.86s;} .l29 {animation-delay: 0.89s;} .l30 {animation-delay: 0.92s;}
+      .l31 {animation-delay: 0.95s;} .l32 {animation-delay: 0.98s;} .l33 {animation-delay: 1.01s;}
+      .l34 {animation-delay: 1.04s;} .l35 {animation-delay: 1.07s;} .l36 {animation-delay: 1.10s;}
+      .l37 {animation-delay: 1.13s;} .l38 {animation-delay: 1.16s;} .l39 {animation-delay: 1.19s;}
+    </style>
+  </defs>
+
+  <text x="350" y="60" text-anchor="middle" xml:space="preserve">
+    <tspan x="350" dy="1.2em" class="line l1">xYYx#$xYYx</tspan>
+    <tspan x="350" dy="1.2em" class="line l2">aA@#Aa</tspan>
+    <tspan x="350" dy="1.2em" class="line l3">bB^&amp;Bb</tspan>
+    <tspan x="350" dy="1.2em" class="line l4">c@#$c*vC#$c</tspan>
+    <tspan x="350" dy="1.2em" class="line l5">d*&amp;d#pD&amp;*d</tspan>
+    <tspan x="350" dy="1.2em" class="line l6">e#$e@yE$#e</tspan>
+    <tspan x="350" dy="1.2em" class="line l7">f&amp;*f$hF*&amp;f</tspan>
+    <tspan x="350" dy="1.2em" class="line l8">g#$g&amp;jG$#g</tspan>
+    <tspan x="350" dy="1.2em" class="line l9">h*&amp;h#lH&amp;*h</tspan>
+    <tspan x="350" dy="1.2em" class="line l10">vDDvMMMM$#@DDv*MM*vDD</tspan>
+    <tspan x="350" dy="1.2em" class="line l11">oUUUUUxYYx@oU*UUUxYYxU*UUo</tspan>
+    <tspan x="350" dy="1.2em" class="line l12">zZZxxYYnnnnYYbMMbY*^$nnYYxxZZz_bMMb</tspan>
+    <tspan x="350" dy="1.2em" class="line l13">cYY hhPheeccccKKK#@$KKK_dMMMdK*&amp;^KKcehPhh YYc</tspan>
+    <tspan x="350" dy="1.2em" class="line l14">r UeY^Y^Y    YYY@#$dM&amp;MMk  kM$MMd   YYY    ^Y^Yr</tspan>
+    <tspan x="350" dy="1.2em" class="line l15">x##ww@#ZNa**qQ####qqQqq####qQ**aZNa#@ww##x</tspan>
+    <tspan x="350" dy="1.2em" class="line l16">mDm@#uIIu#$dJ####Jd$####Jd$#uIIu@#mDm</tspan>
+    <tspan x="350" dy="1.2em" class="line l17">p#P#$xLp$#lVl  b OO b  lVl#$pLx#$P#p</tspan>
+    <tspan x="350" dy="1.2em" class="line l18">l UUUhh#$YeHHe#$bMNooNMb#$eHHe#$hhUUU l</tspan>
+    <tspan x="350" dy="1.2em" class="line l19">vN#$d#$#$vVMMVv#$#$#$d#$Nv</tspan>
+    <tspan x="350" dy="1.2em" class="line l20">z#$#h#$kYaE#$rR#$#$Rr#$EaYk#$h#$Z</tspan>
+    <tspan x="350" dy="1.2em" class="line l21">g#$#f#f#$#t tH#$#$Ht t#$#f#f#$#G</tspan>
+    <tspan x="350" dy="1.2em" class="line l22">bK#$uU#$o WW#$xX#$#$Xx#$WW o#$Uu#$Kb</tspan>
+    <tspan x="350" dy="1.2em" class="line l23">s RRR#$#$aL#Yd sS#$#$Ss dY#La#$#$RRR s</tspan>
+    <tspan x="350" dy="1.2em" class="line l24">mTm#$#$#$#$x zZ#$#$Zz x#$#$#$#$mTm</tspan>
+    <tspan x="350" dy="1.2em" class="line l25">w i#$#$#$#$fF#$#$Ff#$#$#$#$i w</tspan>
+    <tspan x="350" dy="1.2em" class="line l26">jKj#$#sHnA#$kK#$#$Kk#$AnHs#$#jKj</tspan>
+    <tspan x="350" dy="1.2em" class="line l27">e E#n#nUUUw#mM#$#Mm#wUUUn#n#E e</tspan>
+    <tspan x="350" dy="1.2em" class="line l28">oMoV#$r#$#$vV#$#$Vv#$#$r#$VoMo</tspan>
+    <tspan x="350" dy="1.2em" class="line l29">q#$#$#$y#$#cC#$#$Cc#$y#$#$#$Q</tspan>
+    <tspan x="350" dy="1.2em" class="line l30">jLh#$oP#$#$uU#$#$Uu#$#$Po#$hLj</tspan>
+    <tspan x="350" dy="1.2em" class="line l31">dNeGfVjj#bB#$#Bb#jjVfGeNd</tspan>
+    <tspan x="350" dy="1.2em" class="line l32">xZk#Z#cC#$#$Cc#Z#kZx</tspan>
+    <tspan x="350" dy="1.2em" class="line l33">rV#aA#$#$Aa#Vr</tspan>
+    <tspan x="350" dy="1.2em" class="line l34">yY#$#$Yy</tspan>
+    <tspan x="350" dy="1.2em" class="line l35">mM#$#$Mm</tspan>
+    <tspan x="350" dy="1.2em" class="line l36">p Ww#P</tspan>
+    <tspan x="350" dy="1.2em" class="line l37">l Nn#L</tspan>
+    <tspan x="350" dy="1.2em" class="line l38">o Oo</tspan>
+    <tspan x="350" dy="1.2em" class="line l39">vV</tspan>
+  </text>
+</svg>

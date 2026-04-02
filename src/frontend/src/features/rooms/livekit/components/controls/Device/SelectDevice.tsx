@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { useMediaDeviceSelect } from '@livekit/components-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Select, SelectProps } from '@/primitives/Select'
 import { Placement } from '@react-types/overlays'
 import { useCannotUseDevice } from '../../../hooks/useCannotUseDevice'
 import { useDeviceIcons } from '@/features/rooms/livekit/hooks/useDeviceIcons'
+import { openPermissionsDialog } from '@/stores/permissions'
 
 type DeviceItems = Array<{ value: string; label: string }>
 
@@ -42,6 +43,14 @@ const SelectDevicePermissions = <T extends string | number>({
       label: d.label,
     }))
 
+  // After 5s with no devices, stop showing "loading" and show a useful message
+  const [timedOut, setTimedOut] = useState(false)
+  useEffect(() => {
+    if (items.length > 0) return
+    const timer = setTimeout(() => setTimedOut(true), 5000)
+    return () => clearTimeout(timer)
+  }, [items.length])
+
   /**
    * FALLBACK AUDIO OUTPUT DEVICE SELECTION
    * Auto-selects the only available audio output device when currently on 'default'
@@ -67,7 +76,7 @@ const SelectDevicePermissions = <T extends string | number>({
       isDisabled={items.length === 0}
       items={items}
       iconComponent={iconComponent}
-      placeholder={items.length === 0 ? t('loading') : t('select')}
+      placeholder={items.length === 0 ? (timedOut ? t('permissionsNeeded') : t('loading')) : t('select')}
       selectedKey={selectedKey}
       onSelectionChange={(key) => {
         if (key === selectedKey) return
@@ -98,16 +107,19 @@ export const SelectDevice = ({
   const cannotUseDevice = useCannotUseDevice(kind)
 
   if (cannotUseDevice) {
+    const deviceOrigin = kind === 'videoinput' ? 'videoinput' : 'audioinput'
     return (
-      <Select
-        aria-label={t(`${kind}.permissionsNeeded`)}
-        label=""
-        isDisabled={true}
-        items={[]}
-        placeholder={t('permissionsNeeded')}
-        iconComponent={deviceIcons.select}
-        {...contextProps}
-      />
+      <div onClick={() => openPermissionsDialog(deviceOrigin)} style={{ cursor: 'pointer' }}>
+        <Select
+          aria-label={t(`${kind}.permissionsNeeded`)}
+          label=""
+          isDisabled={true}
+          items={[]}
+          placeholder={t('permissionsNeeded')}
+          iconComponent={deviceIcons.select}
+          {...contextProps}
+        />
+      </div>
     )
   }
 

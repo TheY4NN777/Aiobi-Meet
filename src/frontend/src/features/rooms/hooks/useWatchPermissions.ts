@@ -10,6 +10,21 @@ export const useWatchPermissions = () => {
     let intervalId: NodeJS.Timeout | undefined
     let isCancelled = false
 
+    // Safety timeout: if permission check hangs (system-level block),
+    // force loading to false so UI doesn't show infinite "loading" state
+    const safetyTimeout = setTimeout(() => {
+      if (!isCancelled && permissionsStore.isLoading) {
+        console.warn('Permission check timed out, defaulting to prompt')
+        if (permissionsStore.cameraPermission === undefined) {
+          permissionsStore.cameraPermission = 'prompt'
+        }
+        if (permissionsStore.microphonePermission === undefined) {
+          permissionsStore.microphonePermission = 'prompt'
+        }
+        permissionsStore.isLoading = false
+      }
+    }, 3000)
+
     const checkPermissions = async () => {
       try {
         if (!navigator.permissions) {
@@ -162,6 +177,7 @@ export const useWatchPermissions = () => {
 
     return () => {
       isCancelled = true
+      clearTimeout(safetyTimeout)
       cleanup?.()
     }
   }, [])

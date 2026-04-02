@@ -3,7 +3,7 @@ import {
   RoomRoute,
   flexibleRoomIdPattern,
 } from '@/features/rooms'
-import { HomeRoute } from '@/features/home'
+import { HomeRoute, DashboardRoute } from '@/features/home'
 import { LegalTermsRoute } from '@/features/legalsTerms/LegalTermsRoute'
 import { TermsOfServiceRoute } from '@/features/legalsTerms/TermsOfService'
 import { CreatePopup } from '@/features/sdk/routes/CreatePopup'
@@ -13,6 +13,7 @@ import { RecordingDownloadRoute } from '@/features/recording'
 const roomIdRegex = new RegExp(`^[/](?<roomId>${flexibleRoomIdPattern})$`)
 
 export const routes: Record<
+  | 'landing'
   | 'home'
   | 'room'
   | 'feedback'
@@ -29,10 +30,15 @@ export const routes: Record<
     to?: (...args: any[]) => string | URL
   }
 > = {
-  home: {
-    name: 'home',
+  landing: {
+    name: 'landing',
     path: '/',
     Component: HomeRoute,
+  },
+  home: {
+    name: 'home',
+    path: '/home',
+    Component: DashboardRoute,
   },
   room: {
     name: 'room',
