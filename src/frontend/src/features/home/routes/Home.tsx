@@ -516,17 +516,17 @@ const LandingContent = () => {
             </div>
             <div className="simulator-bars">
               <div className="sim-row">
-                <span className="sim-label">Zoom Workplace</span>
+                <span className="sim-label">Zoom Workplace Business</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: '100%' }}></div></div>
                 <span className="sim-price">{formatPrice(zoomPrice)}</span>
               </div>
               <div className="sim-row">
-                <span className="sim-label">Google Workspace</span>
+                <span className="sim-label">Google Business Standard</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: `${(googlePrice / maxPrice) * 100}%` }}></div></div>
                 <span className="sim-price">{formatPrice(googlePrice)}</span>
               </div>
               <div className="sim-row">
-                <span className="sim-label">Microsoft 365</span>
+                <span className="sim-label">Teams Business Basic</span>
                 <div className="sim-bar-track"><div className="sim-bar" style={{ width: `${(teamsPrice / maxPrice) * 100}%` }}></div></div>
                 <span className="sim-price">{formatPrice(teamsPrice)}</span>
               </div>
