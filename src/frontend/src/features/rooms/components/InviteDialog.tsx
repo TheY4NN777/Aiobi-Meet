@@ -312,8 +312,8 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
               <div
                 className={css({
                   width: '100%',
-                  border: '1px solid #DADCE0',
-                  borderRadius: '8px',
+                  border: '1.5px solid #DADCE0',
+                  borderRadius: '10px',
                   padding: '0.5rem',
                   display: 'flex',
                   flexWrap: 'wrap',
@@ -321,6 +321,14 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                   alignItems: 'center',
                   minHeight: '2.5rem',
                   cursor: 'text',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: 'rgba(162, 81, 252, 0.3)',
+                  },
+                  '&:focus-within': {
+                    borderColor: 'primary.500',
+                    boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)',
+                  },
                 })}
                 onClick={(e) => {
                   const input = (e.currentTarget as HTMLElement).querySelector(
@@ -427,14 +435,20 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                     onChange={(e) => setScheduledDate(e.target.value)}
                     className={css({
                       width: '100%',
-                      padding: '0.375rem 0.5rem',
-                      border: '1px solid #DADCE0',
-                      borderRadius: '6px',
+                      padding: '0.5rem 0.75rem',
+                      border: '1.5px solid #DADCE0',
+                      borderRadius: '10px',
                       fontSize: '0.875rem',
+                      color: '#1a1a2e',
                       outline: 'none',
+                      transition: 'all 0.2s ease',
+                      WebkitAppearance: 'none',
+                      '&:hover': {
+                        borderColor: 'rgba(162, 81, 252, 0.3)',
+                      },
                       '&:focus': {
                         borderColor: 'primary.500',
-                        boxShadow: '0 0 0 2px token(colors.primary.100)',
+                        boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)',
                       },
                     })}
                   />
@@ -456,14 +470,20 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                     onChange={(e) => setScheduledTime(e.target.value)}
                     className={css({
                       width: '100%',
-                      padding: '0.375rem 0.5rem',
-                      border: '1px solid #DADCE0',
-                      borderRadius: '6px',
+                      padding: '0.5rem 0.75rem',
+                      border: '1.5px solid #DADCE0',
+                      borderRadius: '10px',
                       fontSize: '0.875rem',
+                      color: '#1a1a2e',
                       outline: 'none',
+                      transition: 'all 0.2s ease',
+                      WebkitAppearance: 'none',
+                      '&:hover': {
+                        borderColor: 'rgba(162, 81, 252, 0.3)',
+                      },
                       '&:focus': {
                         borderColor: 'primary.500',
-                        boxShadow: '0 0 0 2px token(colors.primary.100)',
+                        boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)',
                       },
                     })}
                   />
