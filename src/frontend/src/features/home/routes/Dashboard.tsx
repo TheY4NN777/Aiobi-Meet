@@ -119,7 +119,7 @@ const DashboardContent = () => {
     setTimeout(() => setCopied(false), 2000)
   }, [laterRoom])
 
-  const displayName = user?.full_name || username || ''
+  const displayName = user?.short_name || user?.full_name || username || ''
 
   const headlines = [
     'Prêt pour votre prochaine réunion ?',
