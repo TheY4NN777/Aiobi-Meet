@@ -14,7 +14,7 @@ DJANGO_EMAIL_FROM=no-reply@aiobi.world
 DJANGO_EMAIL_BRAND_NAME="Aïobi Meet"
 DJANGO_EMAIL_DOMAIN=aiobi-meet.duckdns.org
 DJANGO_EMAIL_APP_BASE_URL=https://aiobi-meet.duckdns.org
-DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo-banner.png"
+DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}:8443/assets/logo-banner.png"
 
 # Backend url
 MEET_BASE_URL="https://${MEET_HOST}:8443"
@@ -50,6 +50,10 @@ FRONTEND_USE_FRENCH_GOV_FOOTER=False
 FRONTEND_USE_PROCONNECT_BUTTON=False
 FRONTEND_IS_SILENT_LOGIN_ENABLED=False
 EXTERNAL_API_ENABLED=True
+DJANGO_EMAIL_USE_SSL=True
+DJANGO_EMAIL_USE_TLS=False
+DJANGO_EMAIL_HOST_USER=bowendsom@aiobi.world
+DJANGO_EMAIL_HOST_PASSWORD=wfqg flnc kwhd odgg
 DJANGO_EMAIL_USE_SSL=True
 DJANGO_EMAIL_USE_TLS=False
 DJANGO_EMAIL_HOST_USER=bowendsom@aiobi.world

@@ -43,16 +43,22 @@
           </mj-text>
 
           {% if scheduled_date %}
-          <!-- Scheduled date/time card -->
+          <!-- Scheduled date/time -->
           <mj-text padding="0 0 20px 0">
-            <div style="background: #f8f5ff; border-radius: 8px; padding: 16px; border-left: 4px solid #a251fc;">
-              <p style="margin: 0; font-size: 15px; color: #1a1a2e;">
-                &#128197; {% trans "Date:" %} <strong>{{ scheduled_date|date:"l d F Y" }}</strong>
-                {% if scheduled_time %}
-                <br/>&#128336; {% trans "Time:" %} <strong>{{ scheduled_time|time:"H:i" }}</strong>
-                {% endif %}
-              </p>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" style="background: #f8f5ff; border-radius: 10px; width: 100%;">
+              <tr>
+                <td style="padding: 16px 20px;">
+                  <p style="margin: 0; font-size: 15px; color: #1a1a2e;">
+                    &#128197; {% trans "Date:" %} <strong>{{ scheduled_date|date:"l d F Y" }}</strong>
+                  </p>
+                  {% if scheduled_time %}
+                  <p style="margin: 6px 0 0 0; font-size: 15px; color: #1a1a2e;">
+                    &#128336; {% trans "Time:" %} <strong>{{ scheduled_time|time:"H:i" }}</strong>
+                  </p>
+                  {% endif %}
+                </td>
+              </tr>
+            </table>
           </mj-text>
           {% endif %}
         </mj-column>

@@ -351,42 +351,176 @@
     margin-bottom: 0.25rem;
 }
 
-.dash-invite-field {
-    width: 100%;
+/* ===== REACT ARIA DATE/TIME PICKERS ===== */
+.dash-datepicker {
+    flex: 1;
+}
+
+.dash-timefield {
+    flex: 0.6;
+}
+
+.dash-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     padding: 0.5rem 0.75rem;
     border: 1.5px solid var(--border);
     border-radius: 10px;
-    font-size: 0.85rem;
-    font-family: var(--font-body);
-    color: var(--text);
     background: var(--bg);
-    outline: none;
     transition: all var(--transition);
-    -webkit-appearance: none;
-    appearance: none;
+    cursor: text;
 }
 
-.dash-invite-field:hover {
+.dash-picker-group:hover {
     border-color: var(--accent-border);
 }
 
-.dash-invite-field:focus {
+.dash-picker-group:focus-within {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-light);
 }
 
-/* Style the date/time picker icons */
-.dash-invite-field::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    border-radius: 4px;
-    padding: 2px;
-    opacity: 0.6;
-    transition: opacity var(--transition);
+.dash-picker-input {
+    display: flex;
+    align-items: center;
+    flex: 1;
 }
 
-.dash-invite-field::-webkit-calendar-picker-indicator:hover {
-    opacity: 1;
+.dash-picker-segment {
+    padding: 1px 2px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    outline: none;
+    caret-color: var(--accent);
+}
+
+.dash-picker-segment:focus {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+}
+
+.dash-picker-segment[data-placeholder] {
+    color: var(--text-muted);
+}
+
+.dash-picker-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 4px;
+    border-radius: 6px;
+    transition: all var(--transition);
+    line-height: 1;
+}
+
+.dash-picker-btn:hover {
     background: var(--accent-light);
+}
+
+/* Calendar popover */
+.dash-calendar-popover {
+    background: var(--bg);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    z-index: 200;
+}
+
+.dash-calendar-popover[data-entering] {
+    animation: fade 200ms;
+}
+
+.dash-calendar {
+    font-family: var(--font-body);
+}
+
+.dash-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.dash-calendar-heading {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dash-calendar-nav {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text);
+    transition: all var(--transition);
+}
+
+.dash-calendar-nav:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+}
+
+.dash-calendar-grid {
+    border-collapse: collapse;
+}
+
+.dash-calendar-grid th {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 0.25rem 0;
+}
+
+.dash-calendar-cell {
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+    transition: all var(--transition);
+    color: var(--text);
+}
+
+.dash-calendar-cell:hover {
+    background: var(--accent-light);
+}
+
+.dash-calendar-cell[data-focused] {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.dash-calendar-cell[data-selected] {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.dash-calendar-cell[data-disabled],
+.dash-calendar-cell[data-unavailable] {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.dash-calendar-cell[data-outside-month] {
+    opacity: 0.3;
 }
 
 .dash-invite-send {

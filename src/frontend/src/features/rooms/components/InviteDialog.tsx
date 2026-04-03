@@ -2,7 +2,23 @@ import { useTranslation } from 'react-i18next'
 import { getRouteUrl } from '@/navigation/getRouteUrl'
 import { Div, Button, type DialogProps, P, Bold } from '@/primitives'
 import { HStack, styled, VStack } from '@/styled-system/jsx'
-import { Heading, Dialog } from 'react-aria-components'
+import {
+  Heading,
+  Dialog,
+  DatePicker,
+  DateInput,
+  DateSegment,
+  Calendar,
+  CalendarGrid,
+  CalendarCell,
+  Button as RACButton,
+  Group,
+  Popover,
+  TimeField,
+  Label,
+} from 'react-aria-components'
+import { today, getLocalTimeZone } from '@internationalized/date'
+import type { CalendarDate, Time } from '@internationalized/date'
 import { Text, text } from '@/primitives/Text'
 import {
   RiCheckLine,
@@ -66,8 +82,8 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
   const [emails, setEmails] = useState<string[]>([])
   const [emailInput, setEmailInput] = useState('')
   const [emailError, setEmailError] = useState('')
-  const [scheduledDate, setScheduledDate] = useState('')
-  const [scheduledTime, setScheduledTime] = useState('')
+  const [scheduledDate, setScheduledDate] = useState<CalendarDate | null>(null)
+  const [scheduledTime, setScheduledTime] = useState<Time | null>(null)
   const [inviteSent, setInviteSent] = useState(false)
 
   const inviteMutation = useInviteToRoom({
@@ -75,8 +91,8 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
       setInviteSent(true)
       setEmails([])
       setEmailInput('')
-      setScheduledDate('')
-      setScheduledTime('')
+      setScheduledDate(null)
+      setScheduledTime(null)
       setTimeout(() => setInviteSent(false), 3000)
     },
   })
@@ -122,8 +138,10 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
     inviteMutation.mutate({
       roomId: roomData.id,
       emails,
-      scheduledDate: scheduledDate || null,
-      scheduledTime: scheduledTime || null,
+      scheduledDate: scheduledDate?.toString() || null,
+      scheduledTime: scheduledTime
+        ? `${String(scheduledTime.hour).padStart(2, '0')}:${String(scheduledTime.minute).padStart(2, '0')}`
+        : null,
     })
   }, [roomData?.id, emails, scheduledDate, scheduledTime, inviteMutation])
 
@@ -406,7 +424,7 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                 </Text>
               )}
 
-              {/* Date / Time row */}
+              {/* Date / Time — React Aria */}
               <div
                 className={css({
                   display: 'flex',
@@ -415,8 +433,13 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                   width: '100%',
                 })}
               >
-                <div className={css({ flex: '1' })}>
-                  <label
+                <DatePicker
+                  value={scheduledDate}
+                  onChange={setScheduledDate}
+                  minValue={today(getLocalTimeZone())}
+                  className={css({ flex: '1' })}
+                >
+                  <Label
                     className={css({
                       fontSize: '0.75rem',
                       color: '#5F6368',
@@ -428,33 +451,176 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                     <span style={{ fontStyle: 'italic' }}>
                       ({t('optional')})
                     </span>
-                  </label>
-                  <input
-                    type="date"
-                    value={scheduledDate}
-                    onChange={(e) => setScheduledDate(e.target.value)}
+                  </Label>
+                  <Group
                     className={css({
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.4rem 0.6rem',
                       border: '1.5px solid #DADCE0',
                       borderRadius: '10px',
-                      fontSize: '0.875rem',
-                      color: '#1a1a2e',
-                      outline: 'none',
+                      background: 'white',
                       transition: 'all 0.2s ease',
-                      WebkitAppearance: 'none',
                       '&:hover': {
                         borderColor: 'rgba(162, 81, 252, 0.3)',
                       },
-                      '&:focus': {
+                      '&:focus-within': {
                         borderColor: 'primary.500',
                         boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)',
                       },
                     })}
-                  />
-                </div>
-                <div className={css({ flex: '0.6' })}>
-                  <label
+                  >
+                    <DateInput
+                      className={css({
+                        display: 'flex',
+                        alignItems: 'center',
+                        flex: '1',
+                      })}
+                    >
+                      {(segment) => (
+                        <DateSegment
+                          segment={segment}
+                          className={css({
+                            padding: '1px 2px',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                            outline: 'none',
+                            '&[data-focused]': {
+                              background: 'primary.500',
+                              color: 'white',
+                            },
+                            '&[data-placeholder]': {
+                              color: '#5F6368',
+                            },
+                          })}
+                        />
+                      )}
+                    </DateInput>
+                    <RACButton
+                      className={css({
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        padding: '2px 4px',
+                        borderRadius: '6px',
+                        '&:hover': {
+                          background: 'rgba(162, 81, 252, 0.08)',
+                        },
+                      })}
+                    >
+                      &#128197;
+                    </RACButton>
+                  </Group>
+                  <Popover
+                    className={css({
+                      background: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+                      border: '1px solid #ebebf0',
+                      padding: '1rem',
+                      zIndex: 2000,
+                    })}
+                  >
+                    <Dialog>
+                      <Calendar>
+                        <header
+                          className={css({
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.75rem',
+                          })}
+                        >
+                          <RACButton
+                            slot="previous"
+                            className={css({
+                              background: 'none',
+                              border: '1.5px solid #ebebf0',
+                              borderRadius: '8px',
+                              width: '32px',
+                              height: '32px',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                borderColor: 'primary.500',
+                                color: 'primary.500',
+                              },
+                            })}
+                          >
+                            &larr;
+                          </RACButton>
+                          <Heading
+                            className={css({
+                              fontSize: '0.85rem',
+                              fontWeight: '600',
+                            })}
+                          />
+                          <RACButton
+                            slot="next"
+                            className={css({
+                              background: 'none',
+                              border: '1.5px solid #ebebf0',
+                              borderRadius: '8px',
+                              width: '32px',
+                              height: '32px',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                borderColor: 'primary.500',
+                                color: 'primary.500',
+                              },
+                            })}
+                          >
+                            &rarr;
+                          </RACButton>
+                        </header>
+                        <CalendarGrid>
+                          {(date) => (
+                            <CalendarCell
+                              date={date}
+                              className={css({
+                                width: '32px',
+                                height: '32px',
+                                textAlign: 'center',
+                                borderRadius: '50%',
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                outline: 'none',
+                                '&:hover': {
+                                  background: 'rgba(162, 81, 252, 0.08)',
+                                },
+                                '&[data-selected]': {
+                                  background: 'primary.500',
+                                  color: 'white',
+                                  fontWeight: '600',
+                                },
+                                '&[data-focused]': {
+                                  boxShadow: '0 0 0 2px token(colors.primary.500)',
+                                },
+                                '&[data-disabled]': {
+                                  opacity: 0.3,
+                                  cursor: 'not-allowed',
+                                },
+                                '&[data-outside-month]': {
+                                  opacity: 0.3,
+                                },
+                              })}
+                            />
+                          )}
+                        </CalendarGrid>
+                      </Calendar>
+                    </Dialog>
+                  </Popover>
+                </DatePicker>
+
+                <TimeField
+                  value={scheduledTime}
+                  onChange={setScheduledTime}
+                  hourCycle={24}
+                  granularity="minute"
+                  className={css({ flex: '0.6' })}
+                >
+                  <Label
                     className={css({
                       fontSize: '0.75rem',
                       color: '#5F6368',
@@ -463,31 +629,46 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                     })}
                   >
                     {t('scheduledTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={scheduledTime}
-                    onChange={(e) => setScheduledTime(e.target.value)}
+                  </Label>
+                  <DateInput
                     className={css({
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.4rem 0.6rem',
                       border: '1.5px solid #DADCE0',
                       borderRadius: '10px',
-                      fontSize: '0.875rem',
-                      color: '#1a1a2e',
-                      outline: 'none',
+                      background: 'white',
                       transition: 'all 0.2s ease',
-                      WebkitAppearance: 'none',
                       '&:hover': {
                         borderColor: 'rgba(162, 81, 252, 0.3)',
                       },
-                      '&:focus': {
+                      '&:focus-within': {
                         borderColor: 'primary.500',
                         boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)',
                       },
                     })}
-                  />
-                </div>
+                  >
+                    {(segment) => (
+                      <DateSegment
+                        segment={segment}
+                        className={css({
+                          padding: '1px 2px',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          outline: 'none',
+                          '&[data-focused]': {
+                            background: 'primary.500',
+                            color: 'white',
+                          },
+                          '&[data-placeholder]': {
+                            color: '#5F6368',
+                          },
+                        })}
+                      />
+                    )}
+                  </DateInput>
+                </TimeField>
               </div>
 
               {/* Send button */}

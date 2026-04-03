@@ -6,6 +6,23 @@ import { navigateTo } from '@/navigation/navigateTo'
 import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
 import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
+import {
+  DatePicker,
+  DateInput,
+  DateSegment,
+  Calendar,
+  CalendarGrid,
+  CalendarCell,
+  Heading,
+  Button as RACButton,
+  Group,
+  Popover,
+  Dialog,
+  TimeField,
+  Label,
+} from 'react-aria-components'
+import { today, getLocalTimeZone } from '@internationalized/date'
+import type { CalendarDate, Time } from '@internationalized/date'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -37,8 +54,8 @@ const DashboardContent = () => {
   // Email invite state for "plan later" dialog
   const [inviteEmails, setInviteEmails] = useState<string[]>([])
   const [inviteInput, setInviteInput] = useState('')
-  const [inviteDate, setInviteDate] = useState('')
-  const [inviteTime, setInviteTime] = useState('')
+  const [inviteDate, setInviteDate] = useState<CalendarDate | null>(null)
+  const [inviteTime, setInviteTime] = useState<Time | null>(null)
   const [inviteSent, setInviteSent] = useState(false)
   const [inviteError, setInviteError] = useState('')
 
@@ -68,8 +85,10 @@ const DashboardContent = () => {
     inviteMutation.mutate({
       roomId: laterRoom.id,
       emails: inviteEmails,
-      scheduledDate: inviteDate || null,
-      scheduledTime: inviteTime || null,
+      scheduledDate: inviteDate?.toString() || null,
+      scheduledTime: inviteTime
+        ? `${String(inviteTime.hour).padStart(2, '0')}:${String(inviteTime.minute).padStart(2, '0')}`
+        : null,
     })
   }, [laterRoom?.id, inviteEmails, inviteDate, inviteTime, inviteMutation])
 
@@ -77,8 +96,8 @@ const DashboardContent = () => {
     setLaterRoom(null)
     setInviteEmails([])
     setInviteInput('')
-    setInviteDate('')
-    setInviteTime('')
+    setInviteDate(null)
+    setInviteTime(null)
     setInviteSent(false)
     setInviteError('')
   }, [])
@@ -280,16 +299,49 @@ const DashboardContent = () => {
                 />
               </div>
 
-              {/* Date / Time */}
+              {/* Date / Time — React Aria */}
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label className="dash-invite-label" htmlFor="invite-date">Date <span style={{ fontStyle: 'italic' }}>(optionnel)</span></label>
-                  <input id="invite-date" type="date" value={inviteDate} onChange={(e) => setInviteDate(e.target.value)} className="dash-invite-field" />
-                </div>
-                <div style={{ flex: 0.6 }}>
-                  <label className="dash-invite-label" htmlFor="invite-time">Heure</label>
-                  <input id="invite-time" type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} className="dash-invite-field" />
-                </div>
+                <DatePicker
+                  value={inviteDate}
+                  onChange={setInviteDate}
+                  minValue={today(getLocalTimeZone())}
+                  className="dash-datepicker"
+                >
+                  <Label className="dash-invite-label">Date <span style={{ fontStyle: 'italic' }}>(optionnel)</span></Label>
+                  <Group className="dash-picker-group">
+                    <DateInput className="dash-picker-input">
+                      {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                    </DateInput>
+                    <RACButton className="dash-picker-btn">&#128197;</RACButton>
+                  </Group>
+                  <Popover className="dash-calendar-popover">
+                    <Dialog>
+                      <Calendar className="dash-calendar">
+                        <header className="dash-calendar-header">
+                          <RACButton slot="previous" className="dash-calendar-nav">&larr;</RACButton>
+                          <Heading className="dash-calendar-heading" />
+                          <RACButton slot="next" className="dash-calendar-nav">&rarr;</RACButton>
+                        </header>
+                        <CalendarGrid className="dash-calendar-grid">
+                          {(date) => <CalendarCell date={date} className="dash-calendar-cell" />}
+                        </CalendarGrid>
+                      </Calendar>
+                    </Dialog>
+                  </Popover>
+                </DatePicker>
+
+                <TimeField
+                  value={inviteTime}
+                  onChange={setInviteTime}
+                  hourCycle={24}
+                  granularity="minute"
+                  className="dash-timefield"
+                >
+                  <Label className="dash-invite-label">Heure</Label>
+                  <DateInput className="dash-picker-group dash-picker-input">
+                    {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                  </DateInput>
+                </TimeField>
               </div>
 
               {/* Send button */}
