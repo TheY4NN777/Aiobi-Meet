@@ -35,6 +35,7 @@ class InvitationService:
             "domain": settings.EMAIL_DOMAIN,
             "room_url": f"{settings.EMAIL_APP_BASE_URL}/{room.slug}",
             "room_link": f"{settings.EMAIL_DOMAIN}/{room.slug}",
+            "sender_name": sender.full_name or sender.short_name or "",
             "sender_email": sender.email,
             "scheduled_date": scheduled_date,
             "scheduled_time": scheduled_time,
@@ -43,18 +44,21 @@ class InvitationService:
         with override(language):
             msg_html = render_to_string("mail/html/invitation.html", context)
             msg_plain = render_to_string("mail/text/invitation.txt", context)
+            sender_display = sender.full_name or sender.short_name or sender.email
             if scheduled_date:
                 subject = str(
-                    _("You are invited to a meeting on %(date)s")
-                    % {"date": scheduled_date.strftime("%d/%m/%Y")}
+                    _("%(name)s invites you to a meeting on %(date)s")
+                    % {
+                        "name": sender_display,
+                        "date": scheduled_date.strftime("%d/%m/%Y"),
+                    }
                 )
             else:
                 subject = str(
                     _(
-                        "Video call in progress: %(email)s is waiting for you"
-                        " to connect"
+                        "%(name)s is waiting for you to join a video call"
                     )
-                    % {"email": sender.email}
+                    % {"name": sender_display}
                 )
 
             try:

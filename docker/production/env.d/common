@@ -13,7 +13,7 @@ DJANGO_EMAIL_PORT=1025
 DJANGO_EMAIL_FROM=noreply@aiobi.world
 
 DJANGO_EMAIL_BRAND_NAME="Aiobi Meet"
-DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo.svg"
+DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo-banner.png"
 
 # Backend url
 MEET_BASE_URL="https://${MEET_HOST}"

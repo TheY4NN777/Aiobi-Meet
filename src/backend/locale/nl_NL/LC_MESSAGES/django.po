@@ -477,13 +477,13 @@ msgstr "Je opname is klaar"
 
 #: core/services/invitation.py
 #, python-format
-msgid "Video call in progress: %(email)s is waiting for you to connect"
-msgstr "Video-oproep bezig: %(email)s wacht op je verbinding"
+msgid "%(name)s is waiting for you to join a video call"
+msgstr "%(name)s wacht op u om deel te nemen aan een videogesprek"
 
 #: core/services/invitation.py
 #, python-format
-msgid "You are invited to a meeting on %(date)s"
-msgstr "U bent uitgenodigd voor een vergadering op %(date)s"
+msgid "%(name)s invites you to a meeting on %(date)s"
+msgstr "%(name)s nodigt u uit voor een vergadering op %(date)s"
 
 #: core/templates/mail/html/invitation.html
 msgid "invites you to a scheduled meeting"

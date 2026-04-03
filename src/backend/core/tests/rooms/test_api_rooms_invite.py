@@ -273,10 +273,8 @@ def test_api_rooms_invite_success(mock_send_mail, settings):
 
     subject, body, sender, recipients = mock_send_mail.call_args[0]
 
-    assert (
-        subject
-        == f"Video call in progress: {user.email} is waiting for you to connect"
-    )
+    sender_display = user.full_name or user.short_name or user.email
+    assert subject == f"{sender_display} is waiting for you to join a video call"
 
     # Verify email contains expected content
     required_content = [

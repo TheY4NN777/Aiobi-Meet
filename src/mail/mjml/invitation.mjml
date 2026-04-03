@@ -1,63 +1,98 @@
 <mjml>
   <mj-include path="./partial/header.mjml" />
 
-  <mj-body mj-class="bg--blue-100">
-    <mj-wrapper css-class="wrapper" padding="0 40px 40px 40px">
-      <mj-section css-class="wrapper-logo">
+  <mj-body background-color="#f4f0fa">
+    <mj-section padding="40px 0 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <mj-wrapper css-class="wrapper" padding="0 40px 0 40px">
+      <!-- Logo header (dark background) -->
+      <mj-section css-class="wrapper-logo" padding="30px 20px">
         <mj-column>
           <mj-image
             align="center"
             src="{{logo_img}}"
-            width="320px"
-            alt="{%trans 'Logo email' %}"
+            width="160px"
+            alt="{{brandname}}"
           />
         </mj-column>
       </mj-section>
 
-      <mj-section mj-class="bg--white-100" padding="30px 20px 60px 20px">
+      <!-- Content -->
+      <mj-section background-color="#ffffff" padding="40px 30px 20px 30px">
         <mj-column>
           <!-- Invitation message -->
-          <mj-text font-size="18px" color="#202124">
+          <mj-text font-size="18px" color="#1a1a2e" padding-bottom="10px">
             {% if scheduled_date %}
-            <p><a href="mailto:{{ sender_email }}">{{ sender_email }}</a> {% trans "invites you to a scheduled meeting" %}</p>
+            <p>
+              <strong>{% if sender_name %}{{ sender_name }}{% else %}{{ sender_email }}{% endif %}</strong>
+              {% trans "invites you to a scheduled meeting" %}
+            </p>
             {% else %}
-            <p><a href="mailto:{{ sender_email }}">{{ sender_email }}</a> {% trans "invites you to join an ongoing video call" %}</p>
+            <p>
+              <strong>{% if sender_name %}{{ sender_name }}{% else %}{{ sender_email }}{% endif %}</strong>
+              {% trans "invites you to join an ongoing video call" %}
+            </p>
+            {% endif %}
+            {% if sender_name %}
+            <p style="font-size: 14px; color: #8b8ba3; margin-top: 4px;">
+              <a href="mailto:{{ sender_email }}" style="color: #a251fc; text-decoration: none;">{{ sender_email }}</a>
+            </p>
             {% endif %}
           </mj-text>
 
           {% if scheduled_date %}
-          <!-- Scheduled date/time -->
-          <mj-text font-size="16px" color="#202124" padding="0 0 10px 0">
-            <p style="margin: 0;">
-              &#128197; {% trans "Date:" %} {{ scheduled_date|date:"l d F Y" }}
-              {% if scheduled_time %}
-              <br/>&#128336; {% trans "Time:" %} {{ scheduled_time|time:"H:i" }}
-              {% endif %}
-            </p>
+          <!-- Scheduled date/time card -->
+          <mj-text padding="0 0 20px 0">
+            <div style="background: #f8f5ff; border-radius: 8px; padding: 16px; border-left: 4px solid #a251fc;">
+              <p style="margin: 0; font-size: 15px; color: #1a1a2e;">
+                &#128197; {% trans "Date:" %} <strong>{{ scheduled_date|date:"l d F Y" }}</strong>
+                {% if scheduled_time %}
+                <br/>&#128336; {% trans "Time:" %} <strong>{{ scheduled_time|time:"H:i" }}</strong>
+                {% endif %}
+              </p>
+            </div>
           </mj-text>
           {% endif %}
+        </mj-column>
+      </mj-section>
 
-          <!-- Join button -->
-          <mj-button href="{{ room_url }}" background-color="#a251fc" color="white" border-radius="8px" font-weight="bold" font-size="16px" padding="20px 0">
+      <!-- Join button section -->
+      <mj-section background-color="#ffffff" padding="0 30px 30px 30px">
+        <mj-column>
+          <mj-button
+            href="{{ room_url }}"
+            background-color="#a251fc"
+            color="white"
+            border-radius="100px"
+            font-weight="600"
+            font-size="16px"
+            padding="10px 0 20px 0"
+            inner-padding="14px 40px"
+          >
             {% trans "JOIN THE CALL" %}
           </mj-button>
 
           <!-- Call URL -->
-          <mj-text align="center" color="#5F6368" font-size="14px" padding-top="15px">
+          <mj-text align="center" color="#8b8ba3" font-size="13px" padding-top="5px">
             <p>{{ room_link }}</p>
           </mj-text>
+        </mj-column>
+      </mj-section>
 
-          <mj-divider border-width="1px" border-style="solid" border-color="#EEEEEE" padding="30px 0" />
+      <mj-section background-color="#ffffff" padding="0 30px 40px 30px">
+        <mj-column>
+          <mj-divider border-width="1px" border-style="solid" border-color="#ebebf0" padding="0 0 20px 0" />
 
-          <!-- Additional information -->
-          <mj-text font-size="14px">
+          <!-- Tips -->
+          <mj-text font-size="13px" color="#8b8ba3" line-height="1.6em">
             <p>{% trans "If you can't click the button, copy and paste the URL into your browser to join the call." %}</p>
           </mj-text>
 
-          <!-- Quick tips -->
-          <mj-text padding-top="20px" font-size="14px">
-            <p>{% trans "Tips for a better experience:" %}</p>
-            <ul>
+          <mj-text padding-top="15px" font-size="13px" color="#8b8ba3" line-height="1.8em">
+            <p style="margin-bottom: 4px;">{% trans "Tips for a better experience:" %}</p>
+            <ul style="margin: 0; padding-left: 20px;">
               <li>{% trans "Use Chrome or Firefox for better call quality" %}</li>
               <li>{% trans "Test your microphone and camera before joining" %}</li>
               <li>{% trans "Make sure you have a stable internet connection" %}</li>
@@ -65,7 +100,7 @@
           </mj-text>
 
           <!-- Signature -->
-          <mj-text font-size="14px">
+          <mj-text font-size="14px" color="#1a1a2e" padding-top="25px">
             <p>
               {% blocktrans %}
               Thank you for using {{brandname}}.
@@ -75,7 +110,11 @@
         </mj-column>
       </mj-section>
     </mj-wrapper>
-  </mj-body>
 
-  <mj-include path="./partial/footer.mjml" />
+    <mj-include path="./partial/footer.mjml" />
+
+    <mj-section padding="0 0 40px 0">
+      <mj-column></mj-column>
+    </mj-section>
+  </mj-body>
 </mjml>

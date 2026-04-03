@@ -482,13 +482,13 @@ msgstr "Ihre Aufzeichnung ist bereit"
 
 #: core/services/invitation.py
 #, python-format
-msgid "Video call in progress: %(email)s is waiting for you to connect"
-msgstr "Videoanruf läuft: %(email)s wartet auf Ihre Teilnahme"
+msgid "%(name)s is waiting for you to join a video call"
+msgstr "%(name)s wartet auf Ihre Teilnahme an einem Videoanruf"
 
 #: core/services/invitation.py
 #, python-format
-msgid "You are invited to a meeting on %(date)s"
-msgstr "Sie sind zu einem Meeting am %(date)s eingeladen"
+msgid "%(name)s invites you to a meeting on %(date)s"
+msgstr "%(name)s lädt Sie zu einem Meeting am %(date)s ein"
 
 #: core/templates/mail/html/invitation.html
 msgid "invites you to a scheduled meeting"
