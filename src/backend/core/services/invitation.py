@@ -22,7 +22,9 @@ class InvitationService:
     """Service for invitations to users."""
 
     @staticmethod
-    def invite_to_room(room, sender, emails):
+    def invite_to_room(
+        room, sender, emails, scheduled_date=None, scheduled_time=None
+    ):
         """Send invitation emails to join a room."""
 
         language = get_language()
@@ -34,16 +36,26 @@ class InvitationService:
             "room_url": f"{settings.EMAIL_APP_BASE_URL}/{room.slug}",
             "room_link": f"{settings.EMAIL_DOMAIN}/{room.slug}",
             "sender_email": sender.email,
+            "scheduled_date": scheduled_date,
+            "scheduled_time": scheduled_time,
         }
 
         with override(language):
             msg_html = render_to_string("mail/html/invitation.html", context)
             msg_plain = render_to_string("mail/text/invitation.txt", context)
-            subject = str(
-                _(
-                    f"Video call in progress: {sender.email} is waiting for you to connect"
+            if scheduled_date:
+                subject = str(
+                    _("You are invited to a meeting on %(date)s")
+                    % {"date": scheduled_date.strftime("%d/%m/%Y")}
                 )
-            )  # Force translation
+            else:
+                subject = str(
+                    _(
+                        "Video call in progress: %(email)s is waiting for you"
+                        " to connect"
+                    )
+                    % {"email": sender.email}
+                )
 
             try:
                 send_mail(

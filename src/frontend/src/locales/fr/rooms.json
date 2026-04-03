@@ -99,7 +99,16 @@
     "phone": {
       "call": "Appelez le :",
       "pinCode": "Code :"
-    }
+    },
+    "inviteByEmail": "ou invitez par email",
+    "emailPlaceholder": "Saisir un email puis Entrée",
+    "scheduledDate": "Date de la réunion",
+    "scheduledTime": "Heure",
+    "sendInvites": "Envoyer les invitations",
+    "invitesSent": "Invitations envoyées !",
+    "inviteError": "Erreur lors de l'envoi des invitations",
+    "invalidEmail": "Email invalide",
+    "optional": "optionnel"
   },
   "pagination": {
     "count": "{{currentPage}} sur {{totalPageCount}}",

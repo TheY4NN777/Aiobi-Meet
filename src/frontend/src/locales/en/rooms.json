@@ -98,7 +98,16 @@
     "phone": {
       "call": "Call:",
       "pinCode": "Code:"
-    }
+    },
+    "inviteByEmail": "or invite by email",
+    "emailPlaceholder": "Type an email then press Enter",
+    "scheduledDate": "Meeting date",
+    "scheduledTime": "Time",
+    "sendInvites": "Send invitations",
+    "invitesSent": "Invitations sent!",
+    "inviteError": "Failed to send invitations",
+    "invalidEmail": "Invalid email",
+    "optional": "optional"
   },
   "pagination": {
     "count": "{{currentPage}} of {{totalPageCount}}",

@@ -94,7 +94,16 @@
     "phone": {
       "call": "Ruf an:",
       "pinCode": "Code:"
-    }
+    },
+    "inviteByEmail": "oder per E-Mail einladen",
+    "emailPlaceholder": "E-Mail eingeben und Enter drücken",
+    "scheduledDate": "Datum des Meetings",
+    "scheduledTime": "Uhrzeit",
+    "sendInvites": "Einladungen senden",
+    "invitesSent": "Einladungen gesendet!",
+    "inviteError": "Einladungen konnten nicht gesendet werden",
+    "invalidEmail": "Ungültige E-Mail",
+    "optional": "optional"
   },
   "pagination": {
     "count": "{{currentPage}} von {{totalPageCount}}",

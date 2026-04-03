@@ -476,10 +476,27 @@ msgstr "To hard delete a file, it must first be soft deleted."
 msgid "Your recording is ready"
 msgstr "Your recording is ready"
 
-#: core/services/invitation.py:44
-#, python-brace-format
-msgid "Video call in progress: {sender.email} is waiting for you to connect"
-msgstr "Video call in progress: {sender.email} is waiting for you to connect"
+#: core/services/invitation.py
+#, python-format
+msgid "Video call in progress: %(email)s is waiting for you to connect"
+msgstr "Video call in progress: %(email)s is waiting for you to connect"
+
+#: core/services/invitation.py
+#, python-format
+msgid "You are invited to a meeting on %(date)s"
+msgstr "You are invited to a meeting on %(date)s"
+
+#: core/templates/mail/html/invitation.html
+msgid "invites you to a scheduled meeting"
+msgstr "invites you to a scheduled meeting"
+
+#: core/templates/mail/html/invitation.html
+msgid "Date:"
+msgstr "Date:"
+
+#: core/templates/mail/html/invitation.html
+msgid "Time:"
+msgstr "Time:"
 
 #: core/templates/mail/html/invitation.html:159
 #: core/templates/mail/html/screen_recording.html:159

@@ -285,6 +285,12 @@ class RoomInviteSerializer(serializers.Serializer):
     """Validate room invite creation data."""
 
     emails = serializers.ListField(child=serializers.EmailField(), allow_empty=False)
+    scheduled_date = serializers.DateField(
+        required=False, allow_null=True, default=None
+    )
+    scheduled_time = serializers.TimeField(
+        required=False, allow_null=True, default=None
+    )
 
 
 class BaseParticipantsManagementSerializer(BaseValidationOnlySerializer):

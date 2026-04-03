@@ -105,6 +105,24 @@ deploy-staging:
     - cp docker/staging/default.conf.template $HOST_STAGING/
     - cp docker/staging/livekit-server.yaml $HOST_STAGING/
     - cp docker/staging/env.d/* $HOST_STAGING/env.d/
+
+    # --- Injecter les variables email CI dans env.d/common (ecrase les defaults) ---
+    - |
+      if [ -n "$DJANGO_EMAIL_HOST" ]; then
+        sed -i "s|^DJANGO_EMAIL_HOST=.*|DJANGO_EMAIL_HOST=$DJANGO_EMAIL_HOST|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_PORT=.*|DJANGO_EMAIL_PORT=$DJANGO_EMAIL_PORT|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_FROM=.*|DJANGO_EMAIL_FROM=$DJANGO_EMAIL_FROM|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_BRAND_NAME=.*|DJANGO_EMAIL_BRAND_NAME=\"$DJANGO_EMAIL_BRAND_NAME\"|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_DOMAIN=.*|DJANGO_EMAIL_DOMAIN=$DJANGO_EMAIL_DOMAIN|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_APP_BASE_URL=.*|DJANGO_EMAIL_APP_BASE_URL=$DJANGO_EMAIL_APP_BASE_URL|" $HOST_STAGING/env.d/common
+        # Ajouter les variables qui n'existent pas dans le fichier par defaut
+        echo "DJANGO_EMAIL_USE_SSL=$DJANGO_EMAIL_USE_SSL" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_USE_TLS=$DJANGO_EMAIL_USE_TLS" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_HOST_USER=$DJANGO_EMAIL_HOST_USER" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_HOST_PASSWORD=$DJANGO_EMAIL_HOST_PASSWORD" >> $HOST_STAGING/env.d/common
+        echo "=== Email config injected from CI variables ==="
+      fi
+
     - mkdir -p $HOST_STAGING/vhost.d
     - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json

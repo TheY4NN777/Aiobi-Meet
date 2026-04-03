@@ -7,12 +7,13 @@ DJANGO_CONFIGURATION=Production
 # Python
 PYTHONPATH=/app
 
-# Mail — staging utilise mailcatcher (pas de vrai SMTP)
+# Mail — valeurs par defaut (ecrasees par le CI si les variables GitLab sont definies)
 DJANGO_EMAIL_HOST=mailcatcher
 DJANGO_EMAIL_PORT=1025
 DJANGO_EMAIL_FROM=noreply@aiobi-meet.duckdns.org
-
 DJANGO_EMAIL_BRAND_NAME="Aïobi Meet"
+DJANGO_EMAIL_DOMAIN=aiobi-meet.duckdns.org
+DJANGO_EMAIL_APP_BASE_URL=https://aiobi-meet.duckdns.org
 DJANGO_EMAIL_LOGO_IMG="https://${MEET_HOST}/assets/logo.svg"
 
 # Backend url

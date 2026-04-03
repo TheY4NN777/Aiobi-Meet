@@ -18,11 +18,27 @@
         <mj-column>
           <!-- Invitation message -->
           <mj-text font-size="18px" color="#202124">
-            <p><a href="mailto:{{ sender_email }}">{{ sender_email }}</a>  {% trans "invites you to join an ongoing video call" %}</p>
+            {% if scheduled_date %}
+            <p><a href="mailto:{{ sender_email }}">{{ sender_email }}</a> {% trans "invites you to a scheduled meeting" %}</p>
+            {% else %}
+            <p><a href="mailto:{{ sender_email }}">{{ sender_email }}</a> {% trans "invites you to join an ongoing video call" %}</p>
+            {% endif %}
           </mj-text>
 
+          {% if scheduled_date %}
+          <!-- Scheduled date/time -->
+          <mj-text font-size="16px" color="#202124" padding="0 0 10px 0">
+            <p style="margin: 0;">
+              &#128197; {% trans "Date:" %} {{ scheduled_date|date:"l d F Y" }}
+              {% if scheduled_time %}
+              <br/>&#128336; {% trans "Time:" %} {{ scheduled_time|time:"H:i" }}
+              {% endif %}
+            </p>
+          </mj-text>
+          {% endif %}
+
           <!-- Join button -->
-          <mj-button href="{{ room_url }}" background-color="#1A73E8" color="white" border-radius="4px" font-weight="bold" font-size="16px" padding="20px 0">
+          <mj-button href="{{ room_url }}" background-color="#a251fc" color="white" border-radius="8px" font-weight="bold" font-size="16px" padding="20px 0">
             {% trans "JOIN THE CALL" %}
           </mj-button>
 

@@ -539,7 +539,11 @@ class RoomViewSet(
         emails = list(set(emails))
 
         InvitationService().invite_to_room(
-            room=room, sender=request.user, emails=emails
+            room=room,
+            sender=request.user,
+            emails=emails,
+            scheduled_date=serializer.validated_data.get("scheduled_date"),
+            scheduled_time=serializer.validated_data.get("scheduled_time"),
         )
 
         return drf_response.Response(

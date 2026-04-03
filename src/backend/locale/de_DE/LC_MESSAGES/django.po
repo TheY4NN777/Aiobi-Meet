@@ -480,10 +480,27 @@ msgstr ""
 msgid "Your recording is ready"
 msgstr "Ihre Aufzeichnung ist bereit"
 
-#: core/services/invitation.py:44
-#, python-brace-format
-msgid "Video call in progress: {sender.email} is waiting for you to connect"
-msgstr "Videoanruf läuft: {sender.email} wartet auf Ihre Teilnahme"
+#: core/services/invitation.py
+#, python-format
+msgid "Video call in progress: %(email)s is waiting for you to connect"
+msgstr "Videoanruf läuft: %(email)s wartet auf Ihre Teilnahme"
+
+#: core/services/invitation.py
+#, python-format
+msgid "You are invited to a meeting on %(date)s"
+msgstr "Sie sind zu einem Meeting am %(date)s eingeladen"
+
+#: core/templates/mail/html/invitation.html
+msgid "invites you to a scheduled meeting"
+msgstr "lädt Sie zu einem geplanten Meeting ein"
+
+#: core/templates/mail/html/invitation.html
+msgid "Date:"
+msgstr "Datum:"
+
+#: core/templates/mail/html/invitation.html
+msgid "Time:"
+msgstr "Uhrzeit:"
 
 #: core/templates/mail/html/invitation.html:159
 #: core/templates/mail/html/screen_recording.html:159
