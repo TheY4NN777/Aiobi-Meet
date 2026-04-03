@@ -425,18 +425,29 @@
     color: var(--accent-hover);
 }
 
-/* Calendar popover — rendered via portal on document.body */
-.dash-calendar-popover {
-    background: var(--bg);
-    border-radius: var(--radius);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
-    border: 1px solid var(--border);
-    padding: 1rem;
+/* Calendar modal overlay */
+.dash-cal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 9999;
 }
 
-.dash-calendar-popover[data-entering] {
+.dash-cal-modal {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
     animation: fade 200ms;
+}
+
+@keyframes fade {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .dash-calendar {

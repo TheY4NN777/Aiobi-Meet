@@ -7,17 +7,14 @@ import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePers
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
 import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
 import {
-  DatePicker,
+  DateField,
   DateInput,
   DateSegment,
   Calendar,
   CalendarGrid,
   CalendarCell,
-  Heading,
+  Heading as CalHeading,
   Button as RACButton,
-  Group,
-  Popover,
-  Dialog,
   TimeField,
   Label,
 } from 'react-aria-components'
@@ -50,6 +47,7 @@ const DashboardContent = () => {
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
   const [copied, setCopied] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
 
   // Email invite state for "plan later" dialog
   const [inviteEmails, setInviteEmails] = useState<string[]>([])
@@ -299,38 +297,23 @@ const DashboardContent = () => {
                 />
               </div>
 
-              {/* Date / Time — React Aria */}
+              {/* Date / Time */}
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                <DatePicker
+                <DateField
                   value={inviteDate}
                   onChange={setInviteDate}
-                  minValue={today(getLocalTimeZone())}
                   className="dash-datepicker"
                 >
                   <Label className="dash-invite-label">Date <span style={{ fontStyle: 'italic' }}>(optionnel)</span></Label>
-                  <Group className="dash-picker-group">
+                  <div className="dash-picker-group">
                     <DateInput className="dash-picker-input">
                       {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
                     </DateInput>
-                    <RACButton className="dash-picker-btn">
+                    <button type="button" className="dash-picker-btn" onClick={() => setShowCalendar(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    </RACButton>
-                  </Group>
-                  <Popover className="dash-calendar-popover" UNSTABLE_portalContainer={document.body}>
-                    <Dialog>
-                      <Calendar className="dash-calendar">
-                        <header className="dash-calendar-header">
-                          <RACButton slot="previous" className="dash-calendar-nav">&larr;</RACButton>
-                          <Heading className="dash-calendar-heading" />
-                          <RACButton slot="next" className="dash-calendar-nav">&rarr;</RACButton>
-                        </header>
-                        <CalendarGrid className="dash-calendar-grid">
-                          {(date) => <CalendarCell date={date} className="dash-calendar-cell" />}
-                        </CalendarGrid>
-                      </Calendar>
-                    </Dialog>
-                  </Popover>
-                </DatePicker>
+                    </button>
+                  </div>
+                </DateField>
 
                 <TimeField
                   value={inviteTime}
@@ -340,11 +323,36 @@ const DashboardContent = () => {
                   className="dash-timefield"
                 >
                   <Label className="dash-invite-label">Heure</Label>
-                  <DateInput className="dash-picker-group dash-picker-input">
+                  <DateInput className="dash-picker-group">
                     {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
                   </DateInput>
                 </TimeField>
               </div>
+
+              {/* Calendar modal */}
+              {showCalendar && (
+                // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+                <div className="dash-cal-overlay" onClick={() => setShowCalendar(false)}>
+                  {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+                  <div className="dash-cal-modal" onClick={(e) => e.stopPropagation()}>
+                    <Calendar
+                      value={inviteDate}
+                      onChange={(date) => { setInviteDate(date); setShowCalendar(false) }}
+                      minValue={today(getLocalTimeZone())}
+                      className="dash-calendar"
+                    >
+                      <header className="dash-calendar-header">
+                        <RACButton slot="previous" className="dash-calendar-nav">&larr;</RACButton>
+                        <CalHeading className="dash-calendar-heading" />
+                        <RACButton slot="next" className="dash-calendar-nav">&rarr;</RACButton>
+                      </header>
+                      <CalendarGrid className="dash-calendar-grid">
+                        {(date) => <CalendarCell date={date} className="dash-calendar-cell" />}
+                      </CalendarGrid>
+                    </Calendar>
+                  </div>
+                </div>
+              )}
 
               {/* Send button */}
               <button
