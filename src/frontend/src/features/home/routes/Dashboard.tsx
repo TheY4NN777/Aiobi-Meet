@@ -5,6 +5,7 @@ import { generateRoomId, useCreateRoom } from '@/features/rooms'
 import { navigateTo } from '@/navigation/navigateTo'
 import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -32,6 +33,55 @@ const DashboardContent = () => {
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Email invite state for "plan later" dialog
+  const [inviteEmails, setInviteEmails] = useState<string[]>([])
+  const [inviteInput, setInviteInput] = useState('')
+  const [inviteDate, setInviteDate] = useState('')
+  const [inviteTime, setInviteTime] = useState('')
+  const [inviteSent, setInviteSent] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+
+  const inviteMutation = useInviteToRoom({
+    onSuccess: () => {
+      setInviteSent(true)
+      setInviteEmails([])
+      setInviteInput('')
+      setTimeout(() => setInviteSent(false), 3000)
+    },
+    onError: () => {
+      setInviteError('Erreur lors de l\'envoi des invitations')
+    },
+  })
+
+  const addInviteEmail = useCallback((value: string) => {
+    const trimmed = value.trim().toLowerCase()
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return
+    if (inviteEmails.includes(trimmed)) { setInviteInput(''); return }
+    setInviteEmails((prev) => [...prev, trimmed])
+    setInviteInput('')
+    setInviteError('')
+  }, [inviteEmails])
+
+  const handleSendInvites = useCallback(() => {
+    if (!laterRoom?.id || inviteEmails.length === 0) return
+    inviteMutation.mutate({
+      roomId: laterRoom.id,
+      emails: inviteEmails,
+      scheduledDate: inviteDate || null,
+      scheduledTime: inviteTime || null,
+    })
+  }, [laterRoom?.id, inviteEmails, inviteDate, inviteTime, inviteMutation])
+
+  const resetInviteState = useCallback(() => {
+    setLaterRoom(null)
+    setInviteEmails([])
+    setInviteInput('')
+    setInviteDate('')
+    setInviteTime('')
+    setInviteSent(false)
+    setInviteError('')
+  }, [])
 
   const handleCreateInstant = useCallback(async () => {
     const slug = generateRoomId()
@@ -185,7 +235,9 @@ const DashboardContent = () => {
 
       {/* Later Meeting Dialog */}
       {laterRoom && (
-        <div className="dash-later-overlay" onClick={() => setLaterRoom(null)}>
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+        <div className="dash-later-overlay" onClick={resetInviteState}>
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
           <div className="dash-later-card" onClick={(e) => e.stopPropagation()}>
             <h3>Votre réunion est prête</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
@@ -194,14 +246,67 @@ const DashboardContent = () => {
             <div className="dash-later-url">
               {window.location.origin}/{laterRoom.slug}
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <button className="dash-later-copy" onClick={handleCopyLink}>
                 {copied ? 'Copié !' : 'Copier le lien'}
               </button>
-              <button className="dash-later-close" onClick={() => setLaterRoom(null)}>
-                Fermer
-              </button>
             </div>
+
+            {/* Invite by email section */}
+            <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
+                ou invitez par email
+              </p>
+
+              {/* Email chips + input */}
+              <div className="dash-invite-emails">
+                {inviteEmails.map((email) => (
+                  <span key={email} className="dash-invite-chip">
+                    {email}
+                    <button type="button" onClick={() => setInviteEmails((prev) => prev.filter((e) => e !== email))}>&times;</button>
+                  </span>
+                ))}
+                <input
+                  type="email"
+                  value={inviteInput}
+                  onChange={(e) => { setInviteInput(e.target.value); setInviteError('') }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addInviteEmail(inviteInput) }
+                    if (e.key === 'Backspace' && !inviteInput && inviteEmails.length > 0) setInviteEmails((prev) => prev.slice(0, -1))
+                  }}
+                  onBlur={() => { if (inviteInput.trim()) addInviteEmail(inviteInput) }}
+                  placeholder={inviteEmails.length === 0 ? 'Saisir un email puis Entrée' : ''}
+                  className="dash-invite-input"
+                />
+              </div>
+
+              {/* Date / Time */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label className="dash-invite-label" htmlFor="invite-date">Date <span style={{ fontStyle: 'italic' }}>(optionnel)</span></label>
+                  <input id="invite-date" type="date" value={inviteDate} onChange={(e) => setInviteDate(e.target.value)} className="dash-invite-field" />
+                </div>
+                <div style={{ flex: 0.6 }}>
+                  <label className="dash-invite-label" htmlFor="invite-time">Heure</label>
+                  <input id="invite-time" type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} className="dash-invite-field" />
+                </div>
+              </div>
+
+              {/* Send button */}
+              <button
+                className={`dash-invite-send ${inviteSent ? 'success' : ''}`}
+                disabled={inviteEmails.length === 0 || inviteMutation.isPending}
+                onClick={handleSendInvites}
+              >
+                {inviteSent ? '✓ Invitations envoyées !' : inviteMutation.isPending ? '...' : 'Envoyer les invitations'}
+              </button>
+
+              {inviteError && <p style={{ color: '#D93025', fontSize: '0.8rem', marginTop: '0.25rem' }}>{inviteError}</p>}
+            </div>
+
+            <button className="dash-later-close" onClick={resetInviteState} style={{ marginTop: '0.5rem' }}>
+              Fermer
+            </button>
           </div>
         </div>
       )}
