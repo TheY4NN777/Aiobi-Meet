@@ -121,6 +121,7 @@ deploy-staging:
     - cp docker/staging/compose*.yaml $HOST_STAGING/
     - cp docker/staging/default.conf.template $HOST_STAGING/
     - cp docker/staging/livekit-server.yaml $HOST_STAGING/
+    - cp docker/staging/livekit-egress.yaml $HOST_STAGING/
     - cp docker/staging/env.d/* $HOST_STAGING/env.d/
 
     # --- Injecter les variables email CI dans env.d/common (ecrase les defaults) ---
@@ -140,16 +141,19 @@ deploy-staging:
         echo "=== Email config injected from CI variables ==="
       fi
 
-    # --- Injecter SUMMARY_API_TOKEN dans le .env staging -----------------------
+    # --- Injecter les tokens IA/recording dans le .env staging -----------------
     - |
-      if [ -n "$SUMMARY_API_TOKEN" ]; then
-        if grep -q "^SUMMARY_API_TOKEN=" $HOST_STAGING/.env 2>/dev/null; then
-          sed -i "s|^SUMMARY_API_TOKEN=.*|SUMMARY_API_TOKEN=$SUMMARY_API_TOKEN|" $HOST_STAGING/.env
-        else
-          echo "SUMMARY_API_TOKEN=$SUMMARY_API_TOKEN" >> $HOST_STAGING/.env
+      for VAR_NAME in SUMMARY_API_TOKEN RECORDING_STORAGE_EVENT_TOKEN; do
+        eval VAR_VALUE=\$$VAR_NAME
+        if [ -n "$VAR_VALUE" ]; then
+          if grep -q "^${VAR_NAME}=" $HOST_STAGING/.env 2>/dev/null; then
+            sed -i "s|^${VAR_NAME}=.*|${VAR_NAME}=${VAR_VALUE}|" $HOST_STAGING/.env
+          else
+            echo "${VAR_NAME}=${VAR_VALUE}" >> $HOST_STAGING/.env
+          fi
+          echo "=== ${VAR_NAME} injected ==="
         fi
-        echo "=== Summary API token injected ==="
-      fi
+      done
 
     - mkdir -p $HOST_STAGING/vhost.d
     - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
@@ -444,6 +448,7 @@ deploy-production:
       IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
       CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
       SUMMARY_API_TOKEN=${SUMMARY_API_TOKEN}
+      RECORDING_STORAGE_EVENT_TOKEN=${RECORDING_STORAGE_EVENT_TOKEN}
       ENVEOF
     - sed -i 's/^      //' .env
     - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
