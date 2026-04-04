@@ -1,13 +1,10 @@
 """Authentication Backends for the Meet core app."""
 
 import contextlib
-import logging
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.utils.translation import gettext_lazy as _
-
-logger = logging.getLogger(__name__)
 
 from lasuite.oidc_login.backends import (
     OIDCAuthenticationBackend as LaSuiteOIDCAuthenticationBackend,
@@ -39,21 +36,9 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
           dict: A dictionary of extra claims.
 
         """
-        # Temporary debug log to diagnose OIDC user_info content
-        logger.info("OIDC user_info keys: %s", list(user_info.keys()))
-        logger.info("OIDC user_info: %s", user_info)
-
-        full_name = self.compute_full_name(user_info)
-        short_name = user_info.get(settings.OIDC_USERINFO_SHORTNAME_FIELD)
-        logger.info(
-            "OIDC computed full_name=%s, short_name=%s (fields=%s)",
-            full_name,
-            short_name,
-            settings.OIDC_USERINFO_FULLNAME_FIELDS,
-        )
         return {
-            "full_name": full_name,
-            "short_name": short_name,
+            "full_name": self.compute_full_name(user_info),
+            "short_name": user_info.get(settings.OIDC_USERINFO_SHORTNAME_FIELD),
         }
 
     def post_get_or_create_user(self, user, claims, is_new_user):
