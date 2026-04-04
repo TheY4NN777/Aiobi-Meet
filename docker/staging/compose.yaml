@@ -183,7 +183,7 @@ services:
   # Premier demarrage : telecharge le modele large-v3 (~3 GB)
   # ---------------------------------------------------------------------------
   whisper:
-    image: fedirz/faster-whisper-server:latest
+    image: fedirz/faster-whisper-server:latest-cpu
     restart: always
     environment:
       - WHISPER__MODEL=Systran/faster-whisper-large-v3
