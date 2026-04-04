@@ -140,6 +140,17 @@ deploy-staging:
         echo "=== Email config injected from CI variables ==="
       fi
 
+    # --- Injecter SUMMARY_API_TOKEN dans le .env staging -----------------------
+    - |
+      if [ -n "$SUMMARY_API_TOKEN" ]; then
+        if grep -q "^SUMMARY_API_TOKEN=" $HOST_STAGING/.env 2>/dev/null; then
+          sed -i "s|^SUMMARY_API_TOKEN=.*|SUMMARY_API_TOKEN=$SUMMARY_API_TOKEN|" $HOST_STAGING/.env
+        else
+          echo "SUMMARY_API_TOKEN=$SUMMARY_API_TOKEN" >> $HOST_STAGING/.env
+        fi
+        echo "=== Summary API token injected ==="
+      fi
+
     - mkdir -p $HOST_STAGING/vhost.d
     - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
@@ -432,6 +443,7 @@ deploy-production:
       DOCKER_USER=${DOCKER_USER:-1000}
       IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
       CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
+      SUMMARY_API_TOKEN=${SUMMARY_API_TOKEN}
       ENVEOF
     - sed -i 's/^      //' .env
     - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
