@@ -256,6 +256,9 @@ const DashboardContent = () => {
         <div className="dash-later-overlay" onClick={resetInviteState}>
           {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
           <div className="dash-later-card" onClick={(e) => e.stopPropagation()}>
+            <button className="dash-later-x" onClick={resetInviteState} aria-label="Fermer">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
             <h3>Votre réunion est prête</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
               Partagez ce lien avec les participants :
@@ -263,7 +266,7 @@ const DashboardContent = () => {
             <div className="dash-later-url">
               {window.location.origin}/{laterRoom.slug}
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
               <button className="dash-later-copy" onClick={handleCopyLink}>
                 {copied ? 'Copié !' : 'Copier le lien'}
               </button>
@@ -366,9 +369,6 @@ const DashboardContent = () => {
               {inviteError && <p style={{ color: '#D93025', fontSize: '0.8rem', marginTop: '0.25rem' }}>{inviteError}</p>}
             </div>
 
-            <button className="dash-later-close" onClick={resetInviteState} style={{ marginTop: '0.5rem' }}>
-              Fermer
-            </button>
           </div>
         </div>
       )}

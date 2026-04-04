@@ -49,11 +49,11 @@
               <tr>
                 <td style="padding: 16px 20px;">
                   <p style="margin: 0; font-size: 15px; color: #1a1a2e;">
-                    &#128197; {% trans "Date:" %} <strong>{{ scheduled_date|date:"l d F Y" }}</strong>
+                    {% trans "Date:" %} <strong>{{ scheduled_date|date:"l d F Y" }}</strong>
                   </p>
                   {% if scheduled_time %}
                   <p style="margin: 6px 0 0 0; font-size: 15px; color: #1a1a2e;">
-                    &#128336; {% trans "Time:" %} <strong>{{ scheduled_time|time:"H:i" }}</strong>
+                    {% trans "Time:" %} <strong>{{ scheduled_time|time:"H:i" }}</strong>
                   </p>
                   {% endif %}
                 </td>

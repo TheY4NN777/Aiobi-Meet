@@ -213,12 +213,33 @@
 }
 
 .dash-later-card {
+    position: relative;
     background: #fff;
     border-radius: var(--radius-lg);
     padding: 2.5rem;
     max-width: 480px;
     width: 90%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.dash-later-x {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+}
+
+.dash-later-x:hover {
+    color: var(--text);
+    background: #f0f0f2;
 }
 
 .dash-later-card h3 {
@@ -231,13 +252,13 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    background: var(--bg-alt);
-    border-radius: 10px;
+    background: #f7f7f8;
+    border-radius: 8px;
     border: 1px solid var(--border);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     word-break: break-all;
     font-size: 0.85rem;
-    color: var(--accent);
+    color: var(--text);
     font-weight: 500;
 }
 
@@ -246,10 +267,10 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.6rem 1.25rem;
-    border: none;
-    border-radius: 100px;
-    background: var(--accent);
-    color: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
@@ -258,7 +279,8 @@
 }
 
 .dash-later-copy:hover {
-    background: var(--accent-hover);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .dash-later-close {
@@ -266,20 +288,19 @@
     align-items: center;
     padding: 0.6rem 1.25rem;
     border: 1.5px solid var(--border);
-    border-radius: 100px;
+    border-radius: 8px;
     background: transparent;
-    color: var(--text);
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     font-family: var(--font-body);
-    margin-left: 0.5rem;
     transition: all var(--transition);
 }
 
 .dash-later-close:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--text-muted);
+    color: var(--text);
 }
 
 /* ===== INVITE SECTION (in later dialog) ===== */
@@ -310,9 +331,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    background: var(--accent-light);
-    color: var(--accent);
-    border-radius: 1rem;
+    background: #f0f0f2;
+    color: var(--text);
+    border-radius: 6px;
     padding: 0.125rem 0.5rem;
     font-size: 0.75rem;
     line-height: 1.5;
@@ -325,11 +346,11 @@
     padding: 0;
     font-size: 0.875rem;
     line-height: 1;
-    color: var(--accent);
+    color: var(--text-muted);
 }
 
 .dash-invite-chip button:hover {
-    color: var(--accent-hover);
+    color: var(--text);
 }
 
 .dash-invite-input {
@@ -541,8 +562,8 @@
     width: 100%;
     padding: 0.7rem;
     border: none;
-    border-radius: 100px;
-    background: var(--accent);
+    border-radius: 8px;
+    background: var(--text);
     color: #fff;
     font-size: 0.85rem;
     font-weight: 500;
@@ -553,7 +574,7 @@
 }
 
 .dash-invite-send:hover:not(:disabled) {
-    background: var(--accent-hover);
+    background: #333;
 }
 
 .dash-invite-send:disabled {
