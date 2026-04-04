@@ -128,6 +128,14 @@ export const RecordingDownload = () => {
             >
               {t('success.button')}
             </LinkButton>
+            {data.has_transcription && data.transcription_key && (
+              <LinkButton
+                href={mediaUrl(data.transcription_key)}
+                download={`${data.room.name}-${formatDate(data.created_at)}-transcription.md`}
+              >
+                {t('success.transcription_button')}
+              </LinkButton>
+            )}
             <div
               className={css({
                 backgroundColor: 'greyscale.50',

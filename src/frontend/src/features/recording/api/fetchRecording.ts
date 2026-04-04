@@ -11,6 +11,8 @@ export type RecordingApi = {
   status: RecordingStatus
   is_expired: boolean
   expired_at: string
+  transcription_key: string | null
+  has_transcription: boolean
 }
 
 export const fetchRecording = ({ recordingId }: { recordingId?: string }) => {

@@ -73,6 +73,23 @@ build-frontend-staging:
   only:
     - develop
 
+build-summary-staging:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:27
+  script:
+    - docker build
+      --no-cache
+      --file src/summary/Dockerfile
+      --target production
+      --tag aiobi-meet/summary:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/summary:latest
+      src/summary
+  only:
+    - develop
+
 # =============================================================================
 # DEPLOY STAGING
 # =============================================================================
@@ -299,6 +316,7 @@ deploy-staging:
   needs:
     - build-backend-staging
     - build-frontend-staging
+    - build-summary-staging
 
 # =============================================================================
 # ========================== PRODUCTION (main) ================================

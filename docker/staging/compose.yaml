@@ -177,6 +177,89 @@ services:
       - proxy-tier
       - default
 
+  # ---------------------------------------------------------------------------
+  # Whisper local (transcription audio — faster-whisper-server)
+  # API compatible OpenAI : POST /v1/audio/transcriptions
+  # Premier demarrage : telecharge le modele large-v3 (~3 GB)
+  # ---------------------------------------------------------------------------
+  whisper:
+    image: fedirz/faster-whisper-server:latest
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Redis pour le summary service (broker Celery + result backend)
+  # ---------------------------------------------------------------------------
+  redis-summary:
+    image: redis:5
+    restart: always
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Summary service (FastAPI — transcription + resume IA)
+  # ---------------------------------------------------------------------------
+  summary:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — transcription (queue: transcribe-queue)
+  # ---------------------------------------------------------------------------
+  celery-transcribe:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q transcribe-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — resume IA (queue: summarize-queue)
+  # Pret pour Phase 2 (Docker Model Runner)
+  # ---------------------------------------------------------------------------
+  celery-summarize:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q summarize-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis-summary
+    networks:
+      - default
+
+volumes:
+  whisper-models:
+
 networks:
   proxy-tier:
     external: true

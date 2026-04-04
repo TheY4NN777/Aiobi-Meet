@@ -23,6 +23,7 @@
     "warning": {
       "title": "Link sharing disabled",
       "body": "Sharing the recording via link is not yet available. Only organizers can download it."
-    }
+    },
+    "transcription_button": "Download transcription"
   }
 }
