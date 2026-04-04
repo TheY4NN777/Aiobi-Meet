@@ -111,6 +111,10 @@ class LiveKitEventsService:
         if not auth_token:
             raise AuthenticationError("Authorization header missing")
 
+        # LiveKit server v1.8+ sends "Bearer <jwt>" instead of raw JWT
+        if auth_token.startswith("Bearer "):
+            auth_token = auth_token[len("Bearer "):]
+
         try:
             data = self.webhook_receiver.receive(
                 request.body.decode("utf-8"), auth_token
