@@ -31,7 +31,11 @@ OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-
 OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
 OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
 OIDC_RP_SIGN_ALGO=RS256
-OIDC_RP_SCOPES="openid email"
+OIDC_RP_SCOPES="openid email profile"
+
+# Keycloak sends family_name (not usual_name) — map correctly for full_name
+OIDC_USERINFO_FULLNAME_FIELDS=given_name,family_name
+OIDC_USERINFO_SHORTNAME_FIELD=given_name
 
 LOGIN_REDIRECT_URL=https://${MEET_HOST}:8443
 LOGIN_REDIRECT_URL_FAILURE=https://${MEET_HOST}:8443

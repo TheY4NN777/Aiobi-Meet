@@ -51,4 +51,35 @@
             border-bottom: 2px solid #f4f0fa;
         }
     </mj-style>
+    <mj-style>
+        /* Responsive */
+        @media only screen and (max-width: 480px) {
+            .wrapper {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+            .wrapper-logo {
+                border-radius: 0 !important;
+            }
+            .mobile-section td {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+            .mobile-section-top td {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+                padding-top: 24px !important;
+            }
+            .mobile-btn a {
+                padding: 12px 24px !important;
+                font-size: 15px !important;
+            }
+            .mobile-text-sm p,
+            .mobile-text-sm li {
+                font-size: 12px !important;
+            }
+        }
+    </mj-style>
 </mj-head>

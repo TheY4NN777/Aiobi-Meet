@@ -563,7 +563,7 @@
     padding: 0.7rem;
     border: none;
     border-radius: 8px;
-    background: var(--text);
+    background: var(--accent);
     color: #fff;
     font-size: 0.85rem;
     font-weight: 500;
@@ -574,7 +574,7 @@
 }
 
 .dash-invite-send:hover:not(:disabled) {
-    background: #333;
+    background: var(--accent-hover);
 }
 
 .dash-invite-send:disabled {

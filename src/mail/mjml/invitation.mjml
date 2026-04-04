@@ -20,7 +20,7 @@
       </mj-section>
 
       <!-- Content -->
-      <mj-section background-color="#ffffff" padding="40px 30px 20px 30px">
+      <mj-section css-class="mobile-section-top" background-color="#ffffff" padding="40px 30px 20px 30px">
         <mj-column>
           <!-- Invitation message -->
           <mj-text font-size="18px" color="#1a1a2e" padding-bottom="10px">
@@ -65,13 +65,14 @@
       </mj-section>
 
       <!-- Join button section -->
-      <mj-section background-color="#ffffff" padding="0 30px 30px 30px">
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 30px 30px 30px">
         <mj-column>
           <mj-button
+            css-class="mobile-btn"
             href="{{ room_url }}"
             background-color="#a251fc"
             color="white"
-            border-radius="100px"
+            border-radius="8px"
             font-weight="600"
             font-size="16px"
             padding="10px 0 20px 0"
@@ -87,16 +88,16 @@
         </mj-column>
       </mj-section>
 
-      <mj-section background-color="#ffffff" padding="0 30px 40px 30px">
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 30px 40px 30px">
         <mj-column>
           <mj-divider border-width="1px" border-style="solid" border-color="#ebebf0" padding="0 0 20px 0" />
 
           <!-- Tips -->
-          <mj-text font-size="13px" color="#8b8ba3" line-height="1.6em">
+          <mj-text css-class="mobile-text-sm" font-size="13px" color="#8b8ba3" line-height="1.6em">
             <p>{% trans "If you can't click the button, copy and paste the URL into your browser to join the call." %}</p>
           </mj-text>
 
-          <mj-text padding-top="15px" font-size="13px" color="#8b8ba3" line-height="1.8em">
+          <mj-text css-class="mobile-text-sm" padding-top="15px" font-size="13px" color="#8b8ba3" line-height="1.8em">
             <p style="margin-bottom: 4px;">{% trans "Tips for a better experience:" %}</p>
             <ul style="margin: 0; padding-left: 20px;">
               <li>{% trans "Use Chrome or Firefox for better call quality" %}</li>
@@ -106,7 +107,7 @@
           </mj-text>
 
           <!-- Signature -->
-          <mj-text font-size="14px" color="#1a1a2e" padding-top="25px">
+          <mj-text align="right" font-size="14px" color="#1a1a2e" padding-top="25px">
             <p>
               {% blocktrans %}
               Thank you for using {{brandname}}.

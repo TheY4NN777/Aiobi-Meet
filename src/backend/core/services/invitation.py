@@ -29,13 +29,15 @@ class InvitationService:
 
         language = get_language()
 
+        sender_name = sender.full_name or sender.short_name or ""
+
         context = {
             "brandname": settings.EMAIL_BRAND_NAME,
             "logo_img": settings.EMAIL_LOGO_IMG,
             "domain": settings.EMAIL_DOMAIN,
             "room_url": f"{settings.EMAIL_APP_BASE_URL}/{room.slug}",
             "room_link": f"{settings.EMAIL_DOMAIN}/{room.slug}",
-            "sender_name": sender.full_name or sender.short_name or "",
+            "sender_name": sender_name,
             "sender_email": sender.email,
             "scheduled_date": scheduled_date,
             "scheduled_time": scheduled_time,
@@ -44,7 +46,7 @@ class InvitationService:
         with override(language):
             msg_html = render_to_string("mail/html/invitation.html", context)
             msg_plain = render_to_string("mail/text/invitation.txt", context)
-            sender_display = sender.full_name or sender.short_name or sender.email
+            sender_display = sender_name or sender.email
             if scheduled_date:
                 subject = str(
                     _("%(name)s invites you to a meeting on %(date)s")
