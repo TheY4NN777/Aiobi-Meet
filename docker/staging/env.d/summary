@@ -24,7 +24,7 @@ WHISPERX_BASE_URL=http://whisper:8000/v1
 WHISPERX_API_KEY=local
 WHISPERX_ASR_MODEL=Systran/faster-whisper-large-v3
 WHISPERX_DEFAULT_LANGUAGE=fr
-WHISPERX_ALLOWED_LANGUAGES=en,fr
+WHISPERX_ALLOWED_LANGUAGES=["en","fr"]
 
 # --- LLM (Phase 2 — desactive) ---
 IS_SUMMARY_ENABLED=false

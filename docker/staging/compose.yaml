@@ -191,20 +191,10 @@ services:
   livekit-egress:
     image: livekit/egress:v1.11.0
     restart: always
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        sed -e "s|__LIVEKIT_API_SECRET__|$$LIVEKIT_API_SECRET|g" \
-            -e "s|__MINIO_ACCESS_KEY__|$$POSTGRES_USER|g" \
-            -e "s|__MINIO_SECRET_KEY__|$$POSTGRES_PASSWORD|g" \
-            /egress-config.template.yaml > /egress-config.yaml
-        exec /egress
-    env_file:
-      - .env
     environment:
       EGRESS_CONFIG_FILE: /egress-config.yaml
     volumes:
-      - ./livekit-egress.yaml:/egress-config.template.yaml:ro
+      - ./livekit-egress.yaml:/egress-config.yaml:ro
     depends_on:
       - redis
       - minio

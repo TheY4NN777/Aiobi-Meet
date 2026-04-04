@@ -122,6 +122,10 @@ deploy-staging:
     - cp docker/staging/default.conf.template $HOST_STAGING/
     - cp docker/staging/livekit-server.yaml $HOST_STAGING/
     - cp docker/staging/livekit-egress.yaml $HOST_STAGING/
+    # Injecter les secrets dans la config egress
+    - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_STAGING/livekit-egress.yaml
+    - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_STAGING/livekit-egress.yaml
+    - sed -i "s|__MINIO_SECRET_KEY__|${POSTGRES_PASSWORD}|g" $HOST_STAGING/livekit-egress.yaml
     - cp docker/staging/env.d/* $HOST_STAGING/env.d/
 
     # --- Injecter les variables email CI dans env.d/common (ecrase les defaults) ---
