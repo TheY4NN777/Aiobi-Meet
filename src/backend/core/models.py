@@ -590,6 +590,13 @@ class Recording(BaseModel):
         verbose_name=_("Recording options"),
         help_text=_("Recording options"),
     )
+    transcription_key = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name=_("Transcription key"),
+        help_text=_("MinIO object key for the transcription file (.md)."),
+    )
 
     class Meta:
         db_table = "meet_recording"
@@ -689,6 +696,11 @@ class Recording(BaseModel):
             return False
 
         return self.expired_at < timezone.now()
+
+    @property
+    def has_transcription(self) -> bool:
+        """Check if a transcription file is available for this recording."""
+        return bool(self.transcription_key)
 
 
 class RecordingAccess(BaseAccess):

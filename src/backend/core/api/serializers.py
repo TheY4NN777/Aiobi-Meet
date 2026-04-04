@@ -205,6 +205,8 @@ class RecordingSerializer(serializers.ModelSerializer):
             "key",
             "is_expired",
             "expired_at",
+            "transcription_key",
+            "has_transcription",
         ]
         read_only_fields = fields
 

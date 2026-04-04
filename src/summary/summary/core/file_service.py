@@ -1,5 +1,6 @@
 """File service to encapsulate files' manipulations."""
 
+import io
 import logging
 import os
 import subprocess
@@ -48,6 +49,34 @@ class FileService:
 
         self._allowed_extensions = settings.recording_allowed_extensions
         self._max_duration = settings.recording_max_duration
+
+    def upload_to_minio(self, object_key: str, content: str, content_type: str = "text/markdown") -> None:
+        """Upload text content to MinIO storage.
+
+        Args:
+            object_key: Destination path in MinIO (e.g. "transcriptions/{uuid}.md").
+            content: Text content to upload.
+            content_type: MIME type of the content.
+
+        Raises:
+            FileServiceException: If the upload fails.
+        """
+        logger.info("Uploading to MinIO | object_key: %s", object_key)
+
+        data = content.encode("utf-8")
+        try:
+            self._minio_client.put_object(
+                self._bucket_name,
+                object_key,
+                io.BytesIO(data),
+                length=len(data),
+                content_type=content_type,
+            )
+            logger.info("Upload successful | object_key: %s", object_key)
+        except (MinioException, S3Error) as e:
+            raise FileServiceException(
+                f"Failed to upload {object_key}"
+            ) from e
 
     def _download_from_minio(self, remote_object_key) -> Path:
         """Download file from MinIO to local temporary file.

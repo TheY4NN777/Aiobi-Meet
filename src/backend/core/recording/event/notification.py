@@ -195,4 +195,75 @@ class NotificationService:
         return True
 
 
+    def notify_transcription_ready(self, recording) -> bool:
+        """Send an email notification when a transcription is ready.
+
+        Similar to _notify_user_by_email but with transcription-specific
+        subject and templates.
+        """
+
+        owner_accesses = (
+            models.RecordingAccess.objects.select_related("user")
+            .filter(
+                role=models.RoleChoices.OWNER,
+                recording_id=recording.id,
+            )
+            .order_by("created_at")
+        )
+
+        if not owner_accesses:
+            logger.error("No owner found for recording %s", recording.id)
+            return False
+
+        context = {
+            "brandname": settings.EMAIL_BRAND_NAME,
+            "support_email": settings.EMAIL_SUPPORT_EMAIL,
+            "logo_img": settings.EMAIL_LOGO_IMG,
+            "domain": settings.EMAIL_DOMAIN,
+            "room_name": recording.room.name,
+            "link": f"{get_recording_download_base_url()}/{recording.id}",
+        }
+
+        has_failures = False
+
+        for access in owner_accesses:
+            user = access.user
+            language = user.language or get_language()
+            with override(language):
+                personalized_context = {
+                    "recording_date": recording.created_at.astimezone(
+                        user.timezone
+                    ).strftime("%Y-%m-%d"),
+                    "recording_time": recording.created_at.astimezone(
+                        user.timezone
+                    ).strftime("%H:%M"),
+                    **context,
+                }
+                msg_html = render_to_string(
+                    "mail/html/transcription_ready.html", personalized_context
+                )
+                msg_plain = render_to_string(
+                    "mail/text/transcription_ready.txt", personalized_context
+                )
+                subject = str(_("Your transcription is ready"))
+
+                try:
+                    send_mail(
+                        subject.capitalize(),
+                        msg_plain,
+                        settings.EMAIL_FROM,
+                        [user.email],
+                        html_message=msg_html,
+                        fail_silently=False,
+                    )
+                except smtplib.SMTPException as exception:
+                    logger.error(
+                        "Transcription notification could not be sent: %s",
+                        exception,
+                    )
+                    has_failures = True
+
+        return not has_failures
+
+
 notification_service = NotificationService()

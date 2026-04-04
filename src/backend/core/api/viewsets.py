@@ -36,6 +36,7 @@ from core.api.filters import ListFileFilter
 from core.enums import MEDIA_STORAGE_URL_PATTERN
 from core.recording.enums import FileExtension
 from core.recording.event.authentication import StorageEventAuthentication
+from core.recording.event.summary_authentication import SummaryServiceAuthentication
 from core.recording.event.exceptions import (
     InvalidBucketError,
     InvalidFilepathError,
@@ -802,6 +803,37 @@ class RecordingViewSet(
             {"message": "Event processed."},
         )
 
+    @decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="transcription-ready",
+        authentication_classes=[SummaryServiceAuthentication],
+        permission_classes=[],
+    )
+    def transcription_ready(self, request, pk=None):
+        """Handle transcription-ready webhook from the summary service.
+
+        Called after the summary service uploads a transcription to MinIO.
+        Updates the recording's transcription_key and notifies the owner by email.
+        """
+
+        recording = get_object_or_404(models.Recording, pk=pk)
+
+        transcription_key = request.data.get("transcription_key")
+        if not transcription_key:
+            raise drf_exceptions.ValidationError(
+                {"transcription_key": "This field is required."}
+            )
+
+        recording.transcription_key = transcription_key
+        recording.save(update_fields=["transcription_key", "updated_at"])
+
+        notification_service.notify_transcription_ready(recording)
+
+        return drf_response.Response(
+            {"message": "Transcription registered.", "id": str(recording.id)},
+        )
+
     def _auth_get_original_url(self, request):
         """
         Extracts and parses the original URL from the "HTTP_X_ORIGINAL_URL" header.
@@ -842,7 +874,7 @@ class RecordingViewSet(
     def media_auth(self, request, *args, **kwargs):
         """
         This view is used by an Nginx subrequest to control access to a recording's
-        media file.
+        media file or transcription file.
         When we let the request go through, we compute authorization headers that will be added to
         the request going through thanks to the nginx.ingress.kubernetes.io/auth-response-headers
         annotation. The request will then be proxied to the object storage backend who will
@@ -850,6 +882,15 @@ class RecordingViewSet(
         """
 
         parsed_url = self._auth_get_original_url(request)
+
+        # Try transcription pattern first, then recording pattern
+        transcription_match = enums.TRANSCRIPTION_STORAGE_URL_PATTERN.search(
+            parsed_url.path
+        )
+        if transcription_match:
+            return self._auth_transcription_media(
+                request, transcription_match.groupdict(), parsed_url.path
+            )
 
         url_params = self._auth_get_url_params(
             enums.RECORDING_STORAGE_URL_PATTERN, parsed_url.path
@@ -882,6 +923,30 @@ class RecordingViewSet(
 
         request = utils.generate_s3_authorization_headers(recording.key)
 
+        return drf_response.Response("authorized", headers=request.headers, status=200)
+
+    def _auth_transcription_media(self, request, url_params, original_path):
+        """Authorize access to a transcription file stored in MinIO.
+
+        Transcription files follow the pattern: /media/transcriptions/{uuid}.md
+        Access is granted if the user has retrieve ability on the recording.
+        """
+        user = request.user
+        recording_id = url_params["recording_id"]
+
+        try:
+            recording = models.Recording.objects.get(id=recording_id)
+        except models.Recording.DoesNotExist as e:
+            raise drf_exceptions.NotFound("No recording found.") from e
+
+        if not recording.transcription_key:
+            raise drf_exceptions.NotFound("No transcription available.")
+
+        abilities = recording.get_abilities(user)
+        if not abilities["retrieve"]:
+            raise drf_exceptions.PermissionDenied()
+
+        request = utils.generate_s3_authorization_headers(recording.transcription_key)
         return drf_response.Response("authorized", headers=request.headers, status=200)
 
 
