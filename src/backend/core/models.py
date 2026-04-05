@@ -402,6 +402,12 @@ class Room(Resource):
         verbose_name=_("Room PIN code"),
         help_text=_("Unique n-digit code that identifies this room in telephony mode."),
     )
+    scheduled_date = models.DateField(
+        _("scheduled date"), null=True, blank=True
+    )
+    scheduled_time = models.TimeField(
+        _("scheduled time"), null=True, blank=True
+    )
 
     class Meta:
         db_table = "meet_room"

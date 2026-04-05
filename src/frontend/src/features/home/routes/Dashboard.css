@@ -201,6 +201,112 @@
     background: var(--accent-hover);
 }
 
+/* ===== UPCOMING MEETINGS ===== */
+.dash-upcoming {
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 2rem;
+}
+
+.dash-upcoming h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.dash-upcoming-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dash-upcoming-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    transition: all var(--transition);
+}
+
+.dash-upcoming-card:hover {
+    border-color: var(--accent-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.dash-upcoming-date {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.dash-upcoming-slug {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.dash-upcoming-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.dash-upcoming-join {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all var(--transition);
+}
+
+.dash-upcoming-join:hover {
+    background: var(--accent-hover);
+}
+
+.dash-upcoming-copy {
+    padding: 0.4rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all var(--transition);
+}
+
+.dash-upcoming-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+@media (max-width: 640px) {
+    .dash-upcoming-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .dash-upcoming-actions {
+        width: 100%;
+    }
+    .dash-upcoming-join,
+    .dash-upcoming-copy {
+        flex: 1;
+        text-align: center;
+    }
+}
+
 /* ===== LATER DIALOG ===== */
 .dash-later-overlay {
     position: fixed;

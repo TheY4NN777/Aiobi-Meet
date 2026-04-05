@@ -1,4 +1,4 @@
-import { A, Badge, Button, DialogProps, Field, H, Link, P } from '@/primitives'
+import { A, Badge, Button, DialogProps, Field, H, P } from '@/primitives'
 import { Trans, useTranslation } from 'react-i18next'
 import { useRoomContext } from '@livekit/components-react'
 import { useUser } from '@/features/auth'
@@ -64,17 +64,6 @@ export const AccountTab = ({ id, onOpenChange }: AccountTabProps) => {
           <LoginButton />
         </>
       )}
-      <H lvl={2}>{t('account.legal', { defaultValue: 'Legal' })}</H>
-      <P>
-        <Link to="/politique-confidentialite" underline={false}>
-          {t('footer.links.privacyPolicy', { ns: 'global' })}
-        </Link>
-      </P>
-      <P>
-        <Link to="/conditions-utilisation" underline={false}>
-          {t('footer.links.termsOfService', { ns: 'global' })}
-        </Link>
-      </P>
       <HStack
         className={css({
           marginTop: 'auto',

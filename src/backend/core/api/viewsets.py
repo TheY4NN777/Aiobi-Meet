@@ -540,6 +540,15 @@ class RoomViewSet(
         emails = serializer.validated_data.get("emails")
         emails = list(set(emails))
 
+        scheduled_date = serializer.validated_data.get("scheduled_date")
+        scheduled_time = serializer.validated_data.get("scheduled_time")
+
+        # Persist scheduled date on the room if not already set
+        if scheduled_date and not room.scheduled_date:
+            room.scheduled_date = scheduled_date
+            room.scheduled_time = scheduled_time
+            room.save(update_fields=["scheduled_date", "scheduled_time"])
+
         InvitationService().invite_to_room(
             room=room,
             sender=request.user,

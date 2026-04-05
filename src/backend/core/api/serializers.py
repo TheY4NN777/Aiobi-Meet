@@ -119,7 +119,7 @@ class ListRoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Room
-        fields = ["id", "name", "slug", "access_level"]
+        fields = ["id", "name", "slug", "access_level", "scheduled_date", "scheduled_time"]
         read_only_fields = ["id", "slug"]
 
 
@@ -128,7 +128,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Room
-        fields = ["id", "name", "slug", "configuration", "access_level", "pin_code"]
+        fields = ["id", "name", "slug", "configuration", "access_level", "pin_code", "scheduled_date", "scheduled_time"]
         read_only_fields = ["id", "slug", "pin_code"]
 
     def to_representation(self, instance):

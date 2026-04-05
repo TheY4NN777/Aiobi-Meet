@@ -57,29 +57,7 @@ export const Footer = () => {
       })}
     >
       <InnerContainer>
-        <SecondRow>
-          <StyledLi divider>
-            <Link
-              underline={false}
-              footer="minor"
-              to="/politique-confidentialite"
-              aria-label={t('links.privacyPolicy')}
-            >
-              {t('links.privacyPolicy')}
-            </Link>
-          </StyledLi>
-          <StyledLi divider>
-            <Link
-              underline={false}
-              footer="minor"
-              to="/conditions-utilisation"
-              aria-label={t('links.termsOfService')}
-            >
-              {t('links.termsOfService')}
-            </Link>
-          </StyledLi>
-        </SecondRow>
-
+        <SecondRow />
       </InnerContainer>
     </footer>
   )

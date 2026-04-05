@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware } from '@/features/auth'
 import { generateRoomId, useCreateRoom } from '@/features/rooms'
@@ -20,6 +20,8 @@ import {
 } from 'react-aria-components'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
+import { useQuery } from '@tanstack/react-query'
+import { fetchApi } from '@/api/fetchApi'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -43,6 +45,21 @@ const DashboardContent = () => {
   } = usePersistentUserChoices()
 
   useFontshare()
+
+  // Fetch user's rooms for upcoming meetings
+  const { data: roomsData } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => fetchApi<{ results: ApiRoom[] }>('rooms/'),
+    enabled: !!user,
+  })
+
+  const upcomingRooms = useMemo(() => {
+    if (!roomsData?.results) return []
+    const todayStr = new Date().toISOString().split('T')[0]
+    return roomsData.results
+      .filter((r) => r.scheduled_date && r.scheduled_date >= todayStr)
+      .sort((a, b) => (a.scheduled_date! > b.scheduled_date! ? 1 : -1))
+  }, [roomsData])
 
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
@@ -250,6 +267,32 @@ const DashboardContent = () => {
         </button>
       </div>
 
+      {/* Upcoming Meetings */}
+      {upcomingRooms.length > 0 && (
+        <div className="dash-upcoming">
+          <h2>Réunions à venir</h2>
+          <div className="dash-upcoming-list">
+            {upcomingRooms.map((room) => (
+              <div key={room.id} className="dash-upcoming-card">
+                <div className="dash-upcoming-date">
+                  {room.scheduled_date && new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  {room.scheduled_time && ` — ${room.scheduled_time.slice(0, 5)}`}
+                </div>
+                <div className="dash-upcoming-slug">{room.slug}</div>
+                <div className="dash-upcoming-actions">
+                  <button className="dash-upcoming-join" onClick={() => navigateTo('room', room.slug)}>
+                    Rejoindre
+                  </button>
+                  <button className="dash-upcoming-copy" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${room.slug}`) }}>
+                    Copier le lien
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Later Meeting Dialog */}
       {laterRoom && (
         // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
@@ -379,7 +422,7 @@ const DashboardContent = () => {
 export const Dashboard = () => {
   return (
     <UserAware>
-      <Screen header={true} footer={true}>
+      <Screen header={true} footer={false}>
         <DashboardContent />
       </Screen>
     </UserAware>
