@@ -657,7 +657,7 @@ const LandingContent = () => {
               <p>Première DeepTech du continent dédiée à l&apos;IA appliquée aux entreprises. Filiale de BBS Holding / BURVAL Corporate.</p>
               <div className="footer-status">
                 <span>Disponible maintenant</span>
-                <span className="status-secondary">Afrique &middot; Europe &middot; Monde</span>
+                <span className="status-secondary">Afrique &middot; Océanie &middot; Monde</span>
               </div>
               <div className="footer-socials">
                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
