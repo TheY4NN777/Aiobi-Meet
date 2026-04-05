@@ -13,6 +13,7 @@ import { LoadingScreen } from '@/components/LoadingScreen'
 import { fetchRecording } from '../api/fetchRecording'
 import { RecordingStatus } from '@/features/recording'
 import { useConfig } from '@/api/useConfig'
+import { navigateTo } from '@/navigation/navigateTo'
 
 const BetaBadge = () => (
   <span
@@ -92,6 +93,25 @@ export const RecordingDownload = () => {
   return (
     <UserAware>
       <Screen layout="centered" footer={false}>
+        <div className={css({ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 1rem 0 0' })}>
+          <button
+            onClick={() => navigateTo('home')}
+            className={css({
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              color: 'greyscale.500',
+              _hover: { color: '#a251fc' },
+            })}
+          >
+            Tableau de bord
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          </button>
+        </div>
         <Center>
           <VStack>
             <img
