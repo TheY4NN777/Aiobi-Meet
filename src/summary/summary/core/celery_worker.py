@@ -93,7 +93,10 @@ def transcribe_audio(task_id, filename, language):
             transcription_start_time = time.time()
 
             transcription = whisperx_client.audio.transcriptions.create(
-                model=settings.whisperx_asr_model, file=audio_file, language=language
+                model=settings.whisperx_asr_model,
+                file=audio_file,
+                language=language,
+                response_format="verbose_json",
             )
 
             transcription_time = round(time.time() - transcription_start_time, 2)
