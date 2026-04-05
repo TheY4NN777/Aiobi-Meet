@@ -4,6 +4,7 @@ import {
   flexibleRoomIdPattern,
 } from '@/features/rooms'
 import { HomeRoute, DashboardRoute } from '@/features/home'
+import { MeetingsRoute } from '@/features/meetings'
 import { LegalTermsRoute } from '@/features/legalsTerms/LegalTermsRoute'
 import { TermsOfServiceRoute } from '@/features/legalsTerms/TermsOfService'
 import { CreatePopup } from '@/features/sdk/routes/CreatePopup'
@@ -15,6 +16,7 @@ const roomIdRegex = new RegExp(`^[/](?<roomId>${flexibleRoomIdPattern})$`)
 export const routes: Record<
   | 'landing'
   | 'home'
+  | 'meetings'
   | 'room'
   | 'feedback'
   | 'legalTerms'
@@ -39,6 +41,11 @@ export const routes: Record<
     name: 'home',
     path: '/home',
     Component: DashboardRoute,
+  },
+  meetings: {
+    name: 'meetings',
+    path: '/meetings',
+    Component: MeetingsRoute,
   },
   room: {
     name: 'room',
