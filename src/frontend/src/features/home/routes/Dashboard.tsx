@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Screen } from '@/layout/Screen'
 import { useUser, UserAware } from '@/features/auth'
 import { generateRoomId, useCreateRoom } from '@/features/rooms'
@@ -20,8 +20,6 @@ import {
 } from 'react-aria-components'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
-import { useQuery } from '@tanstack/react-query'
-import { fetchApi } from '@/api/fetchApi'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -45,24 +43,6 @@ const DashboardContent = () => {
   } = usePersistentUserChoices()
 
   useFontshare()
-
-  // Fetch user's rooms for upcoming meetings
-  const { data: roomsData } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: () => fetchApi<{ results: ApiRoom[] }>('rooms/'),
-    enabled: !!user,
-  })
-
-  const myRooms = useMemo(() => {
-    if (!roomsData?.results) return []
-    return [...roomsData.results].sort((a, b) => {
-      // Rooms with dates first, sorted by date
-      if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1
-      if (a.scheduled_date) return -1
-      if (b.scheduled_date) return 1
-      return 0
-    })
-  }, [roomsData])
 
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
@@ -269,38 +249,6 @@ const DashboardContent = () => {
           Rejoindre
         </button>
       </div>
-
-      {/* My Meetings */}
-      {myRooms.length > 0 && (
-        <div className="dash-upcoming">
-          <h2>Mes réunions</h2>
-          <div className="dash-upcoming-list">
-            {myRooms.map((room) => (
-              <div key={room.id} className="dash-upcoming-card">
-                <div className="dash-upcoming-info">
-                  {room.scheduled_date ? (
-                    <div className="dash-upcoming-date">
-                      {new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                      {room.scheduled_time && ` — ${room.scheduled_time.slice(0, 5)}`}
-                    </div>
-                  ) : (
-                    <div className="dash-upcoming-date" style={{ color: 'var(--text-muted)' }}>Pas de date prévue</div>
-                  )}
-                  <div className="dash-upcoming-slug">{room.slug}</div>
-                </div>
-                <div className="dash-upcoming-actions">
-                  <button className="dash-upcoming-join" onClick={() => navigateTo('room', room.slug)}>
-                    Rejoindre
-                  </button>
-                  <button className="dash-upcoming-copy" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${room.slug}`) }}>
-                    Copier le lien
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Later Meeting Dialog */}
       {laterRoom && (
