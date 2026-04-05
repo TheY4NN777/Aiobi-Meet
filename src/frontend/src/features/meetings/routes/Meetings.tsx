@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useLayoutEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '@/api/fetchApi'
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
@@ -21,9 +21,22 @@ import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalize
 import type { CalendarDate, Time } from '@internationalized/date'
 import './Meetings.css'
 
+const useFontshare = () => {
+  useLayoutEffect(() => {
+    const id = 'fontshare-meetings'
+    if (document.getElementById(id)) return
+    const link = document.createElement('link')
+    link.id = id
+    link.rel = 'stylesheet'
+    link.href = 'https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500,400&f[]=satoshi@700,500,400,300&display=swap'
+    document.head.appendChild(link)
+  }, [])
+}
+
 const MeetingsContent = () => {
   const { user } = useUser()
   const queryClient = useQueryClient()
+  useFontshare()
 
   const { data, isLoading } = useQuery({
     queryKey: ['rooms'],
@@ -102,11 +115,26 @@ const MeetingsContent = () => {
 
   return (
     <div className="meetings-page">
-      <h1>Mes reunions</h1>
+      <div className="meetings-header">
+        <button className="meetings-back" onClick={() => navigateTo('home')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Tableau de bord
+        </button>
+        <h1>Mes reunions</h1>
+      </div>
 
       {sorted.length === 0 ? (
         <div className="meetings-empty">
-          Aucune reunion pour le moment. Creez-en une depuis le tableau de bord.
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: '1rem' }}>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <p>Aucune reunion pour le moment</p>
+          <button className="meetings-empty-cta" onClick={() => navigateTo('home')}>
+            Planifier une reunion
+          </button>
         </div>
       ) : (
         sorted.map((room) => (
