@@ -379,7 +379,7 @@ const DashboardContent = () => {
 export const Dashboard = () => {
   return (
     <UserAware>
-      <Screen header={true} footer={false}>
+      <Screen header={true} footer={true}>
         <DashboardContent />
       </Screen>
     </UserAware>
