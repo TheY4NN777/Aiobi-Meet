@@ -47,12 +47,16 @@ class TranscriptFormatter:
         """Format transcription into the final document and its title."""
         segments = self._get_segments(transcription)
 
-        if not segments:
-            content = self._locale.empty_transcription
-        else:
+        if segments:
             content = self._format_speaker(segments)
             content = self._remove_hallucinations(content)
             content = self._add_header(content, download_link)
+        elif hasattr(transcription, "text") and transcription.text:
+            content = transcription.text
+            content = self._remove_hallucinations(content)
+            content = self._add_header(content, download_link)
+        else:
+            content = self._locale.empty_transcription
 
         title = self._generate_title(room, recording_date, recording_time)
 
