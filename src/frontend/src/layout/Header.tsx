@@ -19,7 +19,7 @@ const Logo = () => (
     src="/assets/logo.svg"
     alt={`${import.meta.env.VITE_APP_TITLE}`}
     className={`Header-logo ${css({
-      maxWidth: { base: '160px', sm: '200px' },
+      maxWidth: { base: '110px', sm: '200px' },
       marginTop: { base: '4px', sm: '2px' },
       flexShrink: 0,
     })}`}
@@ -110,7 +110,7 @@ export const Header = () => {
       >
         <HStack gap={0} justify="space-between" alignItems="center">
           <header>
-            <Stack gap={2.25} direction="row" align="center">
+            <Stack gap={{ base: 0.5, sm: 2.25 }} direction="row" align="center">
               <Link
                 className={css({
                   display: 'flex',

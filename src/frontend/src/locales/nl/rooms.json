@@ -133,7 +133,8 @@
     "body": {
       "openMenu": {
         "others": "Klik op het instellingenpictogram ICON_PLACEHOLDER in de adresbalk van uw browser",
-        "safari": "Klik op het menu 'Safari' en open 'Instellingen voor {{appDomain}}'."
+        "safari": "Klik op het menu 'Safari' en open 'Instellingen voor {{appDomain}}'.",
+        "mobile": "Open de instellingen van uw browser en sta toegang toe voor deze site"
       },
       "details": {
         "camera": "Toegang tot de camera toestaan",

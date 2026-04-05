@@ -138,7 +138,8 @@
     "body": {
       "openMenu": {
         "others": "Cliquez sur l'icône des paramètres ICON_PLACEHOLDER dans la barre d'adresse de votre navigateur",
-        "safari": "Cliquez sur le menu \"Safari\", et ouvrez \"Paramètres pour {{appDomain}}\"."
+        "safari": "Cliquez sur le menu \"Safari\", et ouvrez \"Paramètres pour {{appDomain}}\".",
+        "mobile": "Ouvrez les paramètres de votre navigateur, puis autorisez l'accès au site"
       },
       "details": {
         "camera": "Autorisez l'accès à la caméra",
