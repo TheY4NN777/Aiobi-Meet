@@ -320,6 +320,29 @@
     }
 }
 
+/* ===== ROOM TITLE INPUT ===== */
+.dash-room-title-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    outline: none;
+    margin-bottom: 1rem;
+    transition: border-color var(--transition);
+    background: transparent;
+}
+
+.dash-room-title-input:focus {
+    border-color: var(--accent);
+}
+
+.dash-room-title-input::placeholder {
+    color: var(--text-muted);
+}
+
 /* ===== LATER DIALOG ===== */
 .dash-later-overlay {
     position: fixed;

@@ -5,6 +5,20 @@ import { ApiRoom } from '@/features/rooms/api/ApiRoom'
 import { useUser, UserAware } from '@/features/auth'
 import { Screen } from '@/layout/Screen'
 import { navigateTo } from '@/navigation/navigateTo'
+import {
+  DateField,
+  DateInput,
+  DateSegment,
+  Calendar,
+  CalendarGrid,
+  CalendarCell,
+  Heading as CalHeading,
+  Button as RACButton,
+  TimeField,
+  Label,
+} from 'react-aria-components'
+import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalized/date'
+import type { CalendarDate, Time } from '@internationalized/date'
 import './Meetings.css'
 
 const MeetingsContent = () => {
@@ -20,15 +34,19 @@ const MeetingsContent = () => {
   const rooms = data?.results ?? []
 
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editDate, setEditDate] = useState('')
-  const [editTime, setEditTime] = useState('')
+  const [editTitle, setEditTitle] = useState('')
+  const [editDate, setEditDate] = useState<CalendarDate | null>(null)
+  const [editTime, setEditTime] = useState<Time | null>(null)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<ApiRoom | null>(null)
 
   const updateMutation = useMutation({
-    mutationFn: ({ roomId, date, time }: { roomId: string; date: string | null; time: string | null }) =>
+    mutationFn: ({ roomId, name, date, time }: { roomId: string; name?: string; date: string | null; time: string | null }) =>
       fetchApi(`rooms/${roomId}/`, {
         method: 'PATCH',
         body: JSON.stringify({
+          ...(name !== undefined && { name }),
           scheduled_date: date || null,
           scheduled_time: time || null,
         }),
@@ -44,24 +62,26 @@ const MeetingsContent = () => {
       fetchApi(`rooms/${roomId}/`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] })
+      setDeleteConfirm(null)
     },
   })
 
   const handleEdit = useCallback((room: ApiRoom) => {
     setEditingId(room.id)
-    setEditDate(room.scheduled_date || '')
-    setEditTime(room.scheduled_time?.slice(0, 5) || '')
+    setEditTitle(room.name || '')
+    setEditDate(room.scheduled_date ? parseDate(room.scheduled_date) : null)
+    setEditTime(room.scheduled_time ? parseTime(room.scheduled_time.slice(0, 5)) : null)
+    setShowCalendar(false)
   }, [])
 
   const handleSave = useCallback((roomId: string) => {
-    updateMutation.mutate({ roomId, date: editDate || null, time: editTime || null })
-  }, [editDate, editTime, updateMutation])
-
-  const handleDelete = useCallback((room: ApiRoom) => {
-    if (window.confirm(`Supprimer la réunion ${room.slug} ?`)) {
-      deleteMutation.mutate(room.id)
-    }
-  }, [deleteMutation])
+    updateMutation.mutate({
+      roomId,
+      name: editTitle.trim() || undefined,
+      date: editDate?.toString() || null,
+      time: editTime ? `${String(editTime.hour).padStart(2, '0')}:${String(editTime.minute).padStart(2, '0')}` : null,
+    })
+  }, [editTitle, editDate, editTime, updateMutation])
 
   const handleCopy = useCallback((room: ApiRoom) => {
     navigator.clipboard.writeText(`${window.location.origin}/${room.slug}`)
@@ -82,16 +102,17 @@ const MeetingsContent = () => {
 
   return (
     <div className="meetings-page">
-      <h1>Mes réunions</h1>
+      <h1>Mes reunions</h1>
 
       {sorted.length === 0 ? (
         <div className="meetings-empty">
-          Aucune réunion pour le moment. Créez-en une depuis le tableau de bord.
+          Aucune reunion pour le moment. Creez-en une depuis le tableau de bord.
         </div>
       ) : (
         sorted.map((room) => (
           <div key={room.id} className="meeting-card">
             <div className="meeting-info">
+              <div className="meeting-title">{room.name !== room.slug ? room.name : ''}</div>
               {room.scheduled_date ? (
                 <div className="meeting-date">
                   {new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', {
@@ -101,33 +122,89 @@ const MeetingsContent = () => {
                 </div>
               ) : (
                 <div className="meeting-date" style={{ color: 'var(--text-muted)' }}>
-                  Pas de date prévue
+                  Pas de date prevue
                 </div>
               )}
               <div className="meeting-slug">{room.slug}</div>
 
               {editingId === room.id && (
                 <div className="meeting-edit-row">
-                  <input
-                    type="date"
+                  <div className="meeting-titlefield">
+                    <label className="meeting-edit-label">Titre</label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Titre de la reunion"
+                      className="meeting-title-input"
+                    />
+                  </div>
+                  <DateField
                     value={editDate}
-                    onChange={(e) => setEditDate(e.target.value)}
-                  />
-                  <input
-                    type="time"
-                    value={editTime}
-                    onChange={(e) => setEditTime(e.target.value)}
-                  />
-                  <button
-                    className="meeting-btn primary"
-                    onClick={() => handleSave(room.id)}
-                    disabled={updateMutation.isPending}
+                    onChange={setEditDate}
+                    className="meeting-datefield"
                   >
-                    {updateMutation.isPending ? '...' : 'Enregistrer'}
-                  </button>
-                  <button className="meeting-btn" onClick={() => setEditingId(null)}>
-                    Annuler
-                  </button>
+                    <Label className="meeting-edit-label">Date</Label>
+                    <div className="meeting-picker-group">
+                      <DateInput className="meeting-picker-input">
+                        {(segment) => <DateSegment segment={segment} className="meeting-picker-segment" />}
+                      </DateInput>
+                      <button type="button" className="meeting-picker-btn" onClick={() => setShowCalendar(!showCalendar)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      </button>
+                    </div>
+                  </DateField>
+
+                  <TimeField
+                    value={editTime}
+                    onChange={setEditTime}
+                    hourCycle={24}
+                    granularity="minute"
+                    className="meeting-timefield"
+                  >
+                    <Label className="meeting-edit-label">Heure</Label>
+                    <DateInput className="meeting-picker-group">
+                      {(segment) => <DateSegment segment={segment} className="meeting-picker-segment" />}
+                    </DateInput>
+                  </TimeField>
+
+                  <div className="meeting-edit-actions">
+                    <button
+                      className="meeting-btn primary"
+                      onClick={() => handleSave(room.id)}
+                      disabled={updateMutation.isPending}
+                    >
+                      {updateMutation.isPending ? '...' : 'Enregistrer'}
+                    </button>
+                    <button className="meeting-btn" onClick={() => setEditingId(null)}>
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Calendar modal */}
+              {editingId === room.id && showCalendar && (
+                // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+                <div className="meeting-cal-overlay" onClick={() => setShowCalendar(false)}>
+                  {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+                  <div className="meeting-cal-modal" onClick={(e) => e.stopPropagation()}>
+                    <Calendar
+                      value={editDate}
+                      onChange={(date) => { setEditDate(date); setShowCalendar(false) }}
+                      minValue={today(getLocalTimeZone())}
+                      className="meeting-calendar"
+                    >
+                      <header className="meeting-calendar-header">
+                        <RACButton slot="previous" className="meeting-calendar-nav">&larr;</RACButton>
+                        <CalHeading className="meeting-calendar-heading" />
+                        <RACButton slot="next" className="meeting-calendar-nav">&rarr;</RACButton>
+                      </header>
+                      <CalendarGrid className="meeting-calendar-grid">
+                        {(date) => <CalendarCell date={date} className="meeting-calendar-cell" />}
+                      </CalendarGrid>
+                    </Calendar>
+                  </div>
                 </div>
               )}
             </div>
@@ -137,19 +214,43 @@ const MeetingsContent = () => {
                 Rejoindre
               </button>
               <button className="meeting-btn" onClick={() => handleCopy(room)}>
-                {copiedId === room.id ? 'Copié !' : 'Copier'}
+                {copiedId === room.id ? 'Copie !' : 'Copier'}
               </button>
               {editingId !== room.id && (
                 <button className="meeting-btn" onClick={() => handleEdit(room)}>
                   Modifier
                 </button>
               )}
-              <button className="meeting-btn danger" onClick={() => handleDelete(room)}>
+              <button className="meeting-btn danger" onClick={() => setDeleteConfirm(room)}>
                 Supprimer
               </button>
             </div>
           </div>
         ))
+      )}
+
+      {/* Delete confirm dialog */}
+      {deleteConfirm && (
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events
+        <div className="meeting-confirm-overlay" onClick={() => setDeleteConfirm(null)}>
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+          <div className="meeting-confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3>Supprimer cette reunion ?</h3>
+            <p>La reunion <strong>{deleteConfirm.slug}</strong> sera definitivement supprimee.</p>
+            <div className="meeting-confirm-actions">
+              <button className="meeting-btn" onClick={() => setDeleteConfirm(null)}>
+                Annuler
+              </button>
+              <button
+                className="meeting-btn danger-fill"
+                onClick={() => deleteMutation.mutate(deleteConfirm.id)}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? '...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

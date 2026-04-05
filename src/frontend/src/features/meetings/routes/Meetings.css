@@ -67,6 +67,17 @@
     color: var(--text);
 }
 
+.meeting-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    min-height: 1.2em;
+}
+
+.meeting-title:empty {
+    display: none;
+}
+
 .meeting-slug {
     font-size: 0.8rem;
     color: var(--text-muted);
@@ -126,13 +137,29 @@
 .meeting-edit-row {
     display: flex;
     gap: 0.5rem;
-    align-items: center;
-    margin-top: 0.5rem;
+    align-items: flex-end;
+    margin-top: 0.75rem;
     flex-wrap: wrap;
 }
 
-.meeting-edit-row input {
-    padding: 0.35rem 0.5rem;
+.meeting-edit-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.meeting-edit-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.meeting-titlefield { flex: 1 1 100%; }
+
+.meeting-title-input {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
     border: 1.5px solid var(--border);
     border-radius: 8px;
     font-size: 0.8rem;
@@ -140,10 +167,199 @@
     color: var(--text);
     outline: none;
     transition: border-color var(--transition);
+    background: transparent;
 }
 
-.meeting-edit-row input:focus {
+.meeting-title-input:focus {
     border-color: var(--accent);
+}
+
+.meeting-title-input::placeholder {
+    color: var(--text-muted);
+}
+
+.meeting-datefield { flex: 1; min-width: 140px; }
+.meeting-timefield { flex: 0 0 auto; min-width: 90px; }
+
+.meeting-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.4rem 0.6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    transition: border-color var(--transition);
+    cursor: text;
+}
+
+.meeting-picker-group:focus-within {
+    border-color: var(--accent);
+}
+
+.meeting-picker-input {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+}
+
+.meeting-picker-segment {
+    padding: 0 1px;
+    font-size: 0.8rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    outline: none;
+    border-radius: 2px;
+}
+
+.meeting-picker-segment:focus {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.meeting-picker-segment[data-placeholder] {
+    color: var(--text-muted);
+}
+
+.meeting-picker-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+}
+
+.meeting-picker-btn:hover {
+    color: var(--accent-hover);
+}
+
+/* ===== CALENDAR MODAL ===== */
+.meeting-cal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meeting-cal-modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+
+.meeting-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.meeting-calendar-heading {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.meeting-calendar-nav {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: all var(--transition);
+}
+
+.meeting-calendar-nav:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.meeting-calendar-grid {
+    border-collapse: collapse;
+}
+
+.meeting-calendar-cell {
+    width: 2.2rem;
+    height: 2.2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition);
+    outline: none;
+}
+
+.meeting-calendar-cell:hover {
+    background: var(--accent-light);
+}
+
+.meeting-calendar-cell[data-selected] {
+    background: var(--accent);
+    color: #fff;
+}
+
+.meeting-calendar-cell[data-outside-month] {
+    opacity: 0.3;
+}
+
+/* ===== CONFIRM DIALOG ===== */
+.meeting-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meeting-confirm-dialog {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.meeting-confirm-dialog h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.meeting-confirm-dialog p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.meeting-confirm-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.meeting-btn.danger-fill {
+    background: #d93025;
+    color: #fff;
+    border: none;
+}
+
+.meeting-btn.danger-fill:hover {
+    background: #b71c1c;
 }
 
 /* ===== RESPONSIVE ===== */

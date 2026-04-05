@@ -20,6 +20,7 @@ import {
 } from 'react-aria-components'
 import { today, getLocalTimeZone } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
+import { fetchApi } from '@/api/fetchApi'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -46,6 +47,7 @@ const DashboardContent = () => {
 
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
+  const [roomTitle, setRoomTitle] = useState('')
   const [copied, setCopied] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
 
@@ -78,8 +80,16 @@ const DashboardContent = () => {
     setInviteError('')
   }, [inviteEmails])
 
-  const handleSendInvites = useCallback(() => {
+  const handleSendInvites = useCallback(async () => {
     if (!laterRoom?.id || inviteEmails.length === 0) return
+    // Update room title and date if set
+    const patchBody: Record<string, unknown> = {}
+    if (roomTitle.trim()) patchBody.name = roomTitle.trim()
+    if (inviteDate) patchBody.scheduled_date = inviteDate.toString()
+    if (inviteTime) patchBody.scheduled_time = `${String(inviteTime.hour).padStart(2, '0')}:${String(inviteTime.minute).padStart(2, '0')}`
+    if (Object.keys(patchBody).length > 0) {
+      await fetchApi(`rooms/${laterRoom.id}/`, { method: 'PATCH', body: JSON.stringify(patchBody) })
+    }
     inviteMutation.mutate({
       roomId: laterRoom.id,
       emails: inviteEmails,
@@ -88,17 +98,28 @@ const DashboardContent = () => {
         ? `${String(inviteTime.hour).padStart(2, '0')}:${String(inviteTime.minute).padStart(2, '0')}`
         : null,
     })
-  }, [laterRoom?.id, inviteEmails, inviteDate, inviteTime, inviteMutation])
+  }, [laterRoom?.id, roomTitle, inviteEmails, inviteDate, inviteTime, inviteMutation])
 
-  const resetInviteState = useCallback(() => {
+  const resetInviteState = useCallback(async () => {
+    // Save title and date on close if set
+    if (laterRoom?.id) {
+      const patchBody: Record<string, unknown> = {}
+      if (roomTitle.trim()) patchBody.name = roomTitle.trim()
+      if (inviteDate) patchBody.scheduled_date = inviteDate.toString()
+      if (inviteTime) patchBody.scheduled_time = `${String(inviteTime.hour).padStart(2, '0')}:${String(inviteTime.minute).padStart(2, '0')}`
+      if (Object.keys(patchBody).length > 0) {
+        await fetchApi(`rooms/${laterRoom.id}/`, { method: 'PATCH', body: JSON.stringify(patchBody) }).catch(() => {})
+      }
+    }
     setLaterRoom(null)
+    setRoomTitle('')
     setInviteEmails([])
     setInviteInput('')
     setInviteDate(null)
     setInviteTime(null)
     setInviteSent(false)
     setInviteError('')
-  }, [])
+  }, [laterRoom?.id, roomTitle, inviteDate, inviteTime])
 
   const handleCreateInstant = useCallback(async () => {
     const slug = generateRoomId()
@@ -191,7 +212,7 @@ const DashboardContent = () => {
           {headlines[headlineIndex]}
         </h1>
         <p className="dash-subtitle">
-          Lancez une réunion instantanée, planifiez pour plus tard ou rejoignez un appel en cours.
+          Lancez une réunion, planifiez pour plus tard ou gérez vos réunions planifiées.
         </p>
       </div>
 
@@ -229,6 +250,24 @@ const DashboardContent = () => {
           <h3>Planifier pour plus tard</h3>
           <p>Créez un lien à partager</p>
         </div>
+        <div
+          className="dash-action-card"
+          onClick={() => navigateTo('meetings')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && navigateTo('meetings')}
+        >
+          <div className="dash-action-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <h3>Mes réunions</h3>
+          <p>Gérez vos réunions planifiées</p>
+        </div>
       </div>
 
       {/* Join Bar */}
@@ -260,7 +299,17 @@ const DashboardContent = () => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             <h3>Votre réunion est prête</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+
+            {/* Room title */}
+            <input
+              type="text"
+              value={roomTitle}
+              onChange={(e) => setRoomTitle(e.target.value)}
+              placeholder="Titre de la réunion (optionnel)"
+              className="dash-room-title-input"
+            />
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.75rem' }}>
               Partagez ce lien avec les participants :
             </p>
             <div className="dash-later-url">

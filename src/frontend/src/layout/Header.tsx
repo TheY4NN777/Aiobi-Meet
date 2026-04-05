@@ -157,22 +157,6 @@ export const Header = () => {
                   </>
                 )}
               {!!user && (
-                <Link
-                  to="/meetings"
-                  className={css({
-                    fontSize: '0.85rem',
-                    fontWeight: 500,
-                    color: 'greyscale.600',
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    _hover: { color: '#a251fc' },
-                    display: { base: 'none', sm: 'block' },
-                  })}
-                >
-                  Mes réunions
-                </Link>
-              )}
-              {!!user && (
                 <Menu>
                   <Button size="sm" variant="secondaryText">
                     <VisualOnlyTooltip
