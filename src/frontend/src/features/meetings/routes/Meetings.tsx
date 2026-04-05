@@ -140,7 +140,9 @@ const MeetingsContent = () => {
         sorted.map((room) => (
           <div key={room.id} className="meeting-card">
             <div className="meeting-info">
-              <div className="meeting-title">{room.name !== room.slug ? room.name : ''}</div>
+              {room.name !== room.slug && (
+                <div className="meeting-title">{room.name}</div>
+              )}
               {room.scheduled_date ? (
                 <div className="meeting-date">
                   {new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', {
@@ -149,11 +151,14 @@ const MeetingsContent = () => {
                   {room.scheduled_time && ` — ${room.scheduled_time.slice(0, 5)}`}
                 </div>
               ) : (
-                <div className="meeting-date" style={{ color: 'var(--text-muted)' }}>
+                <div className="meeting-date meeting-date--muted">
                   Pas de date prevue
                 </div>
               )}
-              <div className="meeting-slug">{room.slug}</div>
+              <div className="meeting-code">
+                <span className="meeting-code-label">Code :</span>
+                <span className="meeting-code-value">{room.slug}</span>
+              </div>
 
               {editingId === room.id && (
                 <div className="meeting-edit-row">

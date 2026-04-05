@@ -433,13 +433,17 @@ class Room(Resource):
         We don't want any overlapping between the `slug` and the `id` fields because they can
         both be used to get a room detail view on the API.
         """
-        self.slug = slugify(self.name)
-        try:
-            uuid.UUID(self.slug)
-        except ValueError:
-            pass
-        else:
-            raise ValidationError({"name": f'Room name "{self.name:s}" is reserved.'})
+        # Only generate slug on creation (when slug is empty), not on update
+        if not self.slug:
+            self.slug = slugify(self.name)
+            try:
+                uuid.UUID(self.slug)
+            except ValueError:
+                pass
+            else:
+                raise ValidationError(
+                    {"name": f'Room name "{self.name:s}" is reserved.'}
+                )
 
         super().clean_fields(exclude=exclude)
 
