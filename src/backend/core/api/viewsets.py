@@ -471,6 +471,7 @@ class RoomViewSet(
         detail=False,
         methods=["post"],
         url_path="webhooks-livekit",
+        authentication_classes=[],
         permission_classes=[],
     )
     def webhooks_livekit(self, request):
