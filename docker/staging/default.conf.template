@@ -121,7 +121,42 @@ server {
         proxy_pass http://meet_keycloak;
     }
 
-    # -- Media (MinIO via auth) -----------------------------------------------
+    # -- Recording media (MinIO via auth) -------------------------------------
+    location /media/recordings/ {
+        auth_request /recording-media-auth;
+        auth_request_set $s3_auth $upstream_http_authorization;
+        auth_request_set $s3_date $upstream_http_x_amz_date;
+        auth_request_set $s3_sha  $upstream_http_x_amz_content_sha256;
+
+        proxy_set_header Authorization $s3_auth;
+        proxy_set_header X-Amz-Date $s3_date;
+        proxy_set_header X-Amz-Content-SHA256 $s3_sha;
+        proxy_pass http://minio:9000/meet-media-storage/recordings/;
+    }
+
+    location /recording-media-auth {
+        internal;
+        proxy_pass http://meet_backend/api/v1.0/recordings/media-auth/;
+        proxy_set_header Host $host:8443;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Original-URL $request_uri;
+    }
+
+    # -- Transcription media (MinIO via auth) ---------------------------------
+    location /media/transcriptions/ {
+        auth_request /recording-media-auth;
+        auth_request_set $s3_auth $upstream_http_authorization;
+        auth_request_set $s3_date $upstream_http_x_amz_date;
+        auth_request_set $s3_sha  $upstream_http_x_amz_content_sha256;
+
+        proxy_set_header Authorization $s3_auth;
+        proxy_set_header X-Amz-Date $s3_date;
+        proxy_set_header X-Amz-Content-SHA256 $s3_sha;
+        proxy_pass http://minio:9000/meet-media-storage/transcriptions/;
+    }
+
+    # -- General media (MinIO via auth) ---------------------------------------
     location /media/ {
         auth_request /media-auth;
         proxy_pass http://minio:9000/meet-media-storage/;
@@ -130,7 +165,8 @@ server {
     location /media-auth {
         internal;
         proxy_pass http://meet_backend/api/v1.0/files/media-auth/;
-        proxy_set_header Host $http_host;
+        proxy_set_header Host $host:8443;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
     }
 }
