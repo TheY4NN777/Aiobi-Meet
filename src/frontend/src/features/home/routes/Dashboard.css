@@ -238,6 +238,13 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
+.dash-upcoming-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
 .dash-upcoming-date {
     font-size: 0.9rem;
     font-weight: 500;
@@ -248,6 +255,9 @@
     font-size: 0.8rem;
     color: var(--text-muted);
     font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dash-upcoming-actions {

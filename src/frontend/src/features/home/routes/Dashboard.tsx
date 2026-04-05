@@ -53,12 +53,15 @@ const DashboardContent = () => {
     enabled: !!user,
   })
 
-  const upcomingRooms = useMemo(() => {
+  const myRooms = useMemo(() => {
     if (!roomsData?.results) return []
-    const todayStr = new Date().toISOString().split('T')[0]
-    return roomsData.results
-      .filter((r) => r.scheduled_date && r.scheduled_date >= todayStr)
-      .sort((a, b) => (a.scheduled_date! > b.scheduled_date! ? 1 : -1))
+    return [...roomsData.results].sort((a, b) => {
+      // Rooms with dates first, sorted by date
+      if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1
+      if (a.scheduled_date) return -1
+      if (b.scheduled_date) return 1
+      return 0
+    })
   }, [roomsData])
 
   const [joinCode, setJoinCode] = useState('')
@@ -267,18 +270,24 @@ const DashboardContent = () => {
         </button>
       </div>
 
-      {/* Upcoming Meetings */}
-      {upcomingRooms.length > 0 && (
+      {/* My Meetings */}
+      {myRooms.length > 0 && (
         <div className="dash-upcoming">
-          <h2>Réunions à venir</h2>
+          <h2>Mes réunions</h2>
           <div className="dash-upcoming-list">
-            {upcomingRooms.map((room) => (
+            {myRooms.map((room) => (
               <div key={room.id} className="dash-upcoming-card">
-                <div className="dash-upcoming-date">
-                  {room.scheduled_date && new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                  {room.scheduled_time && ` — ${room.scheduled_time.slice(0, 5)}`}
+                <div className="dash-upcoming-info">
+                  {room.scheduled_date ? (
+                    <div className="dash-upcoming-date">
+                      {new Date(room.scheduled_date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      {room.scheduled_time && ` — ${room.scheduled_time.slice(0, 5)}`}
+                    </div>
+                  ) : (
+                    <div className="dash-upcoming-date" style={{ color: 'var(--text-muted)' }}>Pas de date prévue</div>
+                  )}
+                  <div className="dash-upcoming-slug">{room.slug}</div>
                 </div>
-                <div className="dash-upcoming-slug">{room.slug}</div>
                 <div className="dash-upcoming-actions">
                   <button className="dash-upcoming-join" onClick={() => navigateTo('room', room.slug)}>
                     Rejoindre
