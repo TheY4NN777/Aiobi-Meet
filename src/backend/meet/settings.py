@@ -1032,6 +1032,8 @@ class Production(Base):
     SECURE_REDIRECT_EXEMPT = [
         "^__lbheartbeat__",
         "^__heartbeat__",
+        r"^api/v1\.0/rooms/webhooks-livekit/",
+        r"^api/v1\.0/recordings/storage-hook/",
     ]
 
     # Modern browsers require to have the `secure` attribute on cookies with `Samesite=none`
