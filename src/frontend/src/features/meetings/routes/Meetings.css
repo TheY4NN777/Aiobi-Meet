@@ -81,6 +81,73 @@
     background: var(--accent-hover);
 }
 
+/* ===== TABS ===== */
+.meetings-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+.meetings-tab {
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: var(--font-body);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.meetings-tab:hover {
+    color: var(--accent);
+}
+
+.meetings-tab--active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* ===== RECORDING STATUS ===== */
+.recording-status {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background: #f0f0f5;
+    color: var(--text-muted);
+}
+
+.recording-status--saved,
+.recording-status--notification_succeeded {
+    background: #e6f4ea;
+    color: #2d7a3a;
+}
+
+.recording-status--active,
+.recording-status--initiated,
+.recording-status--stopped {
+    background: #fff8e1;
+    color: #b06000;
+}
+
+.recording-status--aborted,
+.recording-status--failedToStart,
+.recording-status--failedToStop {
+    background: #fce8e6;
+    color: #c5221f;
+}
+
+.recording-expired {
+    font-size: 0.75rem;
+    color: #c5221f;
+    margin-top: 0.1rem;
+}
+
 /* ===== ROOM CARD ===== */
 .meeting-card {
     display: flex;

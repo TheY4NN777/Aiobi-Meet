@@ -30,8 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ["id", "email", "full_name", "short_name", "timezone", "language"]
-        read_only_fields = ["id", "email", "full_name", "short_name"]
+        fields = ["id", "email", "full_name", "short_name", "timezone", "language", "account_tier"]
+        read_only_fields = ["id", "email", "full_name", "short_name", "account_tier"]
 
 
 class UserLightSerializer(serializers.ModelSerializer):

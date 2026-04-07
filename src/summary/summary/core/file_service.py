@@ -3,12 +3,15 @@
 import io
 import logging
 import os
+import re
 import subprocess
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
 import mutagen
+from docx import Document
+from docx.shared import Pt
 from minio import Minio
 from minio.error import MinioException, S3Error
 
@@ -50,7 +53,41 @@ class FileService:
         self._allowed_extensions = settings.recording_allowed_extensions
         self._max_duration = settings.recording_max_duration
 
-    def upload_to_minio(self, object_key: str, content: str, content_type: str = "text/markdown") -> None:
+    def markdown_to_docx(self, content: str, title: str = "") -> bytes:
+        """Convert markdown transcription content to a docx document.
+
+        Handles: H1/H2 headings (# / ##), timestamp lines ([MM:SS]), plain paragraphs.
+
+        Returns raw bytes of the .docx file.
+        """
+        doc = Document()
+
+        if title:
+            heading = doc.add_heading(title, level=1)
+            heading.runs[0].font.size = Pt(18)
+
+        for line in content.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("## "):
+                doc.add_heading(stripped[3:], level=2)
+            elif stripped.startswith("# "):
+                doc.add_heading(stripped[2:], level=1)
+            elif re.match(r"^\[\d{2}:\d{2}\]", stripped):
+                # Timestamp line — monospace-style paragraph
+                para = doc.add_paragraph(stripped)
+                for run in para.runs:
+                    run.font.name = "Courier New"
+                    run.font.size = Pt(10)
+            else:
+                doc.add_paragraph(stripped)
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        return buffer.getvalue()
+
+    def upload_to_minio(self, object_key: str, content: str | bytes, content_type: str = "text/markdown") -> None:
         """Upload text content to MinIO storage.
 
         Args:
@@ -63,7 +100,7 @@ class FileService:
         """
         logger.info("Uploading to MinIO | object_key: %s", object_key)
 
-        data = content.encode("utf-8")
+        data = content if isinstance(content, bytes) else content.encode("utf-8")
         try:
             self._minio_client.put_object(
                 self._bucket_name,

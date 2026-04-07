@@ -19,6 +19,9 @@ import {
 } from 'react-aria-components'
 import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
+import { mediaUrl } from '@/api/mediaUrl'
+import { fetchRecordings } from '@/features/recording/api/fetchRecordings'
+import { RecordingStatus } from '@/features/recording'
 import './Meetings.css'
 
 const useFontshare = () => {
@@ -33,10 +36,103 @@ const useFontshare = () => {
   }, [])
 }
 
+const RECORDING_STATUS_LABEL: Record<string, string> = {
+  [RecordingStatus.Saved]: 'Disponible',
+  [RecordingStatus.NotificationSucceed]: 'Disponible',
+  [RecordingStatus.Active]: 'En cours',
+  [RecordingStatus.Initiated]: 'En cours',
+  [RecordingStatus.Stopped]: 'Traitement...',
+  [RecordingStatus.Aborted]: 'Annulé',
+  [RecordingStatus.FailedToStart]: 'Echec',
+  [RecordingStatus.FailedToStop]: 'Echec',
+}
+
+const HistoryTab = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['recordings'],
+    queryFn: fetchRecordings,
+  })
+
+  const recordings = data?.results ?? []
+
+  if (isLoading) {
+    return <div className="meetings-empty">Chargement...</div>
+  }
+
+  if (recordings.length === 0) {
+    return (
+      <div className="meetings-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: '1rem' }}>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <p>Aucun enregistrement disponible</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {recordings.map((rec) => {
+        const isAvailable =
+          rec.status === RecordingStatus.Saved ||
+          rec.status === RecordingStatus.NotificationSucceed ||
+          rec.status === RecordingStatus.FailedToStop
+        const statusLabel = RECORDING_STATUS_LABEL[rec.status] ?? rec.status
+
+        return (
+          <div key={rec.id} className="meeting-card">
+            <div className="meeting-info">
+              <div className="meeting-title">{rec.room.name}</div>
+              <div className="meeting-date">
+                {new Date(rec.created_at).toLocaleDateString('fr-FR', {
+                  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                })}
+                {' — '}
+                {new Date(rec.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+              <div className="meeting-code">
+                <span className="meeting-code-label">Statut :</span>
+                <span className={`recording-status recording-status--${rec.status}`}>{statusLabel}</span>
+              </div>
+              {rec.is_expired && (
+                <div className="recording-expired">Enregistrement expiré</div>
+              )}
+            </div>
+            <div className="meeting-actions">
+              {isAvailable && !rec.is_expired && (
+                <a
+                  className="meeting-btn primary"
+                  href={mediaUrl(rec.key)}
+                  download={`${rec.room.name}-${rec.created_at.slice(0, 10)}.mp4`}
+                >
+                  Télécharger
+                </a>
+              )}
+              {rec.has_transcription && rec.transcription_key && (
+                <a
+                  className="meeting-btn"
+                  href={mediaUrl(rec.transcription_key)}
+                  download={`${rec.room.name}-${rec.created_at.slice(0, 10)}-transcription`}
+                >
+                  Transcription
+                </a>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
 const MeetingsContent = () => {
   const { user } = useUser()
   const queryClient = useQueryClient()
   useFontshare()
+
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming')
 
   const { data, isLoading } = useQuery({
     queryKey: ['rooms'],
@@ -120,10 +216,27 @@ const MeetingsContent = () => {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Tableau de bord
         </button>
-        <h1>Mes reunions</h1>
+        <h1>Mes réunions</h1>
       </div>
 
-      {sorted.length === 0 ? (
+      <div className="meetings-tabs">
+        <button
+          className={`meetings-tab${activeTab === 'upcoming' ? ' meetings-tab--active' : ''}`}
+          onClick={() => setActiveTab('upcoming')}
+        >
+          À venir
+        </button>
+        <button
+          className={`meetings-tab${activeTab === 'history' ? ' meetings-tab--active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          Historique
+        </button>
+      </div>
+
+      {activeTab === 'history' ? (
+        <HistoryTab />
+      ) : sorted.length === 0 ? (
         <div className="meetings-empty">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: '1rem' }}>
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -131,9 +244,9 @@ const MeetingsContent = () => {
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <p>Aucune reunion pour le moment</p>
+          <p>Aucune réunion pour le moment</p>
           <button className="meetings-empty-cta" onClick={() => navigateTo('home')}>
-            Planifier une reunion
+            Planifier une réunion
           </button>
         </div>
       ) : (

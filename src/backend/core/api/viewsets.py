@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 
 import uuid
+from datetime import timedelta
 from logging import getLogger
 from urllib.parse import unquote, urlparse
 
@@ -10,6 +11,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
@@ -36,7 +38,6 @@ from core.api.filters import ListFileFilter
 from core.enums import MEDIA_STORAGE_URL_PATTERN
 from core.recording.enums import FileExtension
 from core.recording.event.authentication import StorageEventAuthentication
-from core.recording.event.summary_authentication import SummaryServiceAuthentication
 from core.recording.event.exceptions import (
     InvalidBucketError,
     InvalidFilepathError,
@@ -45,6 +46,7 @@ from core.recording.event.exceptions import (
 )
 from core.recording.event.notification import notification_service
 from core.recording.event.parsers import get_parser
+from core.recording.event.summary_authentication import SummaryServiceAuthentication
 from core.recording.worker.exceptions import (
     RecordingStartError,
     RecordingStopError,
@@ -816,6 +818,37 @@ class RecordingViewSet(
     @decorators.action(
         detail=True,
         methods=["post"],
+        url_path="delete-transcription",
+    )
+    def delete_transcription(self, request, pk=None):
+        """Delete the transcription file associated with a recording.
+
+        Removes the file from storage and clears the transcription_key field.
+        Only the room owner or admin can perform this action.
+        """
+        recording = get_object_or_404(models.Recording, pk=pk)
+
+        abilities = recording.get_abilities(request.user)
+        if not abilities.get("retrieve"):
+            raise drf_exceptions.PermissionDenied()
+
+        if not recording.transcription_key:
+            raise drf_exceptions.ValidationError(
+                {"detail": "This recording has no transcription."}
+            )
+
+        default_storage.delete(recording.transcription_key)
+        recording.transcription_key = None
+        recording.save(update_fields=["transcription_key", "updated_at"])
+
+        return drf_response.Response(
+            {"message": "Transcription deleted."},
+            status=drf_status.HTTP_200_OK,
+        )
+
+    @decorators.action(
+        detail=True,
+        methods=["post"],
         url_path="transcription-ready",
         authentication_classes=[SummaryServiceAuthentication],
         permission_classes=[],
@@ -838,10 +871,75 @@ class RecordingViewSet(
         recording.transcription_key = transcription_key
         recording.save(update_fields=["transcription_key", "updated_at"])
 
+        # Lot 4 — enforce transcription storage limit per user
+        self._enforce_transcription_limit(recording)
+
         notification_service.notify_transcription_ready(recording)
 
         return drf_response.Response(
             {"message": "Transcription registered.", "id": str(recording.id)},
+        )
+
+    def _enforce_transcription_limit(self, new_recording: models.Recording) -> None:
+        """Enforce the per-user transcription storage limit.
+
+        If the user already has the maximum number of transcriptions, schedule
+        the oldest one for deletion in 48h and send a warning email.
+        """
+        owner_access = (
+            models.RecordingAccess.objects.select_related("user")
+            .filter(
+                role=models.RoleChoices.OWNER,
+                recording_id=new_recording.id,
+            )
+            .first()
+        )
+
+        if not owner_access:
+            return
+
+        user = owner_access.user
+        max_keep = (
+            settings.TRANSCRIPTION_MAX_KEEP_ENTERPRISE
+            if user.account_tier == models.User.AccountTier.ENTERPRISE
+            else settings.TRANSCRIPTION_MAX_KEEP_DEFAULT
+        )
+
+        # All recordings owned by this user that have an active transcription,
+        # ordered oldest first, excluding the one we just saved.
+        owned_with_transcription = (
+            models.Recording.objects.filter(
+                room__accesses__user=user,
+                room__accesses__role__in=[
+                    models.RoleChoices.OWNER,
+                    models.RoleChoices.ADMIN,
+                ],
+                transcription_key__isnull=False,
+                transcription_deletion_scheduled_at__isnull=True,
+            )
+            .exclude(pk=new_recording.pk)
+            .distinct()
+            .order_by("created_at")
+        )
+
+        count = owned_with_transcription.count()
+        if count < max_keep:
+            return
+
+        # Limit exceeded: schedule the oldest for deferred deletion
+        oldest = owned_with_transcription.first()
+        if not oldest:
+            return
+
+        deletion_at = timezone.now() + timedelta(hours=48)
+        models.Recording.objects.filter(pk=oldest.pk).update(
+            transcription_deletion_scheduled_at=deletion_at
+        )
+        oldest.transcription_deletion_scheduled_at = deletion_at
+
+        deletion_date_str = deletion_at.strftime("%Y-%m-%d %H:%M UTC")
+        notification_service.notify_transcription_deletion_warning(
+            oldest, deletion_date=deletion_date_str
         )
 
     def _auth_get_original_url(self, request):

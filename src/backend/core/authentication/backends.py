@@ -58,6 +58,28 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         if is_new_user and email and settings.SIGNUP_NEW_USER_TO_MARKETING_EMAIL:
             self.signup_to_marketing_email(email)
 
+        self._sync_account_tier(user, claims)
+
+    def _sync_account_tier(self, user, claims):
+        """Sync account_tier from Keycloak realm roles on every login.
+
+        Reads 'realm_access.roles' from the OIDC claims. If the 'enterprise'
+        role is present, the user is promoted; otherwise they remain 'normal'.
+        Skips the Keycloak API back-sync (signal) by using update_fields.
+        """
+        realm_roles = claims.get("realm_access", {}).get("roles", [])
+        new_tier = (
+            User.AccountTier.ENTERPRISE
+            if "enterprise" in realm_roles
+            else User.AccountTier.NORMAL
+        )
+
+        if user.account_tier != new_tier:
+            # Use queryset.update() to bypass the post_save signal and avoid
+            # a Keycloak write-back loop (Keycloak is the source of truth here).
+            User.objects.filter(pk=user.pk).update(account_tier=new_tier)
+            user.account_tier = new_tier  # keep in-memory object consistent
+
     @staticmethod
     def signup_to_marketing_email(email):
         """Pragmatic approach to newsletter signup during authentication flow.

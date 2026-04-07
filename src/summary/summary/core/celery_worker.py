@@ -267,9 +267,14 @@ def process_audio_transcribe_summarize_v2(
     recording_id = _extract_recording_id(filename)
 
     if settings.webhook_mode == "minio":
-        # Aiobi mode: upload transcription to MinIO, then notify backend
-        transcription_key = f"{settings.transcription_output_prefix}{recording_id}.md"
-        file_service.upload_to_minio(transcription_key, content)
+        # Aiobi mode: generate docx, upload to MinIO, then notify backend
+        docx_bytes = file_service.markdown_to_docx(content, title=title)
+        transcription_key = f"{settings.transcription_output_prefix}{recording_id}.docx"
+        file_service.upload_to_minio(
+            transcription_key,
+            docx_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
         _notify_backend(recording_id, transcription_key, email, sub, title)
     else:
         # Legacy mode: post content to external Docs service (upstream compat)

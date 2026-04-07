@@ -182,6 +182,18 @@ class User(AbstractBaseUser, BaseModel, auth_models.PermissionsMixin):
         default=settings.TIME_ZONE,
         help_text=_("The timezone in which the user wants to see times."),
     )
+    class AccountTier(models.TextChoices):
+        NORMAL = "normal", _("Normal")
+        ENTERPRISE = "enterprise", _("Enterprise")
+
+    account_tier = models.CharField(
+        _("account tier"),
+        max_length=20,
+        choices=AccountTier.choices,
+        default=AccountTier.NORMAL,
+        help_text=_("Subscription tier. Enterprise users have access to recording and transcription."),
+    )
+
     is_device = models.BooleanField(
         _("device"),
         default=False,
@@ -607,6 +619,15 @@ class Recording(BaseModel):
         verbose_name=_("Transcription key"),
         help_text=_("MinIO object key for the transcription file (.md)."),
     )
+    transcription_deletion_scheduled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Transcription deletion scheduled at"),
+        help_text=_(
+            "When set, the transcription will be automatically deleted at this datetime. "
+            "Used to give users a 48h warning before deletion when the storage limit is reached."
+        ),
+    )
 
     class Meta:
         db_table = "meet_recording"
@@ -640,11 +661,16 @@ class Recording(BaseModel):
 
         is_final_status = RecordingStatusChoices.is_final(self.status)
 
+        is_enterprise = (
+            user.is_authenticated
+            and getattr(user, "account_tier", None) == User.AccountTier.ENTERPRISE
+        )
+
         return {
             "destroy": is_owner_or_admin and is_final_status,
             "partial_update": False,
-            "retrieve": is_owner_or_admin,
-            "stop": is_owner_or_admin and not is_final_status,
+            "retrieve": is_owner_or_admin and is_enterprise,
+            "stop": is_owner_or_admin and not is_final_status and is_enterprise,
             "update": False,
         }
 

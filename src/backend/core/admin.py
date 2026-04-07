@@ -39,6 +39,15 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
         (
+            _("Subscription"),
+            {
+                "fields": ("account_tier",),
+                "description": _(
+                    "Changing tier here also updates the Keycloak role automatically."
+                ),
+            },
+        ),
+        (
             _("Permissions"),
             {
                 "fields": (

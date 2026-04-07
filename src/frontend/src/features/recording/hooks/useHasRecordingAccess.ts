@@ -4,6 +4,7 @@ import { RecordingMode } from '../types'
 import { useIsRecordingModeEnabled } from './useIsRecordingModeEnabled'
 import { useIsAdminOrOwner } from '@/features/rooms/livekit/hooks/useIsAdminOrOwner'
 import { FeatureFlags } from '@/features/analytics/enums'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 
 export const useHasRecordingAccess = (
   mode: RecordingMode,
@@ -13,8 +14,10 @@ export const useHasRecordingAccess = (
   const isAnalyticsEnabled = useIsAnalyticsEnabled()
   const isRecordingModeEnabled = useIsRecordingModeEnabled(mode)
   const isAdminOrOwner = useIsAdminOrOwner()
+  const isEnterprise = useIsEnterprise()
 
   return (
+    isEnterprise &&
     (featureEnabled || !isAnalyticsEnabled) &&
     isAdminOrOwner &&
     isRecordingModeEnabled

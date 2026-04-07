@@ -512,6 +512,20 @@ class Base(Configuration):
         None, environ_name="OIDC_OP_LOGOUT_ENDPOINT", environ_prefix=None
     )
     OIDC_OP_URL = values.Value(None, environ_name="OIDC_OP_URL", environ_prefix=None)
+
+    # Keycloak Admin API — for account_tier sync (optional, sync is skipped if not set)
+    KEYCLOAK_INTERNAL_URL = values.Value(
+        None, environ_name="KEYCLOAK_INTERNAL_URL", environ_prefix=None
+    )
+    KEYCLOAK_REALM = values.Value(
+        None, environ_name="KEYCLOAK_REALM", environ_prefix=None
+    )
+    KEYCLOAK_ADMIN_CLIENT_ID = values.Value(
+        None, environ_name="KEYCLOAK_ADMIN_CLIENT_ID", environ_prefix=None
+    )
+    KEYCLOAK_ADMIN_CLIENT_SECRET = values.Value(
+        None, environ_name="KEYCLOAK_ADMIN_CLIENT_SECRET", environ_prefix=None
+    )
     OIDC_AUTH_REQUEST_EXTRA_PARAMS = values.DictValue(
         {}, environ_name="OIDC_AUTH_REQUEST_EXTRA_PARAMS", environ_prefix=None
     )
@@ -708,6 +722,30 @@ class Base(Configuration):
     RECORDING_DOWNLOAD_BASE_URL = values.Value(
         None, environ_name="RECORDING_DOWNLOAD_BASE_URL", environ_prefix=None
     )
+
+    # Transcription retention (days before auto-purge)
+    TRANSCRIPTION_RETENTION_DAYS_DEFAULT = values.IntegerValue(
+        14, environ_name="TRANSCRIPTION_RETENTION_DAYS_DEFAULT", environ_prefix=None
+    )
+    TRANSCRIPTION_RETENTION_DAYS_ENTERPRISE = values.IntegerValue(
+        365, environ_name="TRANSCRIPTION_RETENTION_DAYS_ENTERPRISE", environ_prefix=None
+    )
+
+    # Max transcriptions kept per user (oldest purged first when exceeded)
+    TRANSCRIPTION_MAX_KEEP_DEFAULT = values.IntegerValue(
+        5, environ_name="TRANSCRIPTION_MAX_KEEP_DEFAULT", environ_prefix=None
+    )
+    TRANSCRIPTION_MAX_KEEP_ENTERPRISE = values.IntegerValue(
+        50, environ_name="TRANSCRIPTION_MAX_KEEP_ENTERPRISE", environ_prefix=None
+    )
+
+    # Celery Beat periodic tasks
+    CELERY_BEAT_SCHEDULE = {
+        "purge-expired-transcriptions": {
+            "task": "core.tasks.recording.purge_expired_transcriptions",
+            "schedule": 3600,  # every hour
+        },
+    }
 
     # Marketing and communication settings
     SIGNUP_NEW_USER_TO_MARKETING_EMAIL = values.BooleanValue(

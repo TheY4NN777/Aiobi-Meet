@@ -1,5 +1,7 @@
 import { BackendLanguage } from '@/utils/languages'
 
+export type AccountTier = 'normal' | 'enterprise'
+
 export type ApiUser = {
   id: string
   email: string
@@ -7,4 +9,5 @@ export type ApiUser = {
   short_name: string
   language: BackendLanguage
   timezone: string
+  account_tier: AccountTier
 }

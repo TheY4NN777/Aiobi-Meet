@@ -1,0 +1,80 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+
+  <mj-body background-color="#f4f0fa">
+    <mj-section padding="40px 0 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <mj-wrapper css-class="wrapper" padding="0 40px 0 40px">
+      <!-- Logo header -->
+      <mj-section css-class="wrapper-logo" padding="30px 20px">
+        <mj-column>
+          <mj-image
+            align="center"
+            src="{{logo_img}}"
+            width="160px"
+            alt="{{brandname}}"
+          />
+        </mj-column>
+      </mj-section>
+
+      <!-- Content -->
+      <mj-section background-color="#ffffff" padding="40px 30px 20px 30px">
+        <mj-column>
+          <mj-text align="center" padding-bottom="20px">
+            <h1>Transcription en attente de suppression</h1>
+          </mj-text>
+
+          <mj-text font-size="15px" color="#1a1a2e" line-height="1.6em">
+            Votre espace de transcriptions est plein. La transcription de votre réunion <strong>« {{old_room_name}} »</strong> du {{old_recording_date}} sera supprimée le <strong>{{deletion_date}}</strong>.
+          </mj-text>
+
+          <mj-text font-size="14px" color="#4a4a68" padding-top="10px" line-height="1.6em">
+            Si vous souhaitez la conserver, téléchargez-la avant cette date via le lien ci-dessous.
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- Open button -->
+      <mj-section background-color="#ffffff" padding="10px 30px 30px 30px">
+        <mj-column>
+          <mj-button
+            href="{{old_link}}"
+            background-color="#a251fc"
+            color="white"
+            border-radius="100px"
+            font-weight="600"
+            font-size="16px"
+            padding="10px 0 20px 0"
+            inner-padding="14px 40px"
+          >
+            Télécharger la transcription
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#ffffff" padding="0 30px 40px 30px">
+        <mj-column>
+          <mj-divider border-width="1px" border-style="solid" border-color="#ebebf0" padding="0 0 20px 0" />
+
+          {% if support_email %}
+          <mj-text font-size="13px" color="#8b8ba3" line-height="1.6em">
+            Si vous avez des questions ou besoin d'assistance, contactez notre équipe support à <a href="mailto:{{support_email}}" style="color: #a251fc;">{{support_email}}</a>.
+          </mj-text>
+          {% endif %}
+
+          <mj-text align="right" font-size="14px" color="#1a1a2e" padding-top="20px">
+            <p>Merci d'utiliser {{brandname}}.</p>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+
+    <mj-include path="./partial/footer.mjml" />
+
+    <mj-section padding="0 0 40px 0">
+      <mj-column></mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
