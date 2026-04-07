@@ -1377,3 +1377,29 @@ class FileViewSet(
         request = utils.generate_s3_authorization_headers(f"{url_params.get('key'):s}")
 
         return drf_response.Response("authorized", headers=request.headers, status=200)
+
+
+class RoomSessionViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """API endpoints to access past room sessions."""
+
+    pagination_class = Pagination
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.RoomSessionSerializer
+
+    def get_queryset(self):
+        """Return sessions for rooms the user has access to."""
+        user = self.request.user
+        return (
+            models.RoomSession.objects.filter(
+                Q(room__accesses__user=user)
+                | Q(room__accesses__team__in=user.get_teams())
+            )
+            .select_related("room")
+            .prefetch_related("participants", "participants__user")
+            .distinct()
+            .order_by("-started_at")
+        )

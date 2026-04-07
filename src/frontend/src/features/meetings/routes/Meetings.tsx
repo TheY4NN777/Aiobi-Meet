@@ -21,7 +21,8 @@ import {
 import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
 import { mediaUrl } from '@/api/mediaUrl'
-import { fetchRecordings } from '@/features/recording/api/fetchRecordings'
+import { fetchRoomSessions } from '../api/fetchRoomSessions'
+import type { SessionRecordingApi } from '../api/fetchRoomSessions'
 import { RecordingStatus } from '@/features/recording'
 import './Meetings.css'
 
@@ -37,31 +38,67 @@ const useFontshare = () => {
   }, [])
 }
 
-const RECORDING_STATUS_LABEL: Record<string, string> = {
-  [RecordingStatus.Saved]: 'Disponible',
-  [RecordingStatus.NotificationSucceed]: 'Disponible',
-  [RecordingStatus.Active]: 'En cours',
-  [RecordingStatus.Initiated]: 'En cours',
-  [RecordingStatus.Stopped]: 'Traitement...',
-  [RecordingStatus.Aborted]: 'Annulé',
-  [RecordingStatus.FailedToStart]: 'Echec',
-  [RecordingStatus.FailedToStop]: 'Echec',
+const formatDuration = (seconds: number): string => {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 0) return `${h}h ${m}min`
+  return `${m}min`
+}
+
+const RecordingActions = ({ recordings, roomName }: { recordings: SessionRecordingApi[], roomName: string }) => {
+  const availableStatuses = [RecordingStatus.Saved, RecordingStatus.NotificationSucceed, RecordingStatus.FailedToStop]
+  return (
+    <>
+      {recordings.map((rec) => (
+        <div key={rec.id} className="meeting-actions" style={{ marginTop: '0.5rem' }}>
+          {availableStatuses.includes(rec.status as RecordingStatus) && !rec.is_expired && (
+            <a
+              className="meeting-btn primary"
+              href={mediaUrl(rec.key)}
+              download={`${roomName}-enregistrement.mp4`}
+            >
+              Télécharger
+            </a>
+          )}
+          {rec.has_transcription && rec.transcription_key && !rec.is_expired && (
+            <a
+              className="meeting-btn"
+              href={mediaUrl(rec.transcription_key)}
+              download={`${roomName}-transcription`}
+            >
+              Transcription
+            </a>
+          )}
+        </div>
+      ))}
+    </>
+  )
 }
 
 const HistoryTab = () => {
   const { data, isLoading } = useQuery({
-    queryKey: ['recordings'],
-    queryFn: fetchRecordings,
+    queryKey: ['room-sessions'],
+    queryFn: fetchRoomSessions,
   })
   const isEnterprise = useIsEnterprise()
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
 
-  const recordings = data?.results ?? []
+  const sessions = data?.results ?? []
+
+  const toggleParticipants = (id: string) => {
+    setExpandedSessions((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   if (isLoading) {
     return <div className="meetings-empty">Chargement...</div>
   }
 
-  if (recordings.length === 0) {
+  if (sessions.length === 0) {
     return (
       <div className="meetings-empty">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: '1rem' }}>
@@ -69,59 +106,53 @@ const HistoryTab = () => {
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
-        <p>Aucun enregistrement disponible</p>
+        <p>Aucune réunion passée</p>
       </div>
     )
   }
 
   return (
     <>
-      {recordings.map((rec) => {
-        const isAvailable =
-          rec.status === RecordingStatus.Saved ||
-          rec.status === RecordingStatus.NotificationSucceed ||
-          rec.status === RecordingStatus.FailedToStop
-        const statusLabel = RECORDING_STATUS_LABEL[rec.status] ?? rec.status
+      {sessions.map((session) => {
+        const isExpanded = expandedSessions.has(session.id)
+        const isOngoing = !session.ended_at
 
         return (
-          <div key={rec.id} className="meeting-card">
+          <div key={session.id} className="meeting-card">
             <div className="meeting-info">
-              <div className="meeting-title">{rec.room.name}</div>
+              <div className="meeting-title">{session.room.name}</div>
               <div className="meeting-date">
-                {new Date(rec.created_at).toLocaleDateString('fr-FR', {
+                {new Date(session.started_at).toLocaleDateString('fr-FR', {
                   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                 })}
                 {' — '}
-                {new Date(rec.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(session.started_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               </div>
-              <div className="meeting-code">
-                <span className="meeting-code-label">Statut :</span>
-                <span className={`recording-status recording-status--${rec.status}`}>{statusLabel}</span>
+              <div className="meeting-meta">
+                {isOngoing ? (
+                  <span className="recording-status recording-status--active">En cours</span>
+                ) : session.duration !== null ? (
+                  <span className="meeting-duration">{formatDuration(session.duration)}</span>
+                ) : null}
+                <button
+                  className="meeting-participants-toggle"
+                  onClick={() => toggleParticipants(session.id)}
+                >
+                  {session.participant_count} participant{session.participant_count > 1 ? 's' : ''}
+                  {' '}{isExpanded ? '▲' : '▼'}
+                </button>
               </div>
-              {rec.is_expired && (
-                <div className="recording-expired">Enregistrement expiré</div>
+              {isExpanded && session.participants.length > 0 && (
+                <ul className="meeting-participants-list">
+                  {session.participants.map((p) => (
+                    <li key={p.id}>{p.full_name || p.display_name || p.livekit_identity}</li>
+                  ))}
+                </ul>
               )}
             </div>
-            <div className="meeting-actions">
-              {isAvailable && !rec.is_expired && isEnterprise && (
-                <a
-                  className="meeting-btn primary"
-                  href={mediaUrl(rec.key)}
-                  download={`${rec.room.name}-${rec.created_at.slice(0, 10)}.mp4`}
-                >
-                  Télécharger
-                </a>
-              )}
-              {rec.has_transcription && rec.transcription_key && isEnterprise && (
-                <a
-                  className="meeting-btn"
-                  href={mediaUrl(rec.transcription_key)}
-                  download={`${rec.room.name}-${rec.created_at.slice(0, 10)}-transcription`}
-                >
-                  Transcription
-                </a>
-              )}
-            </div>
+            {isEnterprise && session.recordings.length > 0 && (
+              <RecordingActions recordings={session.recordings} roomName={session.room.name} />
+            )}
           </div>
         )
       })}
@@ -185,14 +216,15 @@ const MeetingsContent = () => {
     setShowCalendar(false)
   }, [])
 
+  const { mutate: updateMutate } = updateMutation
   const handleSave = useCallback((roomId: string) => {
-    updateMutation.mutate({
+    updateMutate({
       roomId,
       name: editTitle.trim() || undefined,
       date: editDate?.toString() || null,
       time: editTime ? `${String(editTime.hour).padStart(2, '0')}:${String(editTime.minute).padStart(2, '0')}` : null,
     })
-  }, [editTitle, editDate, editTime, updateMutation])
+  }, [editTitle, editDate, editTime, updateMutate])
 
   const handleCopy = useCallback((room: ApiRoom) => {
     navigator.clipboard.writeText(`${window.location.origin}/${room.slug}`)
@@ -278,8 +310,9 @@ const MeetingsContent = () => {
               {editingId === room.id && (
                 <div className="meeting-edit-row">
                   <div className="meeting-titlefield">
-                    <label className="meeting-edit-label">Titre</label>
+                    <label htmlFor="meeting-title-input" className="meeting-edit-label">Titre</label>
                     <input
+                      id="meeting-title-input"
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}

@@ -109,7 +109,7 @@ const LandingContent = () => {
       {/* ===== NAVBAR ===== */}
       <nav className={`lp-navbar ${navScrolled ? 'scrolled' : ''}`}>
         <div className="lp-container">
-          <a href="#" className="nav-logo">
+          <a href="/" className="nav-logo">
             <img src="/assets/logo.svg" alt="Aïobi Meet" />
           </a>
           <ul className="nav-links">
@@ -624,8 +624,8 @@ const LandingContent = () => {
       {/* ===== FOOTER ===== */}
       {/* ===== JOIN POPUP ===== */}
       {joinOpen && (
-        <div className="join-overlay" onClick={() => setJoinOpen(false)}>
-          <div className="join-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="join-overlay" onClick={() => setJoinOpen(false)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Escape' && setJoinOpen(false)}>
+          <div className="join-modal" onClick={(e) => e.stopPropagation()} role="presentation">
             <button className="join-modal-close" onClick={() => setJoinOpen(false)}>&times;</button>
             <h3>Rejoindre une réunion</h3>
             <p>Entrez le code ou le lien de la réunion</p>
@@ -636,6 +636,7 @@ const LandingContent = () => {
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
               />
               <button className="btn btn-primary" onClick={handleJoinRoom}>
@@ -668,7 +669,7 @@ const LandingContent = () => {
             <div className="footer-nav">
               <h5>Navigation</h5>
               <div className="footer-links">
-                <a href="#">Accueil</a>
+                <a href="/">Accueil</a>
                 <a href="#features">Fonctionnalités</a>
                 <a href="#pricing">Tarifs</a>
                 <a href="#about">À propos</a>
