@@ -39,6 +39,11 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         return {
             "full_name": self.compute_full_name(user_info),
             "short_name": user_info.get(settings.OIDC_USERINFO_SHORTNAME_FIELD),
+            # Propagate realm_access so post_get_or_create_user can read
+            # realm roles (used by _sync_account_tier to set ENTERPRISE tier).
+            # lasuite's get_or_create_user only forwards sub/email + extra
+            # claims to post_get_or_create_user, so we must include it here.
+            "realm_access": user_info.get("realm_access", {}),
         }
 
     def post_get_or_create_user(self, user, claims, is_new_user):
