@@ -176,8 +176,8 @@ deploy-staging:
     - docker compose -f compose.keycloak.yaml up -d
     - |
       if git diff --name-only HEAD~1 HEAD | grep -qE "docker/keycloak/themes/|docker/staging/env.d/keycloak|docker/auth/realm.json"; then
-        echo "  Keycloak theme/env/realm changed — restarting to apply changes"
-        docker compose -f compose.keycloak.yaml restart keycloak
+        echo "  Keycloak theme/env/realm changed — force-recreating to apply changes"
+        docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
       else
         echo "  No Keycloak changes — sessions preserved"
       fi
