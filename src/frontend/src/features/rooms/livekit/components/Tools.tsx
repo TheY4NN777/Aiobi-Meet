@@ -12,6 +12,7 @@ import {
   ScreenRecordingSidePanel,
 } from '@/features/recording'
 import { useConfig } from '@/api/useConfig'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 
 export interface ToolsButtonProps {
   icon: ReactNode
@@ -123,6 +124,8 @@ export const Tools = () => {
     RecordingMode.ScreenRecording
   )
 
+  const isEnterprise = useIsEnterprise()
+
   switch (activeSubPanelId) {
     case SubPanelId.TRANSCRIPT:
       return <TranscriptSidePanel />
@@ -166,7 +169,57 @@ export const Tools = () => {
           </A>
         )}
       </Text>
-      {isTranscriptEnabled && (
+      {(isTranscriptEnabled || isScreenRecordingEnabled) && !isEnterprise && (
+        <div
+          className={css({
+            width: 'full',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 60%, #6b4e82 100%)',
+            color: 'white',
+          })}
+        >
+          <div className={css({ padding: '1.25rem 1rem 0.75rem', textAlign: 'center' })}>
+            <div className={css({ fontSize: '2rem', marginBottom: '0.5rem' })}>🎙️ 📹</div>
+            <Text
+              margin={false}
+              as="h2"
+              className={css({ fontWeight: 'bold', fontSize: 'md', color: 'white', marginBottom: '0.4rem' })}
+            >
+              Enregistrez. Transcrivez. Gardez.
+            </Text>
+            <Text
+              as="p"
+              variant="smNote"
+              className={css({ color: '#d4bfe8', lineHeight: '1.5', marginBottom: '1rem' })}
+            >
+              Avec Aïobi Enterprise, chaque réunion devient une ressource — enregistrements, transcriptions automatiques et historique complet inclus.
+            </Text>
+          </div>
+          <a
+            href="https://aiobi.world/#pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={css({
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.4rem',
+              padding: '0.85rem',
+              background: '#E4D3E6',
+              color: '#2d1f3d',
+              fontWeight: 'bold',
+              fontSize: 'sm',
+              textDecoration: 'none',
+              '&:hover': { background: 'white' },
+              transition: 'background 0.2s',
+            })}
+          >
+            Découvrir Aïobi Enterprise →
+          </a>
+        </div>
+      )}
+      {isTranscriptEnabled && isEnterprise && (
         <ToolButton
           icon={<Icon type="symbols" name="speech_to_text" />}
           title={t('tools.transcript.title')}
@@ -174,7 +227,7 @@ export const Tools = () => {
           onPress={() => openTranscript()}
         />
       )}
-      {isScreenRecordingEnabled && (
+      {isScreenRecordingEnabled && isEnterprise && (
         <ToolButton
           icon={<Icon type="symbols" name="mode_standby" />}
           title={t('tools.screenRecording.title')}

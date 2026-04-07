@@ -171,9 +171,16 @@ deploy-staging:
     - echo "=== Deploying nginx-proxy (preserve TLS certs) ==="
     - docker compose -f compose.nginx-proxy.yaml up -d
 
-    # --- 2. Keycloak (preserve sessions) -------------------------------------
+    # --- 2. Keycloak (restart si theme ou env ont change, sinon preserve sessions) ---
     - echo "=== Deploying Keycloak ==="
     - docker compose -f compose.keycloak.yaml up -d
+    - |
+      if git diff --name-only HEAD~1 HEAD | grep -qE "docker/keycloak/themes/|docker/staging/env.d/keycloak|docker/auth/realm.json"; then
+        echo "  Keycloak theme/env/realm changed — restarting to apply changes"
+        docker compose -f compose.keycloak.yaml restart keycloak
+      else
+        echo "  No Keycloak changes — sessions preserved"
+      fi
 
     # --- 3. App containers (force recreate pour nouvelles images + env) ------
     - echo "=== Deploying app containers (force recreate) ==="

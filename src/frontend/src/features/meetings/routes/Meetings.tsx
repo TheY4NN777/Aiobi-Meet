@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '@/api/fetchApi'
 import { ApiRoom } from '@/features/rooms/api/ApiRoom'
 import { useUser, UserAware } from '@/features/auth'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 import { Screen } from '@/layout/Screen'
 import { navigateTo } from '@/navigation/navigateTo'
 import {
@@ -52,6 +53,7 @@ const HistoryTab = () => {
     queryKey: ['recordings'],
     queryFn: fetchRecordings,
   })
+  const isEnterprise = useIsEnterprise()
 
   const recordings = data?.results ?? []
 
@@ -101,7 +103,7 @@ const HistoryTab = () => {
               )}
             </div>
             <div className="meeting-actions">
-              {isAvailable && !rec.is_expired && (
+              {isAvailable && !rec.is_expired && isEnterprise && (
                 <a
                   className="meeting-btn primary"
                   href={mediaUrl(rec.key)}
@@ -110,7 +112,7 @@ const HistoryTab = () => {
                   Télécharger
                 </a>
               )}
-              {rec.has_transcription && rec.transcription_key && (
+              {rec.has_transcription && rec.transcription_key && isEnterprise && (
                 <a
                   className="meeting-btn"
                   href={mediaUrl(rec.transcription_key)}
