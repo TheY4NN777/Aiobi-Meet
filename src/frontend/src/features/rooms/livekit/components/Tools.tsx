@@ -211,7 +211,7 @@ export const Tools = () => {
               fontWeight: 'bold',
               fontSize: 'sm',
               textDecoration: 'none',
-              '&:hover': { background: 'white' },
+              '&:hover': { background: '#cdb8d0' },
               transition: 'background 0.2s',
             })}
           >
