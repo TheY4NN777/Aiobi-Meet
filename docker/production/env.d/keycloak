@@ -4,5 +4,6 @@ KEYCLOAK_ADMIN_PASSWORD=${KC_BOOTSTRAP_ADMIN_PASSWORD}
 
 # Keycloak configuration — sous-domaine dedie (id.aiobi.world)
 KC_HOSTNAME_URL=https://${KEYCLOAK_HOST}
+KC_HOSTNAME_ADMIN_URL=https://${KEYCLOAK_HOST}
 KC_PROXY_HEADERS=xforwarded
 KC_HTTP_ENABLED=true
