@@ -1395,8 +1395,7 @@ class RoomSessionViewSet(
         user = self.request.user
         return (
             models.RoomSession.objects.filter(
-                Q(room__accesses__user=user)
-                | Q(room__accesses__team__in=user.get_teams())
+                room__accesses__user=user
             )
             .select_related("room")
             .prefetch_related("participants", "participants__user")

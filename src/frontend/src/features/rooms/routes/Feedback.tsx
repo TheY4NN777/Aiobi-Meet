@@ -56,7 +56,7 @@ export const FeedbackRoute = () => {
                 {t('feedback.back')}
               </Button>
             )}
-            <Button variant="primary" onPress={() => setLocation('/')}>
+            <Button variant="primary" onPress={() => setLocation('/home')}>
               {t('feedback.home')}
             </Button>
           </HStack>
