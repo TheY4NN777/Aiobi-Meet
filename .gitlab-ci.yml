@@ -400,9 +400,16 @@ deploy-production:
     - sed -i 's/^      //' .env
     - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
 
-    # --- 2. Keycloak (preserve sessions, JAMAIS force-recreate) --------------
+    # --- 2. Keycloak (force-recreate si env.d/keycloak a change, sinon preserve sessions) ---
     - echo "=== Deploying Keycloak ==="
-    - docker compose -f compose.keycloak.yaml up -d
+    - |
+      if git diff --name-only HEAD~1 HEAD | grep -q "docker/production/env.d/keycloak"; then
+        echo "  Keycloak env changed — force-recreating (sessions will be lost)"
+        docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
+      else
+        echo "  Keycloak env unchanged — preserving sessions"
+        docker compose -f compose.keycloak.yaml up -d
+      fi
 
     # --- 3. Pull les nouvelles images depuis le registry ---------------------
     - echo "=== Pulling latest images from registry ==="
