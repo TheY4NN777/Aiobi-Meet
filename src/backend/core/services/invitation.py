@@ -6,6 +6,7 @@ from logging import getLogger
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 
@@ -30,6 +31,10 @@ class InvitationService:
         language = get_language()
 
         sender_name = sender.full_name or sender.short_name or ""
+        
+        fallback_now = timezone.localtime()
+        display_date = scheduled_date or fallback_now.date()
+        display_time = scheduled_time or fallback_now.time().replace(second=0, microsecond=0)
 
         context = {
             "brandname": settings.EMAIL_BRAND_NAME,
@@ -41,6 +46,8 @@ class InvitationService:
             "sender_email": sender.email,
             "scheduled_date": scheduled_date,
             "scheduled_time": scheduled_time,
+            "display_date": display_date,
+            "display_time": display_time
         }
 
         with override(language):

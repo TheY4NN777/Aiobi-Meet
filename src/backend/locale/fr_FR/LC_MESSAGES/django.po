@@ -482,6 +482,10 @@ msgstr ""
 msgid "Your recording is ready"
 msgstr "Votre enregistrement est prêt"
 
+#: core/recording/event/notification.py:248
+msgid "Your transcription is ready"
+msgstr "Votre transcription est prête"
+
 #: core/services/invitation.py
 #, python-format
 msgid "%(name)s is waiting for you to join a video call"
