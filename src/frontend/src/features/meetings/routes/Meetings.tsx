@@ -289,6 +289,7 @@ const MeetingsContent = () => {
     queryKey: ['rooms'],
     queryFn: () => fetchApi<{ results: ApiRoom[] }>('rooms/'),
     enabled: !!user,
+    refetchOnMount: 'always',
   })
 
   const rooms = data?.results ?? []
