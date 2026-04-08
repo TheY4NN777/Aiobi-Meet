@@ -291,6 +291,7 @@ const MeetingsContent = () => {
   const queryClient = useQueryClient()
   const { mutateAsync: createRoom } = useCreateRoom()
   const { userChoices: { username } } = usePersistentUserChoices()
+  const isEnterprise = useIsEnterprise()
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
   const [inviteRoom, setInviteRoom] = useState<ApiRoom | null>(null)
   useFontshare()
