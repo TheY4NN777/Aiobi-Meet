@@ -50,7 +50,7 @@
     <tr>
       <td align="center" style="padding:0 16px 40px 16px;font-size:12px;color:${properties.colorTextMuted!'#8b8ba3'};font-family:'Roboto',Helvetica,Arial,sans-serif;line-height:1.6;">
         <p style="margin:0 0 6px 0;">
-          ${properties.brandName!"Aïobi Meet"} &mdash; ${properties.brandTagline!"La visioconférence souveraine"}
+          ${properties.brandName!"Aïobi Meet"} &mdash; ${properties.brandTagline!"Visioconférence souveraine pour l'Afrique"}
         </p>
         <p style="margin:0;">
           Besoin d'aide&nbsp;? <a href="mailto:${properties.supportEmail!'support@aiobi.world'}" style="color:${properties.colorViolet!'#a251fc'};text-decoration:none;">${properties.supportEmail!"support@aiobi.world"}</a>
