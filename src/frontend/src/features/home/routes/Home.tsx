@@ -439,7 +439,7 @@ const LandingContent = () => {
               <tbody>
                 <tr>
                   <td>Version gratuite</td>
-                  <td className="highlight"><span className="check">&#10003;</span> Complète</td>
+                  <td className="highlight">90 min max</td>
                   <td>Limitée (40 min)</td>
                   <td>Limitée (60 min)</td>
                   <td>Limitée</td>
@@ -460,7 +460,7 @@ const LandingContent = () => {
                 </tr>
                 <tr>
                   <td>IA intégrée</td>
-                  <td className="highlight">Bientôt</td>
+                  <td className="highlight"><span className="check">&#10003;</span> Fair use</td>
                   <td>Payant</td>
                   <td>Payant</td>
                   <td>Payant</td>
