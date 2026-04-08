@@ -3,6 +3,7 @@ import { css } from '@/styled-system/css'
 import { Button as RACButton } from 'react-aria-components'
 import { useTranslation } from 'react-i18next'
 import { ReactNode } from 'react'
+import { RiMicLine, RiRecordCircleLine } from '@remixicon/react'
 import { SubPanelId, useSidePanel } from '../hooks/useSidePanel'
 import { useRestoreFocus } from '@/hooks/useRestoreFocus'
 import {
@@ -174,11 +175,19 @@ export const Tools = () => {
       {isTranscriptEnabled && (
         transcriptionLimitReached ? (
           <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
-            <div className={css({ padding: '1rem', textAlign: 'center' })}>
+            <div className={css({ padding: '1rem 1rem 0.75rem' })}>
+              <div className={css({ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' })}>
+                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
+                  <RiMicLine size={16} color="#E4D3E6" />
+                </div>
+                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
+                  <RiRecordCircleLine size={16} color="#E4D3E6" />
+                </div>
+              </div>
               <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.25rem' })}>
                 Limite atteinte — {usage?.transcriptions_this_month}/10 transcriptions ce mois
               </Text>
-              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0' })}>
                 Veuillez passer au plan supérieur pour continuer.
               </Text>
             </div>
@@ -198,11 +207,19 @@ export const Tools = () => {
       {isScreenRecordingEnabled && (
         recordingLimitReached ? (
           <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
-            <div className={css({ padding: '1rem', textAlign: 'center' })}>
+            <div className={css({ padding: '1rem 1rem 0.75rem' })}>
+              <div className={css({ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' })}>
+                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
+                  <RiRecordCircleLine size={16} color="#E4D3E6" />
+                </div>
+                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
+                  <RiMicLine size={16} color="#E4D3E6" />
+                </div>
+              </div>
               <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.25rem' })}>
                 Limite atteinte — {usage?.recordings_this_month}/10 enregistrements ce mois
               </Text>
-              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0' })}>
                 Veuillez passer au plan supérieur pour continuer.
               </Text>
             </div>

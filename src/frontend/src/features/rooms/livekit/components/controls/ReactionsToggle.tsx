@@ -31,6 +31,12 @@ export enum Emoji {
   SURPRISED = 'face-with-open-mouth',
   CELEBRATION = 'party-popper',
   PLEASE = 'folded-hands',
+  RAISED_HAND = 'raised-hand',
+  FIRE = 'fire',
+  STAR = 'star',
+  ROCKET = 'rocket',
+  TROPHY = 'trophy',
+  CHECK = 'check',
 }
 
 export interface Reaction {
