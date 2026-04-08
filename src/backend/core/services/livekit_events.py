@@ -291,6 +291,11 @@ class LiveKitEventsService:
             )
             return
 
+        # Skip non-human participants (egress bots, ingress, agents)
+        # kind: 0=STANDARD, 1=INGRESS, 2=EGRESS, 3=SIP, 4=AGENT
+        if getattr(data.participant, "kind", 0) != 0:
+            return
+
         identity = data.participant.identity
         user = None
         try:

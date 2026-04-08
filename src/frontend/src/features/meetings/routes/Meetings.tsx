@@ -53,14 +53,14 @@ const RecordingActions = ({ recordings, roomName }: { recordings: SessionRecordi
   return (
     <>
       {recordings.map((rec) => (
-        <div key={rec.id} className="meeting-actions" style={{ marginTop: '0.5rem' }}>
+        <div key={rec.id} style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {availableStatuses.includes(rec.status as RecordingStatus) && !rec.is_expired && (
             <a
               className="meeting-btn primary"
               href={mediaUrl(rec.key)}
               download={`${roomName}-enregistrement.mp4`}
             >
-              Télécharger
+              Enregistrement
             </a>
           )}
           {rec.has_transcription && rec.transcription_key && !rec.is_expired && (
@@ -242,7 +242,7 @@ const HistoryTab = () => {
                 </ul>
               )}
             </div>
-            <div className="meeting-actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem' }}>
+            <div className="meeting-actions">
               {isEnterprise && session.recordings.length > 0 && (
                 <RecordingActions recordings={session.recordings} roomName={session.room.name} />
               )}
@@ -352,7 +352,14 @@ const MeetingsContent = () => {
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const sorted = [...rooms]
-    .filter((room) => !room.scheduled_date || room.scheduled_date >= todayStr)
+    .filter((room) => {
+      // Room with a future scheduled date → always show
+      if (room.scheduled_date && room.scheduled_date >= todayStr) return true
+      // Room with a past scheduled date → hide (call happened)
+      if (room.scheduled_date && room.scheduled_date < todayStr) return false
+      // Room without date: show only if no completed session yet
+      return !room.has_ended_session
+    })
     .sort((a, b) => {
       if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1
       if (a.scheduled_date) return -1

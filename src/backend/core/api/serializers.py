@@ -125,6 +125,12 @@ class NestedResourceAccessSerializer(ResourceAccessSerializer):
 class ListRoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for a list API endpoint."""
 
+    has_ended_session = serializers.SerializerMethodField()
+
+    def get_has_ended_session(self, obj):
+        """Return True if the room has at least one completed session."""
+        return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
     class Meta:
         model = models.Room
         fields = [
@@ -134,8 +140,9 @@ class ListRoomSerializer(serializers.ModelSerializer):
             "access_level",
             "scheduled_date",
             "scheduled_time",
+            "has_ended_session",
         ]
-        read_only_fields = ["id", "slug"]
+        read_only_fields = ["id", "slug", "has_ended_session"]
 
 
 class RoomSerializer(serializers.ModelSerializer):

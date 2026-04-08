@@ -23,4 +23,5 @@ export type ApiRoom = {
   }
   scheduled_date?: string | null
   scheduled_time?: string | null
+  has_ended_session?: boolean
 }
