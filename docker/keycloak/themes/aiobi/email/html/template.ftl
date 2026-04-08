@@ -29,9 +29,9 @@
   <!-- Main wrapper -->
   <table role="presentation" class="wrapper" align="center" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;margin:0 auto;">
 
-    <!-- Logo header (dark band) -->
+    <!-- Logo header (white band, matches MJML templates) -->
     <tr>
-      <td align="center" bgcolor="${properties.colorNoir!'#0F1010'}" style="padding:24px 16px;border-top-left-radius:16px;border-top-right-radius:16px;">
+      <td align="center" bgcolor="#ffffff" style="padding:24px 16px;border-top-left-radius:16px;border-top-right-radius:16px;border-bottom:2px solid #f4f0fa;">
         <img src="${properties.logoUrl!'https://aiobi-meet.duckdns.org:8443/assets/logo-banner.png'}" alt="${properties.brandName!'Aïobi Meet'}" width="160" style="display:block;width:160px;max-width:160px;height:auto;border:0;outline:none;text-decoration:none;">
       </td>
     </tr>

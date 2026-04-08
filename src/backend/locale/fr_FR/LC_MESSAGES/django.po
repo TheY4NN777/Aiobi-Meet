@@ -508,6 +508,10 @@ msgstr "Date :"
 msgid "Time:"
 msgstr "Heure :"
 
+#: core/templates/mail/html/invitation.html
+msgid "Title:"
+msgstr "Titre :"
+
 #: core/templates/mail/html/invitation.html:159
 #: core/templates/mail/html/screen_recording.html:159
 #: core/templates/mail/text/invitation.txt:3
