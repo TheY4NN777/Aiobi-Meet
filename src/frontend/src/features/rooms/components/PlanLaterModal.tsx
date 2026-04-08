@@ -240,8 +240,7 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
             <select
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
-              className="dash-picker-group"
-              style={{ width: '100%', fontSize: '0.85rem', cursor: 'pointer', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '0.5rem 0.75rem', background: 'var(--bg)', fontFamily: 'var(--font-body)' }}
+              className="dash-select"
             >
               <option value="UTC">UTC (GMT+0)</option>
               <option value="Africa/Abidjan">Abidjan — GMT+0</option>

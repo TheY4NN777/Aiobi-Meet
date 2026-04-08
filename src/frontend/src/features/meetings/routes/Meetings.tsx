@@ -318,6 +318,16 @@ const MeetingsContent = () => {
   const [showCalendar, setShowCalendar] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<ApiRoom | null>(null)
+  const [expandedInvited, setExpandedInvited] = useState<Set<string>>(new Set())
+
+  const toggleInvited = useCallback((id: string) => {
+    setExpandedInvited((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
 
   const updateMutation = useMutation({
     mutationFn: ({ roomId, name, date, time }: { roomId: string; name?: string; date: string | null; time: string | null }) =>
@@ -450,18 +460,24 @@ const MeetingsContent = () => {
                 <span className="meeting-code-value">{room.slug}</span>
               </div>
 
-              {room.invited_emails && room.invited_emails.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '0.5rem' }}>
-                  {room.invited_emails.map((email) => (
-                    <span key={email} style={{
-                      background: 'var(--accent-light)',
-                      color: 'var(--accent)',
-                      borderRadius: '20px',
-                      padding: '2px 8px',
-                      fontSize: '0.72rem',
-                      fontWeight: 500,
-                    }}>{email}</span>
-                  ))}
+              {room.invited_users_info && room.invited_users_info.length > 0 && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    className="meeting-participants-toggle"
+                    onClick={() => toggleInvited(room.id)}
+                  >
+                    {room.invited_users_info.length} invité{room.invited_users_info.length > 1 ? 's' : ''}
+                    {' '}{expandedInvited.has(room.id) ? '▲' : '▼'}
+                  </button>
+                  {expandedInvited.has(room.id) && (
+                    <ul className="meeting-participants-list">
+                      {room.invited_users_info.map((u) => (
+                        <li key={u.email}>
+                          {u.full_name ? `${u.full_name} (${u.email})` : u.email}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 

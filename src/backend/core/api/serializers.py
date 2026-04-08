@@ -126,10 +126,22 @@ class ListRoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for a list API endpoint."""
 
     has_ended_session = serializers.SerializerMethodField()
+    invited_users_info = serializers.SerializerMethodField()
 
     def get_has_ended_session(self, obj):
         """Return True if the room has at least one completed session."""
         return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
+    def get_invited_users_info(self, obj):
+        """Return invited emails enriched with full_name when a user account exists."""
+        emails = obj.invited_emails or []
+        if not emails:
+            return []
+        user_map = {
+            u["email"]: u["full_name"]
+            for u in models.User.objects.filter(email__in=emails).values("email", "full_name")
+        }
+        return [{"email": e, "full_name": user_map.get(e)} for e in emails]
 
     class Meta:
         model = models.Room
@@ -142,18 +154,31 @@ class ListRoomSerializer(serializers.ModelSerializer):
             "scheduled_time",
             "has_ended_session",
             "invited_emails",
+            "invited_users_info",
         ]
-        read_only_fields = ["id", "slug", "has_ended_session", "invited_emails"]
+        read_only_fields = ["id", "slug", "has_ended_session", "invited_emails", "invited_users_info"]
 
 
 class RoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for the API."""
 
     has_ended_session = serializers.SerializerMethodField()
+    invited_users_info = serializers.SerializerMethodField()
 
     def get_has_ended_session(self, obj):
         """Return True if the room has at least one completed session."""
         return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
+    def get_invited_users_info(self, obj):
+        """Return invited emails enriched with full_name when a user account exists."""
+        emails = obj.invited_emails or []
+        if not emails:
+            return []
+        user_map = {
+            u["email"]: u["full_name"]
+            for u in models.User.objects.filter(email__in=emails).values("email", "full_name")
+        }
+        return [{"email": e, "full_name": user_map.get(e)} for e in emails]
 
     class Meta:
         model = models.Room
@@ -168,8 +193,9 @@ class RoomSerializer(serializers.ModelSerializer):
             "scheduled_time",
             "has_ended_session",
             "invited_emails",
+            "invited_users_info",
         ]
-        read_only_fields = ["id", "slug", "pin_code", "has_ended_session", "invited_emails"]
+        read_only_fields = ["id", "slug", "pin_code", "has_ended_session", "invited_emails", "invited_users_info"]
 
     def to_representation(self, instance):
         """
