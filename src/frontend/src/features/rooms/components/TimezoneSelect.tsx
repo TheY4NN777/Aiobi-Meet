@@ -65,7 +65,7 @@ export function TimezoneSelect({ value, onChange }: TimezoneSelectProps) {
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
+            bottom: 'calc(100% + 4px)',
             left: 0,
             right: 0,
             background: '#fff',
