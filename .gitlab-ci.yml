@@ -309,8 +309,27 @@ deploy-staging:
             "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
             -H 'Authorization: Bearer $TOKEN' \
             -H 'Content-Type: application/json' \
-            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
-            && echo "  Realm locale set to FR"
+            -d '{
+              \"defaultLocale\":\"fr\",
+              \"internationalizationEnabled\":true,
+              \"supportedLocales\":[\"fr\"],
+              \"loginTheme\":\"aiobi\",
+              \"emailTheme\":\"aiobi\",
+              \"verifyEmail\":true,
+              \"smtpServer\":{
+                \"host\":\"${DJANGO_EMAIL_HOST}\",
+                \"port\":\"${DJANGO_EMAIL_PORT}\",
+                \"ssl\":\"${DJANGO_EMAIL_USE_SSL}\",
+                \"starttls\":\"${DJANGO_EMAIL_USE_TLS}\",
+                \"auth\":\"true\",
+                \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
+                \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
+                \"from\":\"${DJANGO_EMAIL_FROM}\",
+                \"fromDisplayName\":\"${DJANGO_EMAIL_BRAND_NAME}\",
+                \"replyTo\":\"support@aiobi.world\"
+              }
+            }'" \
+            && echo "  Realm: locale FR + aiobi themes + SMTP + verifyEmail applied"
         else
           echo "WARNING: Client 'meet' not found."
         fi
@@ -547,13 +566,32 @@ deploy-production:
               \"attributes\":{\"post.logout.redirect.uris\":\"https://${MEET_HOST}/*\"}
             }'" && echo "  Client secret + URIs updated"
 
-          # Set realm locale to FR only (no language dropdown)
+          # Set realm config: locale FR + aiobi themes + SMTP + verifyEmail
           docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
             "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
             -H 'Authorization: Bearer $TOKEN' \
             -H 'Content-Type: application/json' \
-            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
-            && echo "  Realm locale set to FR"
+            -d '{
+              \"defaultLocale\":\"fr\",
+              \"internationalizationEnabled\":true,
+              \"supportedLocales\":[\"fr\"],
+              \"loginTheme\":\"aiobi\",
+              \"emailTheme\":\"aiobi\",
+              \"verifyEmail\":true,
+              \"smtpServer\":{
+                \"host\":\"${DJANGO_EMAIL_HOST}\",
+                \"port\":\"${DJANGO_EMAIL_PORT}\",
+                \"ssl\":\"${DJANGO_EMAIL_USE_SSL}\",
+                \"starttls\":\"${DJANGO_EMAIL_USE_TLS}\",
+                \"auth\":\"true\",
+                \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
+                \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
+                \"from\":\"${DJANGO_EMAIL_FROM}\",
+                \"fromDisplayName\":\"${DJANGO_EMAIL_BRAND_NAME}\",
+                \"replyTo\":\"support@aiobi.world\"
+              }
+            }'" \
+            && echo "  Realm: locale FR + aiobi themes + SMTP + verifyEmail applied"
         else
           echo "WARNING: Could not find client 'meet'. First deploy? Realm may need import."
         fi
