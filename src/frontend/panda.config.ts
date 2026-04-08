@@ -150,6 +150,7 @@ const config: Config = {
           900: { value: '#4a1d7a' },
           950: { value: '#2e0f52' },
           action: { value: '#a251fc' },
+          brand: { value: '#4A3C5C' },
         },
         greyscale: {
           '000': { value: '#FFFFFF' },

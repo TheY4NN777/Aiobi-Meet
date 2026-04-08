@@ -262,13 +262,15 @@ const HistoryTab = () => {
               {isEnterprise && session.recordings.length > 0 && (
                 <RecordingActions recordings={session.recordings} roomName={session.room.name} />
               )}
-              <button
-                className="meeting-btn"
-                onClick={() => archiveMutation.mutate(session.id)}
-                disabled={archiveMutation.isPending}
-              >
-                Archiver
-              </button>
+              {!showArchived && (
+                <button
+                  className="meeting-btn"
+                  onClick={() => archiveMutation.mutate(session.id)}
+                  disabled={archiveMutation.isPending}
+                >
+                  Archiver
+                </button>
+              )}
               <button
                 className="meeting-btn danger"
                 onClick={() => deleteMutation.mutate(session.id)}
@@ -403,7 +405,14 @@ const MeetingsContent = () => {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Tableau de bord
         </button>
-        <h1>Mes réunions</h1>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          Mes réunions
+          {isEnterprise && (
+            <span style={{ background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)', color: '#E4D3E6', fontSize: '0.6rem', fontWeight: 700, padding: '3px 8px', borderRadius: '20px', letterSpacing: '0.06em', verticalAlign: 'middle' }}>
+              ENTERPRISE
+            </span>
+          )}
+        </h1>
       </div>
 
       <div className="meetings-tabs">

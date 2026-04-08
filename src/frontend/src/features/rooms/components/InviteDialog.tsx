@@ -28,7 +28,11 @@ import {
 } from '@remixicon/react'
 import { useCallback, useMemo, useState } from 'react'
 import { css } from '@/styled-system/css'
+import { useQuery } from '@tanstack/react-query'
 import { useRoomData } from '@/features/rooms/livekit/hooks/useRoomData'
+import { fetchApi } from '@/api/fetchApi'
+import type { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import './PlanLaterModal.css'
 import { ApiAccessLevel } from '@/features/rooms/api/ApiRoom'
 import { useTelephony } from '@/features/rooms/livekit/hooks/useTelephony'
 import { formatPinCode } from '@/features/rooms/utils/telephony'
@@ -64,6 +68,13 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
   const roomData = useRoomData()
   const roomUrl = getRouteUrl('room', roomData?.slug)
 
+  const { data: roomDetail } = useQuery({
+    queryKey: ['rooms', roomData?.id],
+    queryFn: () => fetchApi<ApiRoom>(`rooms/${roomData!.id}/`),
+    enabled: !!roomData?.id,
+    staleTime: 60_000,
+  })
+
   const telephony = useTelephony()
 
   const isTelephonyReadyForUse = useMemo(() => {
@@ -85,6 +96,7 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
   const [scheduledTime, setScheduledTime] = useState<Time | null>(null)
   const [inviteSent, setInviteSent] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
 
   const inviteMutation = useInviteToRoom({
     onSuccess: () => {
@@ -142,6 +154,7 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
       scheduledTime: scheduledTime
         ? `${String(scheduledTime.hour).padStart(2, '0')}:${String(scheduledTime.minute).padStart(2, '0')}`
         : null,
+      timezone,
     })
   }, [roomData?.id, emails, scheduledDate, scheduledTime, inviteMutation])
 
@@ -325,6 +338,20 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                 {t('inviteByEmail')}
               </Text>
 
+              {/* Déjà invités */}
+              {roomDetail?.invited_users_info && roomDetail.invited_users_info.length > 0 && (
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <p className="dash-invite-label">Déjà invités</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                    {roomDetail.invited_users_info.map((u) => (
+                      <span key={u.email} className="dash-invite-chip" style={{ opacity: 0.75 }}>
+                        {u.full_name ? `${u.full_name} (${u.email})` : u.email}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Email chips + input */}
               {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
               <div
@@ -424,80 +451,43 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                 </Text>
               )}
 
-              {/* Date / Time — React Aria */}
-              <div
-                className={css({
-                  display: 'flex',
-                  gap: '0.5rem',
-                  marginTop: '0.75rem',
-                  width: '100%',
-                })}
-              >
-                <DateField
-                  value={scheduledDate}
-                  onChange={setScheduledDate}
-                  className={css({ flex: '1' })}
-                >
-                  <Label className={css({ fontSize: '0.75rem', color: '#5F6368', display: 'block', marginBottom: '0.25rem' })}>
+              {/* Date / Time — shared CSS classes */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', width: '100%' }}>
+                <DateField value={scheduledDate} onChange={setScheduledDate} className="dash-datepicker" style={{ flex: 1 }}>
+                  <Label className="dash-invite-label">
                     {t('scheduledDate')}{' '}
                     <span style={{ fontStyle: 'italic' }}>({t('optional')})</span>
                   </Label>
-                  <div className={css({
-                    display: 'flex', alignItems: 'center', gap: '0.25rem',
-                    padding: '0.4rem 0.6rem', border: '1.5px solid #DADCE0', borderRadius: '10px',
-                    background: 'white', transition: 'all 0.2s ease',
-                    '&:hover': { borderColor: 'rgba(162, 81, 252, 0.3)' },
-                    '&:focus-within': { borderColor: 'primary.500', boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)' },
-                  })}>
-                    <DateInput className={css({ display: 'flex', alignItems: 'center', flex: '1' })}>
-                      {(segment) => (
-                        <DateSegment segment={segment} className={css({
-                          padding: '1px 2px', borderRadius: '4px', fontSize: '0.8rem', outline: 'none',
-                          '&[data-focused]': { background: 'primary.500', color: 'white' },
-                          '&[data-placeholder]': { color: '#5F6368' },
-                        })} />
-                      )}
+                  <div className="dash-picker-group">
+                    <DateInput className="dash-picker-input">
+                      {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
                     </DateInput>
-                    <button
-                      type="button"
-                      onClick={() => setShowCalendar(true)}
-                      className={css({
-                        background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
-                        borderRadius: '6px', color: 'primary.500', display: 'flex', alignItems: 'center',
-                        '&:hover': { background: 'rgba(162, 81, 252, 0.08)', color: 'primary.700' },
-                      })}
-                    >
+                    <button type="button" className="dash-picker-btn" onClick={() => setShowCalendar(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     </button>
                   </div>
                 </DateField>
 
-                <TimeField
-                  value={scheduledTime}
-                  onChange={setScheduledTime}
-                  hourCycle={24}
-                  granularity="minute"
-                  className={css({ flex: '0.6' })}
-                >
-                  <Label className={css({ fontSize: '0.75rem', color: '#5F6368', display: 'block', marginBottom: '0.25rem' })}>
-                    {t('scheduledTime')}
-                  </Label>
-                  <DateInput className={css({
-                    display: 'flex', alignItems: 'center', gap: '1px',
-                    padding: '0.4rem 0.6rem', border: '1.5px solid #DADCE0', borderRadius: '10px',
-                    background: 'white', transition: 'all 0.2s ease',
-                    '&:hover': { borderColor: 'rgba(162, 81, 252, 0.3)' },
-                    '&:focus-within': { borderColor: 'primary.500', boxShadow: '0 0 0 3px rgba(162, 81, 252, 0.08)' },
-                  })}>
-                    {(segment) => (
-                      <DateSegment segment={segment} className={css({
-                        padding: '1px 2px', borderRadius: '4px', fontSize: '0.8rem', outline: 'none',
-                        '&[data-focused]': { background: 'primary.500', color: 'white' },
-                        '&[data-placeholder]': { color: '#5F6368' },
-                      })} />
-                    )}
+                <TimeField value={scheduledTime} onChange={setScheduledTime} hourCycle={24} granularity="minute" className="dash-timefield" style={{ flex: 0.6 }}>
+                  <Label className="dash-invite-label">{t('scheduledTime')}</Label>
+                  <DateInput className="dash-picker-group">
+                    {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
                   </DateInput>
                 </TimeField>
+              </div>
+
+              {/* Timezone */}
+              <div style={{ marginTop: '0.5rem' }}>
+                <label className="dash-invite-label">Fuseau horaire</label>
+                <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="dash-select">
+                  <option value="UTC">UTC (GMT+0)</option>
+                  <option value="Africa/Abidjan">Abidjan — GMT+0</option>
+                  <option value="Africa/Lagos">Lagos / Dakar — WAT (GMT+1)</option>
+                  <option value="Africa/Cairo">Le Caire / Afrique du Nord — GMT+2</option>
+                  <option value="Africa/Nairobi">Nairobi — EAT (GMT+3)</option>
+                  <option value="Europe/Paris">Paris — CET (GMT+1/+2)</option>
+                  <option value="America/New_York">New York — EST (GMT-5/-4)</option>
+                </select>
               </div>
 
               {/* Calendar modal */}

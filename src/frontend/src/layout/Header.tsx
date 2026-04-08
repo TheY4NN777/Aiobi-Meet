@@ -13,6 +13,7 @@ import { LoginButton } from '@/components/LoginButton'
 import { VisualOnlyTooltip } from '@/primitives/VisualOnlyTooltip'
 
 import { useLoginHint } from '@/hooks/useLoginHint'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 
 const Logo = () => (
   <img
@@ -91,6 +92,7 @@ export const Header = () => {
   const isTermsOfService = useMatchesRoute('termsOfService')
   const isRoom = useMatchesRoute('room')
   const { user, isLoggedIn, logout } = useUser()
+  const isEnterprise = useIsEnterprise()
   const userLabel = user?.full_name || user?.email
   const loggedInTooltip = t('loggedInUserTooltip')
   const loggedInAriaLabel = userLabel
@@ -164,16 +166,33 @@ export const Header = () => {
                       ariaLabel={loggedInAriaLabel}
                       tooltipPosition="bottom"
                     >
-                      <span
-                        className={css({
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '350px',
-                          display: { base: 'none', xsm: 'block' },
-                        })}
-                      >
-                        {user?.full_name || user?.email}
+                      <span className={css({ display: 'flex', alignItems: 'center', gap: '0.5rem' })}>
+                        <span
+                          className={css({
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '350px',
+                            display: { base: 'none', xsm: 'block' },
+                          })}
+                        >
+                          {user?.full_name || user?.email}
+                        </span>
+                        {isEnterprise && (
+                          <span style={{
+                            background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)',
+                            color: '#E4D3E6',
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: '20px',
+                            letterSpacing: '0.06em',
+                            flexShrink: 0,
+                            display: 'inline-block',
+                          }}>
+                            ENTERPRISE
+                          </span>
+                        )}
                       </span>
                     </VisualOnlyTooltip>
                   </Button>
