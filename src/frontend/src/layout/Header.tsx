@@ -131,7 +131,7 @@ export const Header = () => {
                     event.preventDefault()
                   }
                 }}
-                to="/"
+                to={isLoggedIn ? '/home' : '/'}
               >
                 {/* this is there only as a hook for custom CSS users who might want to show something before the app logo */}
                 <div

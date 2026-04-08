@@ -162,25 +162,30 @@ export const TranscriptSidePanel = () => {
       flexDirection="column"
       alignItems="center"
     >
-      <img
-        src="/assets/intro-slider/3.png"
-        alt=""
+      <div
         className={css({
-          minHeight: '250px',
-          height: '250px',
-          marginBottom: '1rem',
-          marginTop: '-16px',
-          '@media (max-height: 900px)': {
-            height: 'auto',
-            minHeight: 'auto',
-            maxHeight: '25%',
-            marginBottom: '0.75rem',
-          },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: 'linear-gradient(145deg, #4A3C5C 0%, #2d1f3d 100%)',
+          marginBottom: '1.25rem',
+          marginTop: '0.5rem',
+          flexShrink: 0,
           '@media (max-height: 770px)': {
             display: 'none',
           },
         })}
-      />
+      >
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#E4D3E6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="23" />
+          <line x1="8" y1="23" x2="16" y2="23" />
+        </svg>
+      </div>
       <VStack gap={0} marginBottom={15}>
         <H lvl={1} margin={'sm'}>
           {t('heading')}

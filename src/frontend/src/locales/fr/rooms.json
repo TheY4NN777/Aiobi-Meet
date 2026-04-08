@@ -392,7 +392,7 @@
     }
   },
   "transcript": {
-    "heading": "Transcrivez votre réunion avec l'Assistant IA",
+    "heading": "Transcrivez votre réunion avec Aïobi IA",
     "body": "Transcrivez jusqu'à {{max_duration}} de réunion.",
     "bodyWithoutMaxDuration": "Transcrivez votre réunion sans limite.",
     "details": {
