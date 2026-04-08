@@ -80,9 +80,10 @@ const RecordingActions = ({ recordings, roomName }: { recordings: SessionRecordi
 
 const HistoryTab = () => {
   const queryClient = useQueryClient()
+  const [showArchived, setShowArchived] = useState(false)
   const { data, isLoading } = useQuery({
-    queryKey: ['room-sessions'],
-    queryFn: fetchRoomSessions,
+    queryKey: ['room-sessions', showArchived],
+    queryFn: () => fetchRoomSessions(showArchived),
   })
   const isEnterprise = useIsEnterprise()
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
@@ -172,6 +173,13 @@ const HistoryTab = () => {
           />
           Tout sélectionner
         </label>
+        <button
+          className="meeting-btn"
+          onClick={() => { setShowArchived(!showArchived); setSelectedIds(new Set()) }}
+          style={{ fontSize: '0.78rem' }}
+        >
+          {showArchived ? 'Voir l\'historique' : 'Voir les archivées'}
+        </button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
           {selectedIds.size > 0 && (
             <button
@@ -354,12 +362,9 @@ const MeetingsContent = () => {
   const todayStr = new Date().toISOString().slice(0, 10)
   const sorted = [...rooms]
     .filter((room) => {
-      // Room with a future scheduled date → always show
-      if (room.scheduled_date && room.scheduled_date >= todayStr) return true
-      // Room with a past scheduled date → hide (call happened)
-      if (room.scheduled_date && room.scheduled_date < todayStr) return false
-      // Room without date: show only if no completed session yet
-      return !room.has_ended_session
+      if (room.has_ended_session) return false
+      if (room.scheduled_date) return room.scheduled_date >= todayStr
+      return true
     })
     .sort((a, b) => {
       if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1

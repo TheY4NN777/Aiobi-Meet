@@ -23,18 +23,18 @@ class InvitationService:
     """Service for invitations to users."""
 
     @staticmethod
-    def invite_to_room(
-        room, sender, emails, scheduled_date=None, scheduled_time=None
-    ):
+    def invite_to_room(room, sender, emails, scheduled_date=None, scheduled_time=None):
         """Send invitation emails to join a room."""
 
         language = get_language()
 
         sender_name = sender.full_name or sender.short_name or ""
-        
+
         fallback_now = timezone.localtime()
         display_date = scheduled_date or fallback_now.date()
-        display_time = scheduled_time or fallback_now.time().replace(second=0, microsecond=0)
+        display_time = scheduled_time or fallback_now.time().replace(
+            second=0, microsecond=0
+        )
 
         context = {
             "brandname": settings.EMAIL_BRAND_NAME,
@@ -47,7 +47,7 @@ class InvitationService:
             "scheduled_date": scheduled_date,
             "scheduled_time": scheduled_time,
             "display_date": display_date,
-            "display_time": display_time
+            "display_time": display_time,
         }
 
         with override(language):
@@ -64,9 +64,7 @@ class InvitationService:
                 )
             else:
                 subject = str(
-                    _(
-                        "%(name)s is waiting for you to join a video call"
-                    )
+                    _("%(name)s is waiting for you to join a video call")
                     % {"name": sender_display}
                 )
 

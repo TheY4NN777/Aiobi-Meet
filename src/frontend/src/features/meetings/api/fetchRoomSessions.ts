@@ -30,5 +30,5 @@ export type RoomSessionApi = {
   recordings: SessionRecordingApi[]
 }
 
-export const fetchRoomSessions = () =>
-  fetchApi<{ results: RoomSessionApi[] }>('/room-sessions/')
+export const fetchRoomSessions = (archived = false) =>
+  fetchApi<{ results: RoomSessionApi[] }>(`/room-sessions/${archived ? '?archived=true' : ''}`)

@@ -194,7 +194,6 @@ class NotificationService:
 
         return True
 
-
     def notify_transcription_ready(self, recording) -> bool:
         """Send an email notification when a transcription is ready.
 
@@ -264,7 +263,6 @@ class NotificationService:
                     has_failures = True
 
         return not has_failures
-
 
     def notify_transcription_deletion_warning(
         self, old_recording: "models.Recording", deletion_date: str

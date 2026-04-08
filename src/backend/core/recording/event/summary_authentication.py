@@ -28,9 +28,7 @@ class SummaryServiceAuthentication(BaseAuthentication):
 
         required_token = settings.SUMMARY_SERVICE_API_TOKEN
         if not required_token:
-            raise AuthenticationFailed(
-                "Summary service token is not configured."
-            )
+            raise AuthenticationFailed("Summary service token is not configured.")
 
         auth_header = request.headers.get(self.AUTH_HEADER)
 

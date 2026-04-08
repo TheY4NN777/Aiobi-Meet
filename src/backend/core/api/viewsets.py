@@ -207,6 +207,44 @@ class UserViewSet(
             self.serializer_class(request.user, context=context).data
         )
 
+    @decorators.action(
+        detail=False,
+        methods=["get"],
+        url_path="me/usage",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def get_usage(self, request):
+        """Return monthly usage counts for recordings and transcriptions."""
+        user = request.user
+        now = timezone.now()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        recordings_count = models.RecordingAccess.objects.filter(
+            user=user,
+            recording__mode=models.RecordingModeChoices.SCREEN_RECORDING,
+            recording__created_at__gte=start_of_month,
+        ).count()
+
+        transcriptions_count = models.RecordingAccess.objects.filter(
+            user=user,
+            recording__mode=models.RecordingModeChoices.TRANSCRIPT,
+            recording__created_at__gte=start_of_month,
+        ).count()
+
+        is_enterprise = (
+            getattr(user, "account_tier", None) == models.User.AccountTier.ENTERPRISE
+        )
+        limit = None if is_enterprise else 10
+
+        return drf_response.Response(
+            {
+                "recordings_this_month": recordings_count,
+                "transcriptions_this_month": transcriptions_count,
+                "recording_limit": limit,
+                "transcription_limit": limit,
+            }
+        )
+
 
 class RoomViewSet(
     mixins.CreateModelMixin,
@@ -319,6 +357,26 @@ class RoomViewSet(
         mode = serializer.validated_data["mode"]
         options = serializer.validated_data.get("options")
         room = self.get_object()
+
+        # Enforce monthly quota for free-tier users
+        user = request.user
+        is_enterprise = (
+            getattr(user, "account_tier", None) == models.User.AccountTier.ENTERPRISE
+        )
+        if not is_enterprise:
+            start_of_month = timezone.now().replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            count = models.RecordingAccess.objects.filter(
+                user=user,
+                recording__mode=mode,
+                recording__created_at__gte=start_of_month,
+            ).count()
+            if count >= 10:
+                return drf_response.Response(
+                    {"error": "rate_limit_exceeded"},
+                    status=drf_status.HTTP_429_TOO_MANY_REQUESTS,
+                )
 
         # May raise exception if an active or initiated recording already exist for the room
         recording = models.Recording.objects.create(
@@ -1395,12 +1453,13 @@ class RoomSessionViewSet(
     serializer_class = serializers.RoomSessionSerializer
 
     def get_queryset(self):
-        """Return non-archived sessions for rooms the user has access to."""
+        """Return sessions for rooms the user has access to."""
         user = self.request.user
+        archived = self.request.query_params.get("archived", "false").lower() == "true"
         return (
             models.RoomSession.objects.filter(
                 room__accesses__user=user,
-                is_archived=False,
+                is_archived=archived,
             )
             .select_related("room")
             .prefetch_related("participants", "participants__user")

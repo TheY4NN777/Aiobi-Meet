@@ -106,4 +106,7 @@ def purge_expired_transcriptions():
             _delete_transcription(recording)
             total_purged += 1
 
-    logger.info("purge_expired_transcriptions completed: %d transcriptions purged.", total_purged)
+    logger.info(
+        "purge_expired_transcriptions completed: %d transcriptions purged.",
+        total_purged,
+    )
