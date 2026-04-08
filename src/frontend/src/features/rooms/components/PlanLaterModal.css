@@ -253,20 +253,20 @@
     border-radius: 4px;
     font-size: 0.85rem;
     font-family: var(--font-body);
-    color: #1a1a2e;
+    color: #1a1a2e !important;
     outline: none;
     caret-color: #a251fc;
 }
 
 .dash-picker-segment:focus,
 .dash-picker-segment[data-focused] {
-    background: #a251fc;
-    color: #ffffff;
+    background: #a251fc !important;
+    color: #ffffff !important;
     border-radius: 4px;
 }
 
 .dash-picker-segment[data-placeholder]:not(:focus):not([data-focused]) {
-    color: #8b8ba3;
+    color: #8b8ba3 !important;
 }
 
 .dash-picker-btn {
