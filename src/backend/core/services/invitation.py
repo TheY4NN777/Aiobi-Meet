@@ -43,6 +43,7 @@ class InvitationService:
             "domain": settings.EMAIL_DOMAIN,
             "room_url": f"{settings.EMAIL_APP_BASE_URL}/{room.slug}",
             "room_link": f"{settings.EMAIL_DOMAIN}/{room.slug}",
+            "room_name": room.name,
             "sender_name": sender_name,
             "sender_email": sender.email,
             "room_name": room_name,

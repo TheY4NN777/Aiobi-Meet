@@ -50,6 +50,11 @@
                     {% trans "Time:" %} <strong>{{ display_time|time:"H:i" }}</strong>
                   </p>
                   {% endif %}
+                  {% if room_name %}
+                  <p style="margin: 6px 0 0 0; font-size: 15px; color: #1a1a2e;">
+                    {% trans "Title:" %} <strong>{{ room_name }}</strong>
+                  </p>
+                  {% endif %}
                 </td>
               </tr>
             </table>
