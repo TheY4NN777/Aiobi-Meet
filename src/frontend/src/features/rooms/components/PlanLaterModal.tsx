@@ -16,6 +16,7 @@ import type { CalendarDate, Time } from '@internationalized/date'
 import { fetchApi } from '@/api/fetchApi'
 import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
 import type { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import { TimezoneSelect } from './TimezoneSelect'
 import './PlanLaterModal.css'
 
 type PlanLaterModalProps = {
@@ -190,7 +191,16 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
               </Label>
               <div className="dash-picker-group">
                 <DateInput className="dash-picker-input">
-                  {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                  {(segment) => (
+                    <DateSegment
+                      segment={segment}
+                      className="dash-picker-segment"
+                      style={({ isFocused, isPlaceholder }) => ({
+                        background: isFocused ? '#a251fc' : 'transparent',
+                        color: isFocused ? '#ffffff' : isPlaceholder ? '#8b8ba3' : '#1a1a2e',
+                      })}
+                    />
+                  )}
                 </DateInput>
                 <button type="button" className="dash-picker-btn" onClick={() => setShowCalendar(true)}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -206,7 +216,16 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
             <TimeField value={inviteTime} onChange={setInviteTime} hourCycle={24} granularity="minute" className="dash-timefield">
               <Label className="dash-invite-label">Heure</Label>
               <DateInput className="dash-picker-group">
-                {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                {(segment) => (
+                <DateSegment
+                  segment={segment}
+                  className="dash-picker-segment"
+                  style={({ isFocused, isPlaceholder }) => ({
+                    background: isFocused ? '#a251fc' : 'transparent',
+                    color: isFocused ? '#ffffff' : isPlaceholder ? '#8b8ba3' : '#1a1a2e',
+                  })}
+                />
+              )}
               </DateInput>
             </TimeField>
           </div>
@@ -237,19 +256,7 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
 
           <div style={{ marginTop: '0.75rem' }}>
             <label className="dash-invite-label">Fuseau horaire</label>
-            <select
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              className="dash-select"
-            >
-              <option value="UTC">UTC (GMT+0)</option>
-              <option value="Africa/Abidjan">Abidjan — GMT+0</option>
-              <option value="Africa/Lagos">Lagos / Dakar — WAT (GMT+1)</option>
-              <option value="Africa/Cairo">Le Caire / Afrique du Nord — GMT+2</option>
-              <option value="Africa/Nairobi">Nairobi — EAT (GMT+3)</option>
-              <option value="Europe/Paris">Paris — CET (GMT+1/+2)</option>
-              <option value="America/New_York">New York — EST (GMT-5/-4)</option>
-            </select>
+            <TimezoneSelect value={timezone} onChange={setTimezone} />
           </div>
 
           <button

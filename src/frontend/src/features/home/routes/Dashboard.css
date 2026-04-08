@@ -553,25 +553,6 @@
     flex: 1;
 }
 
-.dash-picker-segment {
-    padding: 1px 2px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-family: var(--font-body);
-    color: var(--text);
-    outline: none;
-    caret-color: var(--accent);
-}
-
-.dash-picker-segment:focus {
-    background: var(--accent);
-    color: #fff;
-    border-radius: 4px;
-}
-
-.dash-picker-segment[data-placeholder] {
-    color: var(--text-muted);
-}
 
 .dash-picker-btn {
     background: none;

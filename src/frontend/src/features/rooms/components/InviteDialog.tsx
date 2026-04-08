@@ -31,6 +31,7 @@ import { css } from '@/styled-system/css'
 import { useQuery } from '@tanstack/react-query'
 import { useRoomData } from '@/features/rooms/livekit/hooks/useRoomData'
 import { fetchApi } from '@/api/fetchApi'
+import { TimezoneSelect } from './TimezoneSelect'
 import type { ApiRoom } from '@/features/rooms/api/ApiRoom'
 import './PlanLaterModal.css'
 import { ApiAccessLevel } from '@/features/rooms/api/ApiRoom'
@@ -460,7 +461,16 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                   </Label>
                   <div className="dash-picker-group">
                     <DateInput className="dash-picker-input">
-                      {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                      {(segment) => (
+                      <DateSegment
+                        segment={segment}
+                        className="dash-picker-segment"
+                        style={({ isFocused, isPlaceholder }) => ({
+                          background: isFocused ? '#a251fc' : 'transparent',
+                          color: isFocused ? '#ffffff' : isPlaceholder ? '#8b8ba3' : '#1a1a2e',
+                        })}
+                      />
+                    )}
                     </DateInput>
                     <button type="button" className="dash-picker-btn" onClick={() => setShowCalendar(true)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -471,7 +481,16 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
                 <TimeField value={scheduledTime} onChange={setScheduledTime} hourCycle={24} granularity="minute" className="dash-timefield" style={{ flex: 0.6 }}>
                   <Label className="dash-invite-label">{t('scheduledTime')}</Label>
                   <DateInput className="dash-picker-group">
-                    {(segment) => <DateSegment segment={segment} className="dash-picker-segment" />}
+                    {(segment) => (
+                      <DateSegment
+                        segment={segment}
+                        className="dash-picker-segment"
+                        style={({ isFocused, isPlaceholder }) => ({
+                          background: isFocused ? '#a251fc' : 'transparent',
+                          color: isFocused ? '#ffffff' : isPlaceholder ? '#8b8ba3' : '#1a1a2e',
+                        })}
+                      />
+                    )}
                   </DateInput>
                 </TimeField>
               </div>
@@ -479,15 +498,7 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
               {/* Timezone */}
               <div style={{ marginTop: '0.5rem' }}>
                 <label className="dash-invite-label">Fuseau horaire</label>
-                <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="dash-select">
-                  <option value="UTC">UTC (GMT+0)</option>
-                  <option value="Africa/Abidjan">Abidjan — GMT+0</option>
-                  <option value="Africa/Lagos">Lagos / Dakar — WAT (GMT+1)</option>
-                  <option value="Africa/Cairo">Le Caire / Afrique du Nord — GMT+2</option>
-                  <option value="Africa/Nairobi">Nairobi — EAT (GMT+3)</option>
-                  <option value="Europe/Paris">Paris — CET (GMT+1/+2)</option>
-                  <option value="America/New_York">New York — EST (GMT-5/-4)</option>
-                </select>
+                <TimezoneSelect value={timezone} onChange={setTimezone} />
               </div>
 
               {/* Calendar modal */}
