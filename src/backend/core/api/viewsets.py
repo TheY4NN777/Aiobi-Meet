@@ -269,7 +269,10 @@ class RoomViewSet(
 
         if user.is_authenticated:
             queryset = (
-                self.filter_queryset(self.get_queryset()).filter(users=user).distinct()
+                self.filter_queryset(self.get_queryset())
+                .filter(users=user)
+                .prefetch_related("sessions")
+                .distinct()
             )
         else:
             queryset = self.get_queryset().none()

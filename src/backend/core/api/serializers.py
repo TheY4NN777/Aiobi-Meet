@@ -148,6 +148,12 @@ class ListRoomSerializer(serializers.ModelSerializer):
 class RoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for the API."""
 
+    has_ended_session = serializers.SerializerMethodField()
+
+    def get_has_ended_session(self, obj):
+        """Return True if the room has at least one completed session."""
+        return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
     class Meta:
         model = models.Room
         fields = [
@@ -159,8 +165,9 @@ class RoomSerializer(serializers.ModelSerializer):
             "pin_code",
             "scheduled_date",
             "scheduled_time",
+            "has_ended_session",
         ]
-        read_only_fields = ["id", "slug", "pin_code"]
+        read_only_fields = ["id", "slug", "pin_code", "has_ended_session"]
 
     def to_representation(self, instance):
         """
