@@ -94,7 +94,7 @@ export function TimezoneSelect({ value, onChange }: TimezoneSelectProps) {
               }}
               onMouseEnter={(e) => {
                 if (opt.value !== value)
-                  (e.currentTarget as HTMLDivElement).style.background = '#f7f7f8'
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(162,81,252,0.06)'
               }}
               onMouseLeave={(e) => {
                 if (opt.value !== value)
