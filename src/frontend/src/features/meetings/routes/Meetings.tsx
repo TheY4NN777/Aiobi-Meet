@@ -155,7 +155,15 @@ const HistoryTab = () => {
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
-        <p>Aucune réunion passée</p>
+        <p>{showArchived ? 'Aucune réunion archivée' : 'Aucune réunion passée'}</p>
+        {!showArchived && (
+          <button
+            onClick={() => setShowArchived(true)}
+            style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            Voir les réunions archivées
+          </button>
+        )}
       </div>
     )
   }
