@@ -46,6 +46,20 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
             "realm_access": user_info.get("realm_access", {}),
         }
 
+    def create_user(self, claims):
+        """Create a new User, stripping non-model claims.
+
+        lasuite's base ``create_user`` instantiates the model with
+        ``User(**claims)``. Our ``get_extra_claims`` injects ``realm_access``
+        (needed by ``_sync_account_tier``) which is not a User field, so we
+        must drop it before delegating — otherwise registration raises
+        ``TypeError: User() got unexpected keyword arguments: 'realm_access'``.
+        ``claims`` is not mutated so ``post_get_or_create_user`` still sees
+        ``realm_access`` afterwards.
+        """
+        filtered = {k: v for k, v in claims.items() if k != "realm_access"}
+        return super().create_user(filtered)
+
     def post_get_or_create_user(self, user, claims, is_new_user):
         """
         Post-processing after user creation or retrieval.
