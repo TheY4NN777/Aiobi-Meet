@@ -179,11 +179,29 @@ export const TranscriptSidePanel = () => {
           },
         })}
       >
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#E4D3E6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-          <line x1="12" y1="19" x2="12" y2="23" />
-          <line x1="8" y1="23" x2="16" y2="23" />
+        <svg width="90" height="90" viewBox="0 0 90 90" aria-hidden="true">
+          {[
+            '  .M.  ',
+            ' [MMM] ',
+            ' [MoM] ',
+            ' [MMM] ',
+            '  .M.  ',
+            '   |   ',
+            ' (   ) ',
+            " '---' ",
+          ].map((row, i) => (
+            <text
+              key={i}
+              x="27 33 39 45 51 57 63"
+              y={12 + i * 11}
+              fontFamily="'Space Mono','Courier New',monospace"
+              fontSize="8"
+              fontWeight="700"
+              fill="#E4D3E6"
+            >
+              {row}
+            </text>
+          ))}
         </svg>
       </div>
       <VStack gap={0} marginBottom={15}>

@@ -141,8 +141,9 @@ class ListRoomSerializer(serializers.ModelSerializer):
             "scheduled_date",
             "scheduled_time",
             "has_ended_session",
+            "invited_emails",
         ]
-        read_only_fields = ["id", "slug", "has_ended_session"]
+        read_only_fields = ["id", "slug", "has_ended_session", "invited_emails"]
 
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -166,8 +167,9 @@ class RoomSerializer(serializers.ModelSerializer):
             "scheduled_date",
             "scheduled_time",
             "has_ended_session",
+            "invited_emails",
         ]
-        read_only_fields = ["id", "slug", "pin_code", "has_ended_session"]
+        read_only_fields = ["id", "slug", "pin_code", "has_ended_session", "invited_emails"]
 
     def to_representation(self, instance):
         """
@@ -421,6 +423,7 @@ class RoomInviteSerializer(serializers.Serializer):
     scheduled_time = serializers.TimeField(
         required=False, allow_null=True, default=None
     )
+    timezone = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class BaseParticipantsManagementSerializer(BaseValidationOnlySerializer):

@@ -143,9 +143,26 @@ export const ScreenRecordingSidePanel = () => {
           },
         })}
       >
-        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#E4D3E6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="12" r="3" fill="#E4D3E6" stroke="none" />
+        <svg width="90" height="90" viewBox="0 0 90 90" aria-hidden="true">
+          {[
+            ' .ooo. ',
+            'o     o',
+            'o  O  o',
+            'o     o',
+            ' .ooo. ',
+          ].map((row, i) => (
+            <text
+              key={i}
+              x="27 33 39 45 51 57 63"
+              y={20 + i * 11}
+              fontFamily="'Space Mono','Courier New',monospace"
+              fontSize="8"
+              fontWeight="700"
+              fill="#E4D3E6"
+            >
+              {row}
+            </text>
+          ))}
         </svg>
       </div>
       <VStack gap={0} marginBottom={15}>

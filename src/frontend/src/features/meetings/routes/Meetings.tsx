@@ -282,6 +282,7 @@ const MeetingsContent = () => {
   const { mutateAsync: createRoom } = useCreateRoom()
   const { userChoices: { username } } = usePersistentUserChoices()
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
+  const [inviteRoom, setInviteRoom] = useState<ApiRoom | null>(null)
   useFontshare()
 
   const handlePlanLater = useCallback(async () => {
@@ -441,6 +442,21 @@ const MeetingsContent = () => {
                 <span className="meeting-code-value">{room.slug}</span>
               </div>
 
+              {room.invited_emails && room.invited_emails.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '0.5rem' }}>
+                  {room.invited_emails.map((email) => (
+                    <span key={email} style={{
+                      background: 'var(--accent-light)',
+                      color: 'var(--accent)',
+                      borderRadius: '20px',
+                      padding: '2px 8px',
+                      fontSize: '0.72rem',
+                      fontWeight: 500,
+                    }}>{email}</span>
+                  ))}
+                </div>
+              )}
+
               {editingId === room.id && (
                 <div className="meeting-edit-row">
                   <div className="meeting-titlefield">
@@ -536,6 +552,9 @@ const MeetingsContent = () => {
                   Modifier
                 </button>
               )}
+              <button className="meeting-btn" onClick={() => setInviteRoom(room)}>
+                Inviter
+              </button>
               <button className="meeting-btn danger" onClick={() => setDeleteConfirm(room)}>
                 Supprimer
               </button>
@@ -546,6 +565,10 @@ const MeetingsContent = () => {
 
       {laterRoom && (
         <PlanLaterModal room={laterRoom} onClose={() => setLaterRoom(null)} />
+      )}
+
+      {inviteRoom && (
+        <PlanLaterModal room={inviteRoom} onClose={() => setInviteRoom(null)} />
       )}
 
       {/* Delete confirm dialog */}

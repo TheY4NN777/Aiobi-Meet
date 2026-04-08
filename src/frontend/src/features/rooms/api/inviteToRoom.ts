@@ -7,6 +7,7 @@ export interface InviteToRoomParams {
   emails: string[]
   scheduledDate?: string | null
   scheduledTime?: string | null
+  timezone?: string
 }
 
 export interface InviteToRoomResponse {
@@ -19,6 +20,7 @@ const inviteToRoom = async ({
   emails,
   scheduledDate,
   scheduledTime,
+  timezone,
 }: InviteToRoomParams): Promise<InviteToRoomResponse> => {
   return fetchApi<InviteToRoomResponse>(`rooms/${roomId}/invite/`, {
     method: 'POST',
@@ -26,6 +28,7 @@ const inviteToRoom = async ({
       emails,
       scheduled_date: scheduledDate || null,
       scheduled_time: scheduledTime || null,
+      timezone: timezone || '',
     }),
   })
 }

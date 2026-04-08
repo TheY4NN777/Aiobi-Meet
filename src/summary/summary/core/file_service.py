@@ -11,7 +11,7 @@ from pathlib import Path
 
 import mutagen
 from docx import Document
-from docx.shared import Pt
+from docx.shared import Pt, RGBColor
 from minio import Minio
 from minio.error import MinioException, S3Error
 
@@ -65,6 +65,7 @@ class FileService:
         if title:
             heading = doc.add_heading(title, level=1)
             heading.runs[0].font.size = Pt(18)
+            heading.runs[0].font.color.rgb = RGBColor(0x4A, 0x3C, 0x5C)
 
         for line in content.splitlines():
             stripped = line.strip()

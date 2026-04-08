@@ -120,7 +120,6 @@ const LandingContent = () => {
             <li><a href="#faq">FAQ</a></li>
           </ul>
           <div className="nav-actions">
-            <button className="btn btn-ghost" onClick={() => setJoinOpen(true)}>Rejoindre</button>
             {isLoggedIn ? (
               <a href="/home" className="btn btn-primary">Mon espace</a>
             ) : (
@@ -173,9 +172,6 @@ const LandingContent = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
               Lancer une réunion
             </a>
-            <button className="btn btn-ghost btn-lg" onClick={() => setJoinOpen(true)}>
-              Rejoindre une réunion
-            </button>
           </div>
           <p className="hero-note reveal reveal-delay-4" ref={addRevealRef}>
             Gratuit, sans installation, depuis votre navigateur
@@ -384,6 +380,7 @@ const LandingContent = () => {
                 <li>Chiffrement TLS</li>
                 <li>Aucune installation</li>
                 <li>Durée max 1h30</li>
+                <li>IA intégrée (fair use applicable)</li>
               </ul>
               <a href={loginUrl} className="btn btn-ghost btn-lg">Créer un compte gratuit</a>
             </div>

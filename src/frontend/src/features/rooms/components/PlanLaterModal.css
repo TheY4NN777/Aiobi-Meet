@@ -264,7 +264,7 @@
     border-radius: 4px;
 }
 
-.dash-picker-segment[data-placeholder] {
+.dash-picker-segment[data-placeholder]:not(:focus) {
     color: var(--text-muted);
 }
 

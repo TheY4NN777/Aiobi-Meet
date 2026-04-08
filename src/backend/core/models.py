@@ -419,6 +419,11 @@ class Room(Resource):
     )
     scheduled_date = models.DateField(_("scheduled date"), null=True, blank=True)
     scheduled_time = models.TimeField(_("scheduled time"), null=True, blank=True)
+    invited_emails = models.JSONField(
+        blank=True,
+        default=list,
+        verbose_name=_("Invited emails"),
+    )
 
     class Meta:
         db_table = "meet_room"

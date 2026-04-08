@@ -23,12 +23,13 @@ class InvitationService:
     """Service for invitations to users."""
 
     @staticmethod
-    def invite_to_room(room, sender, emails, scheduled_date=None, scheduled_time=None):
+    def invite_to_room(room, sender, emails, scheduled_date=None, scheduled_time=None, timezone_label=""):
         """Send invitation emails to join a room."""
 
         language = get_language()
 
         sender_name = sender.full_name or sender.short_name or ""
+        room_name = room.name or ""
 
         fallback_now = timezone.localtime()
         display_date = scheduled_date or fallback_now.date()
@@ -44,10 +45,12 @@ class InvitationService:
             "room_link": f"{settings.EMAIL_DOMAIN}/{room.slug}",
             "sender_name": sender_name,
             "sender_email": sender.email,
+            "room_name": room_name,
             "scheduled_date": scheduled_date,
             "scheduled_time": scheduled_time,
             "display_date": display_date,
             "display_time": display_time,
+            "timezone_label": timezone_label,
         }
 
         with override(language):
@@ -55,13 +58,23 @@ class InvitationService:
             msg_plain = render_to_string("mail/text/invitation.txt", context)
             sender_display = sender_name or sender.email
             if scheduled_date:
-                subject = str(
-                    _("%(name)s invites you to a meeting on %(date)s")
-                    % {
-                        "name": sender_display,
-                        "date": scheduled_date.strftime("%d/%m/%Y"),
-                    }
-                )
+                if room_name:
+                    subject = str(
+                        _("%(name)s vous invite à « %(room)s » le %(date)s")
+                        % {
+                            "name": sender_display,
+                            "room": room_name,
+                            "date": scheduled_date.strftime("%d/%m/%Y"),
+                        }
+                    )
+                else:
+                    subject = str(
+                        _("%(name)s invites you to a meeting on %(date)s")
+                        % {
+                            "name": sender_display,
+                            "date": scheduled_date.strftime("%d/%m/%Y"),
+                        }
+                    )
             else:
                 subject = str(
                     _("%(name)s is waiting for you to join a video call")

@@ -1,4 +1,26 @@
 import { useTranslation } from 'react-i18next'
+import {
+  RiThumbUpLine,
+  RiThumbDownLine,
+  RiShakeHandsLine,
+  RiHeartLine,
+  RiEmotionLaughLine,
+  RiEmotion2Line,
+  RiSparklingLine,
+  RiHandHeartLine,
+} from '@remixicon/react'
+import type { RemixiconComponentType } from '@remixicon/react'
+
+export const emojiIcons: Record<string, RemixiconComponentType> = {
+  'thumbs-up': RiThumbUpLine,
+  'thumbs-down': RiThumbDownLine,
+  'clapping-hands': RiShakeHandsLine,
+  'red-heart': RiHeartLine,
+  'face-with-tears-of-joy': RiEmotionLaughLine,
+  'face-with-open-mouth': RiEmotion2Line,
+  'party-popper': RiSparklingLine,
+  'folded-hands': RiHandHeartLine,
+}
 
 export const getEmojiLabel = (
   emoji: string,

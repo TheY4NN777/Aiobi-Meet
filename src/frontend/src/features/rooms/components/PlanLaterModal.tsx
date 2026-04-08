@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   DateField,
   DateInput,
@@ -33,10 +33,17 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
   const [inviteTime, setInviteTime] = useState<Time | null>(null)
   const [inviteSent, setInviteSent] = useState(false)
   const [inviteError, setInviteError] = useState('')
+  const [sentEmails, setSentEmails] = useState<string[]>(room.invited_emails ?? [])
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
+
+  useEffect(() => {
+    setSentEmails(room.invited_emails ?? [])
+  }, [room.id])
 
   const inviteMutation = useInviteToRoom({
     onSuccess: () => {
       setInviteSent(true)
+      setSentEmails((prev) => Array.from(new Set([...prev, ...inviteEmails])))
       setInviteEmails([])
       setInviteInput('')
       setTimeout(() => setInviteSent(false), 3000)
@@ -78,6 +85,7 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
       scheduledTime: inviteTime
         ? `${String(inviteTime.hour).padStart(2, '0')}:${String(inviteTime.minute).padStart(2, '0')}`
         : null,
+      timezone,
     })
   }, [room.id, roomTitle, inviteEmails, inviteDate, inviteTime, inviteMutation])
 
@@ -134,8 +142,21 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
         </div>
 
         <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+          {sentEmails.length > 0 && (
+            <div style={{ marginBottom: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 500 }}>
+                Déjà invités
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                {sentEmails.map((email) => (
+                  <span key={email} className="dash-invite-chip" style={{ opacity: 0.7 }}>{email}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
-            ou invitez par email
+            {sentEmails.length > 0 ? 'Inviter d\'autres personnes' : 'ou invitez par email'}
           </p>
 
           <div className="dash-invite-emails">
@@ -213,6 +234,24 @@ export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: '0.75rem' }}>
+            <label className="dash-invite-label">Fuseau horaire</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="dash-picker-group"
+              style={{ width: '100%', fontSize: '0.85rem', cursor: 'pointer', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '0.5rem 0.75rem', background: 'var(--bg)', fontFamily: 'var(--font-body)' }}
+            >
+              <option value="UTC">UTC (GMT+0)</option>
+              <option value="Africa/Abidjan">Abidjan — GMT+0</option>
+              <option value="Africa/Lagos">Lagos / Dakar — WAT (GMT+1)</option>
+              <option value="Africa/Cairo">Le Caire / Afrique du Nord — GMT+2</option>
+              <option value="Africa/Nairobi">Nairobi — EAT (GMT+3)</option>
+              <option value="Europe/Paris">Paris — CET (GMT+1/+2)</option>
+              <option value="America/New_York">New York — EST (GMT-5/-4)</option>
+            </select>
+          </div>
 
           <button
             className={`dash-invite-send${inviteSent ? ' success' : ''}`}

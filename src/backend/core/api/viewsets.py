@@ -605,6 +605,7 @@ class RoomViewSet(
 
         scheduled_date = serializer.validated_data.get("scheduled_date")
         scheduled_time = serializer.validated_data.get("scheduled_time")
+        timezone = serializer.validated_data.get("timezone", "")
 
         # Persist scheduled date on the room if not already set
         if scheduled_date and not room.scheduled_date:
@@ -612,12 +613,17 @@ class RoomViewSet(
             room.scheduled_time = scheduled_time
             room.save(update_fields=["scheduled_date", "scheduled_time"])
 
+        # Accumulate invited emails
+        room.invited_emails = list(set((room.invited_emails or []) + emails))
+        room.save(update_fields=["invited_emails"])
+
         InvitationService().invite_to_room(
             room=room,
             sender=request.user,
             emails=emails,
             scheduled_date=serializer.validated_data.get("scheduled_date"),
             scheduled_time=serializer.validated_data.get("scheduled_time"),
+            timezone_label=timezone,
         )
 
         return drf_response.Response(

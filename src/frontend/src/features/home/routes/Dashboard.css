@@ -197,7 +197,7 @@
     cursor: pointer;
     transition: all var(--transition);
     white-space: nowrap;
-    margin: -1px;
+    align-self: stretch;
 }
 
 .dash-join-btn:hover {
