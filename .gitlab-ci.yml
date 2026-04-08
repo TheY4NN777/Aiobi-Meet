@@ -269,6 +269,10 @@ deploy-staging:
     # --- 7. Configuration Keycloak post-deploy ---------------------------------
     - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
     - |
+      # Keycloak parses smtpServer booleans in lowercase only ("true"/"false").
+      # Django-style "True"/"False" would be treated as false and break SSL/STARTTLS.
+      EMAIL_SSL_LC=$(echo "${DJANGO_EMAIL_USE_SSL:-false}" | tr '[:upper:]' '[:lower:]')
+      EMAIL_TLS_LC=$(echo "${DJANGO_EMAIL_USE_TLS:-false}" | tr '[:upper:]' '[:lower:]')
       echo "Waiting for Keycloak to be ready..."
       for i in $(seq 1 30); do
         if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
@@ -319,8 +323,8 @@ deploy-staging:
               \"smtpServer\":{
                 \"host\":\"${DJANGO_EMAIL_HOST}\",
                 \"port\":\"${DJANGO_EMAIL_PORT}\",
-                \"ssl\":\"${DJANGO_EMAIL_USE_SSL}\",
-                \"starttls\":\"${DJANGO_EMAIL_USE_TLS}\",
+                \"ssl\":\"${EMAIL_SSL_LC}\",
+                \"starttls\":\"${EMAIL_TLS_LC}\",
                 \"auth\":\"true\",
                 \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
                 \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
@@ -523,6 +527,10 @@ deploy-production:
     # Cela garantit que meme apres un destroy+recreate, Keycloak est configure.
     - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
     - |
+      # Keycloak parses smtpServer booleans in lowercase only ("true"/"false").
+      # Django-style "True"/"False" would be treated as false and break SSL/STARTTLS.
+      EMAIL_SSL_LC=$(echo "${DJANGO_EMAIL_USE_SSL:-false}" | tr '[:upper:]' '[:lower:]')
+      EMAIL_TLS_LC=$(echo "${DJANGO_EMAIL_USE_TLS:-false}" | tr '[:upper:]' '[:lower:]')
       echo "Waiting for Keycloak to be ready..."
       for i in $(seq 1 30); do
         if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
@@ -581,8 +589,8 @@ deploy-production:
               \"smtpServer\":{
                 \"host\":\"${DJANGO_EMAIL_HOST}\",
                 \"port\":\"${DJANGO_EMAIL_PORT}\",
-                \"ssl\":\"${DJANGO_EMAIL_USE_SSL}\",
-                \"starttls\":\"${DJANGO_EMAIL_USE_TLS}\",
+                \"ssl\":\"${EMAIL_SSL_LC}\",
+                \"starttls\":\"${EMAIL_TLS_LC}\",
                 \"auth\":\"true\",
                 \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
                 \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
