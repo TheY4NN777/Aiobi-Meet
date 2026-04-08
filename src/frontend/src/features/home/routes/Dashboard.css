@@ -320,6 +320,8 @@
     }
 }
 
+/* Modal styles moved to PlanLaterModal.css */
+
 /* ===== ROOM TITLE INPUT ===== */
 .dash-room-title-input {
     width: 100%;

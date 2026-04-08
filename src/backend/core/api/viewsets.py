@@ -1382,6 +1382,7 @@ class FileViewSet(
 class RoomSessionViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """API endpoints to access past room sessions."""
@@ -1391,14 +1392,38 @@ class RoomSessionViewSet(
     serializer_class = serializers.RoomSessionSerializer
 
     def get_queryset(self):
-        """Return sessions for rooms the user has access to."""
+        """Return non-archived sessions for rooms the user has access to."""
         user = self.request.user
         return (
             models.RoomSession.objects.filter(
-                room__accesses__user=user
+                room__accesses__user=user,
+                is_archived=False,
             )
             .select_related("room")
             .prefetch_related("participants", "participants__user")
             .distinct()
             .order_by("-started_at")
         )
+
+    @decorators.action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        """Archive a single session (hide from history)."""
+        session = self.get_object()
+        session.is_archived = True
+        session.save(update_fields=["is_archived"])
+        return drf_response.Response(status=204)
+
+    @decorators.action(detail=False, methods=["post"], url_path="clear")
+    def clear(self, request):
+        """Archive all sessions from the user's history."""
+        self.get_queryset().update(is_archived=True)
+        return drf_response.Response(status=204)
+
+    @decorators.action(detail=False, methods=["post"], url_path="bulk-archive")
+    def bulk_archive(self, request):
+        """Archive a list of sessions by ID."""
+        ids = request.data.get("ids", [])
+        if not isinstance(ids, list):
+            return drf_response.Response({"detail": "ids must be a list."}, status=400)
+        self.get_queryset().filter(id__in=ids).update(is_archived=True)
+        return drf_response.Response(status=204)

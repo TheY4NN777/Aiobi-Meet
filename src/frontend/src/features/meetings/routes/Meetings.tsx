@@ -1,7 +1,10 @@
 import { useState, useCallback, useLayoutEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '@/api/fetchApi'
-import { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import type { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import { generateRoomId, useCreateRoom } from '@/features/rooms'
+import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
+import { PlanLaterModal } from '@/features/rooms/components/PlanLaterModal'
 import { useUser, UserAware } from '@/features/auth'
 import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 import { Screen } from '@/layout/Screen'
@@ -76,14 +79,59 @@ const RecordingActions = ({ recordings, roomName }: { recordings: SessionRecordi
 }
 
 const HistoryTab = () => {
+  const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({
     queryKey: ['room-sessions'],
     queryFn: fetchRoomSessions,
   })
   const isEnterprise = useIsEnterprise()
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const sessions = data?.results ?? []
+  const allSelected = sessions.length > 0 && selectedIds.size === sessions.length
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(sessions.map((s) => s.id)))
+  }
+
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetchApi(`/room-sessions/${id}/archive/`, { method: 'POST' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['room-sessions'] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetchApi(`/room-sessions/${id}/`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['room-sessions'] }),
+  })
+
+  const bulkArchiveMutation = useMutation({
+    mutationFn: (ids: string[]) =>
+      fetchApi('/room-sessions/bulk-archive/', { method: 'POST', body: JSON.stringify({ ids }) }),
+    onSuccess: () => {
+      setSelectedIds(new Set())
+      queryClient.invalidateQueries({ queryKey: ['room-sessions'] })
+    },
+  })
+
+  const clearMutation = useMutation({
+    mutationFn: () => fetchApi('/room-sessions/clear/', { method: 'POST' }),
+    onSuccess: () => {
+      setSelectedIds(new Set())
+      queryClient.invalidateQueries({ queryKey: ['room-sessions'] })
+    },
+  })
 
   const toggleParticipants = (id: string) => {
     setExpandedSessions((prev) => {
@@ -113,12 +161,54 @@ const HistoryTab = () => {
 
   return (
     <>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={toggleSelectAll}
+            style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+          />
+          Tout sélectionner
+        </label>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+          {selectedIds.size > 0 && (
+            <button
+              className="meeting-btn"
+              onClick={() => bulkArchiveMutation.mutate(Array.from(selectedIds))}
+              disabled={bulkArchiveMutation.isPending}
+            >
+              {bulkArchiveMutation.isPending ? '...' : `Archiver (${selectedIds.size})`}
+            </button>
+          )}
+          <button
+            className="meeting-btn danger"
+            onClick={() => clearMutation.mutate()}
+            disabled={clearMutation.isPending}
+          >
+            {clearMutation.isPending ? '...' : "Vider l'historique"}
+          </button>
+        </div>
+      </div>
+
       {sessions.map((session) => {
         const isExpanded = expandedSessions.has(session.id)
         const isOngoing = !session.ended_at
+        const isSelected = selectedIds.has(session.id)
 
         return (
-          <div key={session.id} className="meeting-card">
+          <div
+            key={session.id}
+            className="meeting-card"
+            style={isSelected ? { borderColor: 'var(--accent-border)', background: 'var(--accent-light)' } : undefined}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleSelect(session.id)}
+              style={{ accentColor: 'var(--accent)', flexShrink: 0, cursor: 'pointer' }}
+            />
             <div className="meeting-info">
               <div className="meeting-title">{session.room.name}</div>
               <div className="meeting-date">
@@ -134,13 +224,15 @@ const HistoryTab = () => {
                 ) : session.duration !== null ? (
                   <span className="meeting-duration">{formatDuration(session.duration)}</span>
                 ) : null}
-                <button
-                  className="meeting-participants-toggle"
-                  onClick={() => toggleParticipants(session.id)}
-                >
-                  {session.participant_count} participant{session.participant_count > 1 ? 's' : ''}
-                  {' '}{isExpanded ? '▲' : '▼'}
-                </button>
+                {session.participant_count > 0 && (
+                  <button
+                    className="meeting-participants-toggle"
+                    onClick={() => toggleParticipants(session.id)}
+                  >
+                    {session.participant_count} participant{session.participant_count > 1 ? 's' : ''}
+                    {' '}{isExpanded ? '▲' : '▼'}
+                  </button>
+                )}
               </div>
               {isExpanded && session.participants.length > 0 && (
                 <ul className="meeting-participants-list">
@@ -150,9 +242,25 @@ const HistoryTab = () => {
                 </ul>
               )}
             </div>
-            {isEnterprise && session.recordings.length > 0 && (
-              <RecordingActions recordings={session.recordings} roomName={session.room.name} />
-            )}
+            <div className="meeting-actions" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem' }}>
+              {isEnterprise && session.recordings.length > 0 && (
+                <RecordingActions recordings={session.recordings} roomName={session.room.name} />
+              )}
+              <button
+                className="meeting-btn"
+                onClick={() => archiveMutation.mutate(session.id)}
+                disabled={archiveMutation.isPending}
+              >
+                Archiver
+              </button>
+              <button
+                className="meeting-btn danger"
+                onClick={() => deleteMutation.mutate(session.id)}
+                disabled={deleteMutation.isPending}
+              >
+                Supprimer
+              </button>
+            </div>
           </div>
         )
       })}
@@ -163,7 +271,17 @@ const HistoryTab = () => {
 const MeetingsContent = () => {
   const { user } = useUser()
   const queryClient = useQueryClient()
+  const { mutateAsync: createRoom } = useCreateRoom()
+  const { userChoices: { username } } = usePersistentUserChoices()
+  const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
   useFontshare()
+
+  const handlePlanLater = useCallback(async () => {
+    const slug = generateRoomId()
+    const data = await createRoom({ slug, username })
+    setLaterRoom(data)
+    queryClient.invalidateQueries({ queryKey: ['rooms'] })
+  }, [createRoom, username, queryClient])
 
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming')
 
@@ -232,12 +350,15 @@ const MeetingsContent = () => {
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
 
-  const sorted = [...rooms].sort((a, b) => {
-    if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1
-    if (a.scheduled_date) return -1
-    if (b.scheduled_date) return 1
-    return 0
-  })
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const sorted = [...rooms]
+    .filter((room) => !room.scheduled_date || room.scheduled_date >= todayStr)
+    .sort((a, b) => {
+      if (a.scheduled_date && b.scheduled_date) return a.scheduled_date > b.scheduled_date ? 1 : -1
+      if (a.scheduled_date) return -1
+      if (b.scheduled_date) return 1
+      return 0
+    })
 
   if (isLoading) {
     return <div className="meetings-page"><div className="meetings-empty">Chargement...</div></div>
@@ -279,7 +400,7 @@ const MeetingsContent = () => {
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <p>Aucune réunion pour le moment</p>
-          <button className="meetings-empty-cta" onClick={() => navigateTo('home')}>
+          <button className="meetings-empty-cta" onClick={handlePlanLater}>
             Planifier une réunion
           </button>
         </div>
@@ -408,6 +529,10 @@ const MeetingsContent = () => {
             </div>
           </div>
         ))
+      )}
+
+      {laterRoom && (
+        <PlanLaterModal room={laterRoom} onClose={() => setLaterRoom(null)} />
       )}
 
       {/* Delete confirm dialog */}

@@ -1085,6 +1085,10 @@ class RoomSession(BaseModel):
         blank=True,
         verbose_name=_("Ended at"),
     )
+    is_archived = models.BooleanField(
+        default=False,
+        verbose_name=_("Archived"),
+    )
 
     class Meta:
         db_table = "meet_room_session"
