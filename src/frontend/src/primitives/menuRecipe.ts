@@ -39,10 +39,12 @@ export const menuRecipe = sva({
       light: {
         item: {
           '&[data-focused]': {
-            backgroundColor: 'primary.800',
+            backgroundColor: 'greyscale.100',
+            color: 'greyscale.800',
           },
           '&[data-hovered]': {
-            backgroundColor: 'primary.800',
+            backgroundColor: 'greyscale.100',
+            color: 'greyscale.800',
           },
         },
       },

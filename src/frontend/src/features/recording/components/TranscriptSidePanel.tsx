@@ -162,25 +162,48 @@ export const TranscriptSidePanel = () => {
       flexDirection="column"
       alignItems="center"
     >
-      <img
-        src="/assets/intro-slider/3.png"
-        alt=""
+      <div
         className={css({
-          minHeight: '250px',
-          height: '250px',
-          marginBottom: '1rem',
-          marginTop: '-16px',
-          '@media (max-height: 900px)': {
-            height: 'auto',
-            minHeight: 'auto',
-            maxHeight: '25%',
-            marginBottom: '0.75rem',
-          },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: 'linear-gradient(145deg, #4A3C5C 0%, #2d1f3d 100%)',
+          marginBottom: '1.25rem',
+          marginTop: '0.5rem',
+          flexShrink: 0,
           '@media (max-height: 770px)': {
             display: 'none',
           },
         })}
-      />
+      >
+        <svg width="90" height="90" viewBox="0 0 90 90" aria-hidden="true">
+          {[
+            '  .M.  ',
+            ' [MMM] ',
+            ' [MoM] ',
+            ' [MMM] ',
+            '  .M.  ',
+            '   |   ',
+            ' (   ) ',
+            " '---' ",
+          ].map((row, i) => (
+            <text
+              key={i}
+              x="27 33 39 45 51 57 63"
+              y={12 + i * 11}
+              fontFamily="'Space Mono','Courier New',monospace"
+              fontSize="8"
+              fontWeight="700"
+              fill="#E4D3E6"
+            >
+              {row}
+            </text>
+          ))}
+        </svg>
+      </div>
       <VStack gap={0} marginBottom={15}>
         <H lvl={1} margin={'sm'}>
           {t('heading')}

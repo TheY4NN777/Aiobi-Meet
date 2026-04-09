@@ -46,14 +46,14 @@ export const buttonRecipe = cva({
     },
     variant: {
       primary: {
-        backgroundColor: 'primary.800',
+        backgroundColor: 'primary.action',
         color: 'white',
         fontWeight: 'medium !important',
         '&[data-hovered]': {
-          backgroundColor: 'primary.action',
+          backgroundColor: 'primary.600',
         },
         '&[data-pressed]': {
-          backgroundColor: 'primary.action',
+          backgroundColor: 'primary.600',
         },
         '&[data-disabled]': {
           backgroundColor: 'greyscale.100',
@@ -62,9 +62,9 @@ export const buttonRecipe = cva({
       },
       secondary: {
         backgroundColor: 'white',
-        color: 'primary.800',
+        color: 'primary.action',
         fontWeight: 'medium !important',
-        borderColor: 'primary.800',
+        borderColor: 'primary.action',
         '&[data-hovered]': {
           backgroundColor: 'greyscale.100',
         },
@@ -75,7 +75,7 @@ export const buttonRecipe = cva({
       secondaryText: {
         backgroundColor: 'transparent',
         fontWeight: 'medium !important',
-        color: 'primary.800',
+        color: 'primary.action',
         '&[data-hovered]': {
           backgroundColor: 'greyscale.100',
         },

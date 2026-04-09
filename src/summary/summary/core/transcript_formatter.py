@@ -47,12 +47,16 @@ class TranscriptFormatter:
         """Format transcription into the final document and its title."""
         segments = self._get_segments(transcription)
 
-        if not segments:
-            content = self._locale.empty_transcription
-        else:
+        if segments:
             content = self._format_speaker(segments)
             content = self._remove_hallucinations(content)
             content = self._add_header(content, download_link)
+        elif hasattr(transcription, "text") and transcription.text:
+            content = transcription.text
+            content = self._remove_hallucinations(content)
+            content = self._add_header(content, download_link)
+        else:
+            content = self._locale.empty_transcription
 
         title = self._generate_title(room, recording_date, recording_time)
 
@@ -66,20 +70,47 @@ class TranscriptFormatter:
             content = content.replace(pattern, replacement)
         return content
 
+    @staticmethod
+    def _format_timestamp(seconds) -> str:
+        """Format seconds into [HH:MM:SS] or [MM:SS]."""
+        if seconds is None:
+            return ""
+        total = int(seconds)
+        h, remainder = divmod(total, 3600)
+        m, s = divmod(remainder, 60)
+        if h > 0:
+            return f"[{h:02d}:{m:02d}:{s:02d}]"
+        return f"[{m:02d}:{s:02d}]"
+
     def _format_speaker(self, segments) -> str:
-        """Format segments with speaker labels, combining consecutive speakers."""
+        """Format segments with timestamps and optional speaker labels."""
         formatted_output = ""
         previous_speaker = None
 
         for segment in segments:
-            speaker = segment.get("speaker", "UNKNOWN_SPEAKER")
-            text = segment.get("text", "")
-            if text:
+            # Support both dict and object segments
+            if isinstance(segment, dict):
+                speaker = segment.get("speaker")
+                text = segment.get("text", "")
+                start = segment.get("start")
+            else:
+                speaker = getattr(segment, "speaker", None)
+                text = getattr(segment, "text", "")
+                start = getattr(segment, "start", None)
+
+            if not text or not text.strip():
+                continue
+
+            timestamp = self._format_timestamp(start)
+
+            if speaker:
                 if speaker != previous_speaker:
-                    formatted_output += f"\n\n **{speaker}**: {text}"
+                    formatted_output += f"\n\n{timestamp} **{speaker}**:{text}"
                 else:
                     formatted_output += f" {text}"
                 previous_speaker = speaker
+            else:
+                formatted_output += f"\n\n{timestamp}{text}"
 
         return formatted_output
 

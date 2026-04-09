@@ -34,7 +34,7 @@ import { ApiLobbyStatus, ApiRequestEntry } from '../api/requestEntry'
 import { Spinner } from '@/primitives/Spinner'
 import { ApiAccessLevel } from '../api/ApiRoom'
 import { useLoginHint } from '@/hooks/useLoginHint'
-import { openPermissionsDialog } from '@/stores/permissions'
+import { openPermissionsDialog, permissionsStore } from '@/stores/permissions'
 import { useResolveInitiallyDefaultDeviceId } from '../livekit/hooks/useResolveInitiallyDefaultDeviceId'
 import { isSafari } from '@/utils/livekit'
 import type { LocalUserChoices } from '@/stores/userChoices'
@@ -351,8 +351,9 @@ export const Join = ({
   const [showPermBanner, setShowPermBanner] = useState(false)
   useEffect(() => {
     const timer = setTimeout(() => {
-      // If after 5s we still have no video and no audio tracks, permissions are likely blocked
-      if (!videoTrack && !audioTrack) {
+      // If after 5s we still have no tracks AND permissions are denied, show the dialog
+      if (!videoTrack && !audioTrack &&
+          (permissionsStore.isCameraDenied || permissionsStore.isMicrophoneDenied)) {
         openPermissionsDialog('videoinput')
         setShowPermBanner(true)
       }

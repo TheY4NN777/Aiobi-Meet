@@ -5,7 +5,7 @@ import { css } from '@/styled-system/css'
 import { Participant } from 'livekit-client'
 import { useTranslation } from 'react-i18next'
 import { Reaction } from '@/features/rooms/livekit/components/controls/ReactionsToggle'
-import { getEmojiLabel } from '@/features/rooms/livekit/utils/reactionUtils'
+import { getEmojiLabel, emojiIcons } from '@/features/rooms/livekit/utils/reactionUtils'
 import { accessibilityStore } from '@/stores/accessibility'
 import { useSnapshot } from 'valtio'
 import { useScreenReaderAnnounce } from '@/hooks/useScreenReaderAnnounce'
@@ -77,17 +77,27 @@ export function FloatingReaction({
         opacity: opacity,
       }}
     >
-      <img
-        src={`/assets/reactions/${emoji}.png`}
-        alt={''}
-        className={css({
-          height: '50px',
-        })}
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: 'center bottom',
-        }}
-      />
+      {(() => {
+        const Icon = emojiIcons[emoji]
+        return Icon ? (
+          <div
+            style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              background: 'linear-gradient(145deg, #4A3C5C, #2d1f3d)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: `scale(${scale})`,
+              transformOrigin: 'center bottom',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            }}
+          >
+            <Icon size={26} color="#E4D3E6" />
+          </div>
+        ) : null
+      })()}
       {name && (
         <Text
           variant="sm"

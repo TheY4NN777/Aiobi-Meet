@@ -93,7 +93,10 @@ def transcribe_audio(task_id, filename, language):
             transcription_start_time = time.time()
 
             transcription = whisperx_client.audio.transcriptions.create(
-                model=settings.whisperx_asr_model, file=audio_file, language=language
+                model=settings.whisperx_asr_model,
+                file=audio_file,
+                language=language,
+                response_format="verbose_json",
             )
 
             transcription_time = round(time.time() - transcription_start_time, 2)
@@ -156,6 +159,45 @@ def format_actions(llm_output: dict) -> str:
     if lines:
         return "### Prochaines étapes\n\n" + "\n".join(lines)
     return ""
+
+
+def _extract_recording_id(filename: str) -> str:
+    """Extract the recording UUID from a MinIO filename.
+
+    Example: "recordings/abc-123.ogg" -> "abc-123"
+    """
+    from pathlib import Path
+
+    return Path(filename).stem
+
+
+def _notify_backend(recording_id, transcription_key, email, sub, title):
+    """Notify the backend that a transcription is ready in MinIO.
+
+    Posts to {webhook_url}/{recording_id}/transcription-ready/ so the backend
+    can update the recording and send the user an email.
+
+    The webhook_url should be the recordings API base URL, e.g.:
+    http://backend:8000/api/v1.0/recordings
+    """
+    from summary.core.webhook_service import _post_with_retries
+
+    data = {
+        "transcription_key": transcription_key,
+        "email": email,
+        "sub": sub,
+        "title": title,
+    }
+
+    base_url = settings.webhook_url.rstrip("/")
+    url = f"{base_url}/{recording_id}/transcription-ready/"
+
+    logger.info(
+        "Notifying backend | recording_id: %s | url: %s",
+        recording_id,
+        url,
+    )
+    _post_with_retries(url, data)
 
 
 @celery.task(
@@ -222,7 +264,22 @@ def process_audio_transcribe_summarize_v2(
         download_link,
     )
 
-    submit_content(content, title, email, sub)
+    recording_id = _extract_recording_id(filename)
+
+    if settings.webhook_mode == "minio":
+        # Aiobi mode: generate docx, upload to MinIO, then notify backend
+        docx_bytes = file_service.markdown_to_docx(content, title=title)
+        transcription_key = f"{settings.transcription_output_prefix}{recording_id}.docx"
+        file_service.upload_to_minio(
+            transcription_key,
+            docx_bytes,
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        _notify_backend(recording_id, transcription_key, email, sub, title)
+    else:
+        # Legacy mode: post content to external Docs service (upstream compat)
+        submit_content(content, title, email, sub)
+
     metadata_manager.capture(task_id, settings.posthog_event_success)
 
     # LLM Summarization
@@ -232,7 +289,7 @@ def process_audio_transcribe_summarize_v2(
     ):
         logger.info("Queuing summary generation task.")
         summarize_transcription.apply_async(
-            args=[owner_id, content, email, sub, title],
+            args=[owner_id, content, email, sub, title, recording_id],
             queue=settings.summarize_queue,
         )
     else:
@@ -265,7 +322,13 @@ def task_failure_handler(task_id, exception=None, **kwargs):
     queue=settings.summarize_queue,
 )
 def summarize_transcription(
-    self, owner_id: str, transcript: str, email: str, sub: str, title: str
+    self,
+    owner_id: str,
+    transcript: str,
+    email: str,
+    sub: str,
+    title: str,
+    recording_id: Optional[str] = None,
 ):
     """Generate a summary from the provided transcription text.
 
@@ -340,7 +403,12 @@ def summarize_transcription(
     summary = tldr + "\n\n" + cleaned_summary + "\n\n" + next_steps
     summary_title = settings.summary_title_template.format(title=title)
 
-    submit_content(summary, summary_title, email, sub)
+    if settings.webhook_mode == "minio" and recording_id:
+        summary_key = f"{settings.transcription_output_prefix}{recording_id}.summary.md"
+        file_service.upload_to_minio(summary_key, summary)
+        _notify_backend(recording_id, summary_key, email, sub, summary_title)
+    else:
+        submit_content(summary, summary_title, email, sub)
 
     llm_observability.flush()
     logger.debug("LLM observability flushed")

@@ -1,0 +1,460 @@
+/* ===== PLAN LATER MODAL — shared component ===== */
+
+.dash-room-title-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-body);
+    color: var(--text);
+    outline: none;
+    margin-bottom: 1rem;
+    transition: border-color var(--transition);
+    background: transparent;
+}
+
+.dash-room-title-input:focus {
+    border-color: var(--accent);
+}
+
+.dash-room-title-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ===== LATER DIALOG ===== */
+.dash-later-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.dash-later-card {
+    --accent: #a251fc;
+    --accent-hover: #8b3ae0;
+    --accent-light: rgba(162, 81, 252, 0.07);
+    --accent-border: rgba(162, 81, 252, 0.18);
+    --bg: #ffffff;
+    --text: #1a1a2e;
+    --text-muted: #8b8ba3;
+    --border: #ebebf0;
+    --radius: 12px;
+    --radius-lg: 20px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-display: 'Clash Display', sans-serif;
+    --font-body: 'Satoshi', sans-serif;
+
+    position: relative;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    font-family: var(--font-body);
+}
+
+.dash-later-x {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+}
+
+.dash-later-x:hover {
+    color: var(--text);
+    background: #f0f0f2;
+}
+
+.dash-later-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.dash-later-url {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f7f7f8;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    word-break: break-all;
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.dash-later-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.25rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all var(--transition);
+}
+
+.dash-later-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.dash-later-close {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.25rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all var(--transition);
+}
+
+.dash-later-close:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+}
+
+/* ===== INVITE SECTION ===== */
+.dash-invite-emails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.5rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: text;
+    background: var(--bg);
+    transition: all var(--transition);
+}
+
+.dash-invite-emails:hover {
+    border-color: var(--accent-border);
+}
+
+.dash-invite-emails:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.dash-invite-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: #f0f0f2;
+    color: var(--text);
+    border-radius: 6px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.dash-invite-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.875rem;
+    line-height: 1;
+    color: var(--text-muted);
+}
+
+.dash-invite-chip button:hover {
+    color: var(--text);
+}
+
+.dash-invite-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 8rem;
+    font-size: 0.85rem;
+    padding: 0.125rem 0;
+    background: transparent;
+    font-family: var(--font-body);
+    color: var(--text);
+}
+
+.dash-invite-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* ===== DATE/TIME PICKERS ===== */
+.dash-datepicker {
+    flex: 1;
+}
+
+.dash-timefield {
+    flex: 0.6;
+}
+
+.dash-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #ebebf0;
+    border-radius: 10px;
+    background: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: text;
+}
+
+.dash-picker-group:hover {
+    border-color: rgba(162, 81, 252, 0.18);
+}
+
+.dash-picker-group:focus-within {
+    border-color: #a251fc;
+    box-shadow: 0 0 0 3px rgba(162, 81, 252, 0.07);
+}
+
+.dash-picker-input {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.dash-picker-segment {
+    padding: 1px 2px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    color: #1a1a2e !important;
+    outline: none;
+    caret-color: #a251fc;
+}
+
+.dash-picker-segment:focus,
+.dash-picker-segment[data-focused] {
+    background: #a251fc !important;
+    color: #ffffff !important;
+    border-radius: 4px;
+}
+
+.dash-picker-segment[data-placeholder]:not(:focus):not([data-focused]) {
+    color: #8b8ba3 !important;
+}
+
+.dash-picker-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all var(--transition);
+    line-height: 1;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+}
+
+.dash-picker-btn:hover {
+    background: var(--accent-light);
+    color: var(--accent-hover);
+}
+
+/* ===== TIMEZONE SELECT ===== */
+.dash-select {
+    width: 100%;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    border: 1.5px solid #ebebf0 !important;
+    border-radius: 10px;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234A3C5C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #1a1a2e !important;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none !important;
+    box-shadow: none;
+}
+
+.dash-select:hover {
+    border-color: rgba(162, 81, 252, 0.18) !important;
+}
+
+.dash-select:focus {
+    border-color: #a251fc !important;
+    box-shadow: 0 0 0 3px rgba(162, 81, 252, 0.07) !important;
+    outline: none !important;
+}
+
+/* ===== CALENDAR MODAL ===== */
+.dash-cal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.dash-cal-modal {
+    background: #fff;
+    border-radius: var(--radius-lg, 20px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    animation: plan-later-fade 200ms;
+}
+
+@keyframes plan-later-fade {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.dash-calendar {
+    font-family: var(--font-body);
+}
+
+.dash-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.dash-calendar-heading {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.dash-calendar-nav {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text);
+    transition: all var(--transition);
+}
+
+.dash-calendar-nav:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+}
+
+.dash-calendar-grid {
+    border-collapse: collapse;
+}
+
+.dash-calendar-grid th {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 0.25rem 0;
+}
+
+.dash-calendar-cell {
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+    transition: all var(--transition);
+    color: var(--text);
+}
+
+.dash-calendar-cell:hover {
+    background: var(--accent-light);
+}
+
+.dash-calendar-cell[data-focused] {
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+.dash-calendar-cell[data-selected] {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.dash-calendar-cell[data-disabled],
+.dash-calendar-cell[data-unavailable] {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.dash-calendar-cell[data-outside-month] {
+    opacity: 0.3;
+}
+
+.dash-invite-send {
+    width: 100%;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-body);
+    margin-top: 0.75rem;
+    transition: all var(--transition);
+}
+
+.dash-invite-send:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.dash-invite-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.dash-invite-send.success {
+    background: #34a853;
+}

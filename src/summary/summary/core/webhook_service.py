@@ -24,6 +24,7 @@ def _create_retry_session():
         allowed_methods={"POST"},
     )
     session.mount("https://", HTTPAdapter(max_retries=retries))
+    session.mount("http://", HTTPAdapter(max_retries=retries))
     return session
 
 

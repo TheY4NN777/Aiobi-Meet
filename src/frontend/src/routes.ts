@@ -4,23 +4,27 @@ import {
   flexibleRoomIdPattern,
 } from '@/features/rooms'
 import { HomeRoute, DashboardRoute } from '@/features/home'
+import { MeetingsRoute } from '@/features/meetings'
 import { LegalTermsRoute } from '@/features/legalsTerms/LegalTermsRoute'
 import { TermsOfServiceRoute } from '@/features/legalsTerms/TermsOfService'
 import { CreatePopup } from '@/features/sdk/routes/CreatePopup'
 import { CreateMeetingButton } from '@/features/sdk/routes/CreateMeetingButton'
 import { RecordingDownloadRoute } from '@/features/recording'
+import { ReleaseNotesRoute } from '@/features/releaseNotes/ReleaseNotes'
 
 const roomIdRegex = new RegExp(`^[/](?<roomId>${flexibleRoomIdPattern})$`)
 
 export const routes: Record<
   | 'landing'
   | 'home'
+  | 'meetings'
   | 'room'
   | 'feedback'
   | 'legalTerms'
   | 'termsOfService'
   | 'sdkCreatePopup'
   | 'sdkCreateButton'
+  | 'releaseNotes'
   | 'recordingDownload',
   {
     name: RouteName
@@ -39,6 +43,11 @@ export const routes: Record<
     name: 'home',
     path: '/home',
     Component: DashboardRoute,
+  },
+  meetings: {
+    name: 'meetings',
+    path: '/meetings',
+    Component: MeetingsRoute,
   },
   room: {
     name: 'room',
@@ -70,6 +79,11 @@ export const routes: Record<
     name: 'sdkCreateButton',
     path: '/sdk/create-button',
     Component: CreateMeetingButton,
+  },
+  releaseNotes: {
+    name: 'releaseNotes',
+    path: '/release-notes',
+    Component: ReleaseNotesRoute,
   },
   recordingDownload: {
     name: 'recordingDownload',

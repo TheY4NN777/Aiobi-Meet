@@ -23,6 +23,7 @@
     "warning": {
       "title": "Partage via lien désactivé",
       "body": "Le partage de l'enregistrement via lien n'est pas encore disponible. Seuls les organisateurs peuvent le télécharger."
-    }
+    },
+    "transcription_button": "Télécharger la transcription"
   }
 }

@@ -1,6 +1,6 @@
 import { Trans, useTranslation } from 'react-i18next'
 import { useLanguageLabels } from '@/i18n/useLanguageLabels'
-import { A, Badge, Dialog, type DialogProps, Field, H, P } from '@/primitives'
+import { A, Badge, Dialog, type DialogProps, Field, H, Link, P } from '@/primitives'
 import { useUser } from '@/features/auth'
 import { LoginButton } from '@/components/LoginButton'
 
@@ -46,6 +46,17 @@ export const SettingsDialog = (props: SettingsDialogProps) => {
           i18n.changeLanguage(lang as string)
         }}
       />
+      <H lvl={2}>{t('tabs.about', { defaultValue: 'About' })}</H>
+      <P>
+        <Link to="/politique-confidentialite" underline={false}>
+          {t('footer.links.privacyPolicy', { ns: 'global' })}
+        </Link>
+      </P>
+      <P>
+        <Link to="/conditions-utilisation" underline={false}>
+          {t('footer.links.termsOfService', { ns: 'global' })}
+        </Link>
+      </P>
     </Dialog>
   )
 }

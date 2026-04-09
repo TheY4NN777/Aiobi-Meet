@@ -2,7 +2,7 @@ import { useWatchPermissions } from '@/features/rooms/hooks/useWatchPermissions'
 import { css } from '@/styled-system/css'
 import { Dialog, H } from '@/primitives'
 import { RiEqualizer2Line } from '@remixicon/react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSnapshot } from 'valtio'
 import { closePermissionsDialog, permissionsStore } from '@/stores/permissions'
 import { useTranslation } from 'react-i18next'
@@ -32,6 +32,8 @@ export const Permissions = () => {
       return 'default'
     }
   }, [permissions])
+
+  const [isMobile] = useState(() => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
 
   const [descriptionBeforeIcon, descriptionAfterIcon] =
     injectIconIntoTranslation(t('body.openMenu.others'))
@@ -107,7 +109,9 @@ export const Permissions = () => {
           </H>
           <ol className={css({ listStyle: 'decimal', paddingLeft: '24px' })}>
             <li>
-              {isSafari() ? (
+              {isMobile ? (
+                t('body.openMenu.mobile')
+              ) : isSafari() ? (
                 t('body.openMenu.safari', {
                   appDomain: window.origin.replace('https://', ''),
                 })

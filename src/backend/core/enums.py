@@ -17,6 +17,10 @@ RECORDING_STORAGE_URL_PATTERN = re.compile(
     rf"{settings.MEDIA_URL:s}{settings.RECORDING_OUTPUT_FOLDER}/(?P<recording_id>{UUID_REGEX:s})\.(?P<extension>{FILE_EXT_REGEX:s})"
 )
 
+TRANSCRIPTION_STORAGE_URL_PATTERN = re.compile(
+    rf"{settings.MEDIA_URL:s}transcriptions/(?P<recording_id>{UUID_REGEX:s})\.(?P<extension>{FILE_EXT_REGEX:s})"
+)
+
 MEDIA_STORAGE_URL_PATTERN = re.compile(
     f"{settings.MEDIA_URL:s}"
     rf"(?P<key>{settings.FILE_UPLOAD_PATH:s}/(?P<pk>{UUID_REGEX:s})\.{FILE_EXT_REGEX:s})$"

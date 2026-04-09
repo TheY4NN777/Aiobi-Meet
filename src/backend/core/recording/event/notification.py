@@ -194,5 +194,153 @@ class NotificationService:
 
         return True
 
+    def notify_transcription_ready(self, recording) -> bool:
+        """Send an email notification when a transcription is ready.
+
+        Similar to _notify_user_by_email but with transcription-specific
+        subject and templates.
+        """
+
+        owner_accesses = (
+            models.RecordingAccess.objects.select_related("user")
+            .filter(
+                role=models.RoleChoices.OWNER,
+                recording_id=recording.id,
+            )
+            .order_by("created_at")
+        )
+
+        if not owner_accesses:
+            logger.error("No owner found for recording %s", recording.id)
+            return False
+
+        context = {
+            "brandname": settings.EMAIL_BRAND_NAME,
+            "support_email": settings.EMAIL_SUPPORT_EMAIL,
+            "logo_img": settings.EMAIL_LOGO_IMG,
+            "domain": settings.EMAIL_DOMAIN,
+            "room_name": recording.room.name,
+            "link": f"{get_recording_download_base_url()}/{recording.id}",
+        }
+
+        has_failures = False
+
+        for access in owner_accesses:
+            user = access.user
+            language = user.language or get_language()
+            with override(language):
+                personalized_context = {
+                    "recording_date": recording.created_at.astimezone(
+                        user.timezone
+                    ).strftime("%Y-%m-%d"),
+                    "recording_time": recording.created_at.astimezone(
+                        user.timezone
+                    ).strftime("%H:%M"),
+                    **context,
+                }
+                msg_html = render_to_string(
+                    "mail/html/transcription_ready.html", personalized_context
+                )
+                msg_plain = render_to_string(
+                    "mail/text/transcription_ready.txt", personalized_context
+                )
+                subject = str(_("Your transcription is ready"))
+
+                try:
+                    send_mail(
+                        subject.capitalize(),
+                        msg_plain,
+                        settings.EMAIL_FROM,
+                        [user.email],
+                        html_message=msg_html,
+                        fail_silently=False,
+                    )
+                except smtplib.SMTPException as exception:
+                    logger.error(
+                        "Transcription notification could not be sent: %s",
+                        exception,
+                    )
+                    has_failures = True
+
+        return not has_failures
+
+    def notify_transcription_deletion_warning(
+        self, old_recording: "models.Recording", deletion_date: str
+    ) -> bool:
+        """Notify the owner that their oldest transcription is scheduled for deletion.
+
+        Called when the storage limit is reached and a deferred deletion is scheduled.
+
+        Args:
+            old_recording: The recording whose transcription will be deleted.
+            deletion_date: Human-readable deletion date (e.g. "2026-04-09 14:00").
+        """
+        owner_accesses = (
+            models.RecordingAccess.objects.select_related("user")
+            .filter(
+                role=models.RoleChoices.OWNER,
+                recording_id=old_recording.id,
+            )
+            .order_by("created_at")
+        )
+
+        if not owner_accesses:
+            logger.error(
+                "No owner found for recording %s — cannot send deletion warning.",
+                old_recording.id,
+            )
+            return False
+
+        context = {
+            "brandname": settings.EMAIL_BRAND_NAME,
+            "support_email": settings.EMAIL_SUPPORT_EMAIL,
+            "logo_img": settings.EMAIL_LOGO_IMG,
+            "domain": settings.EMAIL_DOMAIN,
+            "old_room_name": old_recording.room.name,
+            "old_link": f"{get_recording_download_base_url()}/{old_recording.id}",
+            "deletion_date": deletion_date,
+        }
+
+        has_failures = False
+
+        for access in owner_accesses:
+            user = access.user
+            language = user.language or get_language()
+            with override(language):
+                personalized_context = {
+                    "old_recording_date": old_recording.created_at.astimezone(
+                        user.timezone
+                    ).strftime("%Y-%m-%d"),
+                    **context,
+                }
+                msg_html = render_to_string(
+                    "mail/html/transcription_deletion_warning.html",
+                    personalized_context,
+                )
+                msg_plain = render_to_string(
+                    "mail/text/transcription_deletion_warning.txt",
+                    personalized_context,
+                )
+                subject = str(_("Your transcription will be deleted soon"))
+
+                try:
+                    send_mail(
+                        subject.capitalize(),
+                        msg_plain,
+                        settings.EMAIL_FROM,
+                        [user.email],
+                        html_message=msg_html,
+                        fail_silently=False,
+                    )
+                except smtplib.SMTPException as exc:
+                    logger.error(
+                        "Deletion warning email could not be sent to %s: %s",
+                        user.email,
+                        exc,
+                    )
+                    has_failures = True
+
+        return not has_failures
+
 
 notification_service = NotificationService()

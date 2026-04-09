@@ -94,7 +94,16 @@
     "phone": {
       "call": "Ruf an:",
       "pinCode": "Code:"
-    }
+    },
+    "inviteByEmail": "oder per E-Mail einladen",
+    "emailPlaceholder": "E-Mail eingeben und Enter drücken",
+    "scheduledDate": "Datum des Meetings",
+    "scheduledTime": "Uhrzeit",
+    "sendInvites": "Einladungen senden",
+    "invitesSent": "Einladungen gesendet!",
+    "inviteError": "Einladungen konnten nicht gesendet werden",
+    "invalidEmail": "Ungültige E-Mail",
+    "optional": "optional"
   },
   "pagination": {
     "count": "{{currentPage}} von {{totalPageCount}}",
@@ -124,7 +133,8 @@
     "body": {
       "openMenu": {
         "others": "Klicke das Einstellungs-Symbol ICON_PLACEHOLDER in der Adressleiste deines Browsers",
-        "safari": "Klicke auf das Menü 'Safari' und öffne 'Einstellungen für {{appDomain}}'."
+        "safari": "Klicke auf das Menü 'Safari' und öffne 'Einstellungen für {{appDomain}}'.",
+        "mobile": "Öffne die Einstellungen deines Browsers und erlaube den Zugriff für diese Seite"
       },
       "details": {
         "camera": "Zugriff auf die Kamera erlauben",

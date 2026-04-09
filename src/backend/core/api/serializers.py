@@ -30,8 +30,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ["id", "email", "full_name", "short_name", "timezone", "language"]
-        read_only_fields = ["id", "email", "full_name", "short_name"]
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "short_name",
+            "timezone",
+            "language",
+            "account_tier",
+        ]
+        read_only_fields = ["id", "email", "full_name", "short_name", "account_tier"]
 
 
 class UserLightSerializer(serializers.ModelSerializer):
@@ -117,19 +125,77 @@ class NestedResourceAccessSerializer(ResourceAccessSerializer):
 class ListRoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for a list API endpoint."""
 
+    has_ended_session = serializers.SerializerMethodField()
+    invited_users_info = serializers.SerializerMethodField()
+
+    def get_has_ended_session(self, obj):
+        """Return True if the room has at least one completed session."""
+        return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
+    def get_invited_users_info(self, obj):
+        """Return invited emails enriched with full_name when a user account exists."""
+        emails = obj.invited_emails or []
+        if not emails:
+            return []
+        user_map = {
+            u["email"]: u["full_name"]
+            for u in models.User.objects.filter(email__in=emails).values("email", "full_name")
+        }
+        return [{"email": e, "full_name": user_map.get(e)} for e in emails]
+
     class Meta:
         model = models.Room
-        fields = ["id", "name", "slug", "access_level"]
-        read_only_fields = ["id", "slug"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "access_level",
+            "scheduled_date",
+            "scheduled_time",
+            "has_ended_session",
+            "invited_emails",
+            "invited_users_info",
+        ]
+        read_only_fields = ["id", "slug", "has_ended_session", "invited_emails", "invited_users_info"]
 
 
 class RoomSerializer(serializers.ModelSerializer):
     """Serialize Room model for the API."""
 
+    has_ended_session = serializers.SerializerMethodField()
+    invited_users_info = serializers.SerializerMethodField()
+
+    def get_has_ended_session(self, obj):
+        """Return True if the room has at least one completed session."""
+        return obj.sessions.filter(ended_at__isnull=False, is_archived=False).exists()
+
+    def get_invited_users_info(self, obj):
+        """Return invited emails enriched with full_name when a user account exists."""
+        emails = obj.invited_emails or []
+        if not emails:
+            return []
+        user_map = {
+            u["email"]: u["full_name"]
+            for u in models.User.objects.filter(email__in=emails).values("email", "full_name")
+        }
+        return [{"email": e, "full_name": user_map.get(e)} for e in emails]
+
     class Meta:
         model = models.Room
-        fields = ["id", "name", "slug", "configuration", "access_level", "pin_code"]
-        read_only_fields = ["id", "slug", "pin_code"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "configuration",
+            "access_level",
+            "pin_code",
+            "scheduled_date",
+            "scheduled_time",
+            "has_ended_session",
+            "invited_emails",
+            "invited_users_info",
+        ]
+        read_only_fields = ["id", "slug", "pin_code", "has_ended_session", "invited_emails", "invited_users_info"]
 
     def to_representation(self, instance):
         """
@@ -205,6 +271,98 @@ class RecordingSerializer(serializers.ModelSerializer):
             "key",
             "is_expired",
             "expired_at",
+            "transcription_key",
+            "has_transcription",
+        ]
+        read_only_fields = fields
+
+
+class RoomParticipantSerializer(serializers.ModelSerializer):
+    """Serialize a room participant."""
+
+    full_name = serializers.SerializerMethodField()
+
+    def get_full_name(self, obj):
+        """Return user full name or display name."""
+        if obj.user:
+            return obj.user.full_name
+        return obj.display_name or obj.livekit_identity
+
+    class Meta:
+        model = models.RoomParticipant
+        fields = [
+            "id",
+            "livekit_identity",
+            "display_name",
+            "full_name",
+            "joined_at",
+            "left_at",
+        ]
+        read_only_fields = fields
+
+
+class RoomSessionRecordingSerializer(serializers.ModelSerializer):
+    """Thin recording serializer for session history."""
+
+    class Meta:
+        model = models.Recording
+        fields = [
+            "id",
+            "mode",
+            "status",
+            "key",
+            "transcription_key",
+            "has_transcription",
+            "is_expired",
+        ]
+        read_only_fields = fields
+
+
+class RoomSessionSerializer(serializers.ModelSerializer):
+    """Serialize a room session with participants and recordings."""
+
+    room = ListRoomSerializer(read_only=True)
+    participants = RoomParticipantSerializer(many=True, read_only=True)
+    duration = serializers.SerializerMethodField()
+    participant_count = serializers.SerializerMethodField()
+    recordings = serializers.SerializerMethodField()
+
+    def get_duration(self, obj):
+        """Return session duration in seconds."""
+        return obj.duration
+
+    def get_participant_count(self, obj):
+        """Return number of participants."""
+        return obj.participants.count()
+
+    def get_recordings(self, obj):
+        """Return recordings only for enterprise users."""
+        request = self.context.get("request")
+        if (
+            request
+            and request.user.is_authenticated
+            and getattr(request.user, "account_tier", None)
+            == models.User.AccountTier.ENTERPRISE
+        ):
+            recordings = obj.room.recordings.filter(
+                created_at__gte=obj.started_at,
+            )
+            if obj.ended_at:
+                recordings = recordings.filter(created_at__lte=obj.ended_at)
+            return RoomSessionRecordingSerializer(recordings, many=True).data
+        return []
+
+    class Meta:
+        model = models.RoomSession
+        fields = [
+            "id",
+            "room",
+            "started_at",
+            "ended_at",
+            "duration",
+            "participant_count",
+            "participants",
+            "recordings",
         ]
         read_only_fields = fields
 
@@ -285,6 +443,13 @@ class RoomInviteSerializer(serializers.Serializer):
     """Validate room invite creation data."""
 
     emails = serializers.ListField(child=serializers.EmailField(), allow_empty=False)
+    scheduled_date = serializers.DateField(
+        required=False, allow_null=True, default=None
+    )
+    scheduled_time = serializers.TimeField(
+        required=False, allow_null=True, default=None
+    )
+    timezone = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class BaseParticipantsManagementSerializer(BaseValidationOnlySerializer):

@@ -369,8 +369,177 @@ Error: client version 1.43 is too old. Minimum supported API version is 1.44
 **DuckDNS** : Cron automatique toutes les 5 minutes
 **Visioconference** : Testee et fonctionnelle (connexion WebRTC, publication audio/video)
 
+---
+
+## Erreur 31 — faster-whisper-server image tag inexistant
+
+**Date** : 1 avril 2026
+**Erreur** : `docker pull fedirz/faster-whisper-server:latest` → manifest unknown
+**Cause** : Docker Hub n'a que les tags `:latest-cpu` et `:latest-cuda` pour cette image.
+**Solution** : Utiliser `fedirz/faster-whisper-server:latest-cpu`.
+**Commit** : `40bc2d79`
+
+---
+
+## Erreur 32 — WHISPERX_ALLOWED_LANGUAGES parsing pydantic
+
+**Date** : 1 avril 2026
+**Erreur** : `error parsing value for field 'whisperx_allowed_languages' from source 'EnvSettingsSource'`
+**Cause** : pydantic-settings attend un JSON array, pas une string comma-separated (`en,fr`).
+**Solution** : Changer `en,fr` en `["en","fr"]` dans `env.d/summary`.
+**Commit** : `b4dbda09`
+
+---
+
+## Erreur 33 — LiveKit Egress permission denied sur config
+
+**Date** : 1 avril 2026
+**Erreur** : `cannot create /egress-config.yaml: Permission denied` + `exec: /egress: not found`
+**Cause** : L'image egress a un entrypoint fixe. Tenter un entrypoint custom avec sed echoue.
+**Solution** : Injecter les secrets via CI sed avant le deploy, monter le fichier en read-only.
+**Commit** : `b4dbda09`
+
+---
+
+## Erreur 34 — Webhooks LiveKit 400 (ALLOWED_HOSTS)
+
+**Date** : 5 avril 2026
+**Erreur** : Tous les webhooks LiveKit retournent **400** — reponse HTML Django (pas JSON DRF).
+**Cause** : LiveKit envoie les webhooks a `http://backend:8000`. Le hostname `backend` n'est pas dans `DJANGO_ALLOWED_HOSTS` → Django rejette avec `DisallowedHost`.
+**Diagnostic** : Le 400 etait une erreur Django (HTML), pas notre code webhook. Le fix Bearer token (erreur 36) etait correct mais en amont de ce probleme.
+**Solution** : Ajouter `backend` dans `DJANGO_ALLOWED_HOSTS` : `DJANGO_ALLOWED_HOSTS=${MEET_HOST},backend`.
+**Commit** : `91cad120`
+
+---
+
+## Erreur 35 — Webhooks LiveKit 301 (SECURE_SSL_REDIRECT)
+
+**Date** : 5 avril 2026
+**Erreur** : Apres fix ALLOWED_HOSTS, les webhooks retournent **301** au lieu de 200.
+**Cause** : `SECURE_SSL_REDIRECT=True` redirige toute requete HTTP vers HTTPS. Les appels Docker internes (LiveKit, MinIO, summary) arrivent en HTTP → redirect infini.
+**Solution** : Ajouter les URLs internes a `SECURE_REDIRECT_EXEMPT` dans `settings.py` :
+```python
+SECURE_REDIRECT_EXEMPT = [
+    "^__lbheartbeat__",
+    "^__heartbeat__",
+    r"^api/v1\.0/rooms/webhooks-livekit/",
+    r"^api/v1\.0/recordings/",
+]
+```
+**Commit** : `91cad120`
+
+---
+
+## Erreur 36 — Bearer prefix dans le token LiveKit
+
+**Date** : 4 avril 2026
+**Erreur** : `jwt.decode()` echoue avec "Invalid header padding".
+**Cause** : LiveKit server v1.8+ envoie `Authorization: Bearer <jwt>` mais `TokenVerifier.verify()` attend le JWT brut sans prefixe.
+**Solution** : Strip du prefixe `Bearer ` avant verification dans `livekit_events.py`.
+**Commit** : `c28dbbeb`
+
+---
+
+## Erreur 37 — DRF authentication 401 sur webhook
+
+**Date** : 5 avril 2026
+**Erreur** : Webhook retourne **401** "Token verification failed".
+**Cause** : `webhooks_livekit` avait `permission_classes=[]` mais pas `authentication_classes=[]`. DRF tentait d'interpreter le Bearer token LiveKit comme un token utilisateur Django.
+**Solution** : Ajouter `authentication_classes=[]` au decorateur de l'action.
+**Commit** : `894cf402`
+
+---
+
+## Erreur 38 — Download recording 404 (media-auth mauvais endpoint)
+
+**Date** : 5 avril 2026
+**Erreur** : `GET /api/v1.0/files/media-auth/` retourne **404**.
+**Cause** : Le nginx routait `/media-auth` vers `files/media-auth` (FileViewSet, gate par feature flag `file_upload`) au lieu de `recordings/media-auth` (RecordingViewSet, pas de gate).
+**Solution** : Ajout d'un location nginx separe `/media/recordings/` avec auth vers `/recording-media-auth` → `recordings/media-auth`.
+**Commit** : `d8158318`
+
+---
+
+## Erreur 39 — Download recording 403 (X-Original-URL manquant)
+
+**Date** : 5 avril 2026
+**Erreur** : Backend retourne **403** "Missing HTTP_X_ORIGINAL_URL header".
+**Cause** : `_auth_get_original_url()` lit le header `X-Original-URL` que nginx doit transmettre. Notre config ne l'envoyait pas.
+**Solution** : Ajout de `proxy_set_header X-Original-URL $request_uri` dans `/recording-media-auth`.
+**Commit** : `d8158318`
+
+---
+
+## Erreur 40 — Download recording 403 (MinIO rejette sans S3 auth)
+
+**Date** : 5 avril 2026
+**Erreur** : Backend retourne 200 pour l'auth mais MinIO retourne **403** pour le fichier.
+**Cause** : Le backend genere des headers S3 SigV4 (`Authorization`, `X-Amz-Date`, `X-Amz-Content-SHA256`) dans la reponse auth. Nginx ne les transmettait pas a MinIO.
+**Solution** : Utilisation de `auth_request_set` pour capturer les headers de la reponse auth et `proxy_set_header` pour les transmettre a MinIO :
+```nginx
+auth_request_set $s3_auth $upstream_http_authorization;
+auth_request_set $s3_date $upstream_http_x_amz_date;
+auth_request_set $s3_sha  $upstream_http_x_amz_content_sha256;
+proxy_set_header Authorization $s3_auth;
+proxy_set_header X-Amz-Date $s3_date;
+proxy_set_header X-Amz-Content-SHA256 $s3_sha;
+```
+**Commit** : `d8158318`
+
+---
+
+## Erreur 41 — Summary service SSLError sur callback backend
+
+**Date** : 5 avril 2026
+**Erreur** : `SSLError: HTTPSConnectionPool(host='backend', port=8000)` dans celery-transcribe.
+**Cause** : Deux problemes combines :
+1. `webhook_service.py` ne montait le retry adapter que sur `https://`, pas `http://`
+2. `SECURE_SSL_REDIRECT` redigeait le POST HTTP vers HTTPS → requests suivait la redirection vers un port HTTP en HTTPS
+**Solution** : (a) Monter l'adapter sur `http://` aussi. (b) Exempter `/api/v1.0/recordings/` du SSL redirect.
+**Commit** : `d8158318`
+
+---
+
+## Erreur 42 — Transcription vide "Aucun contenu audio detecte"
+
+**Date** : 5 avril 2026
+**Erreur** : Toutes les transcriptions affichent "Aucun contenu audio n'a ete detecte" malgre audio audible.
+**Cause** : `faster-whisper-server` retourne un objet `Transcription` avec `.text` (texte brut). Le code cherchait `.segments` (format verbose_json avec speaker labels) → None → message "vide".
+**Diagnostic** : Test manuel confirme que Whisper transcrit correctement ("Ok. La, on va faire un test rapide pour voir si l'enregistrement et puis la transcription fonctionnent...").
+**Solution** : Ajout d'un fallback dans `transcript_formatter.py` : si `segments` absent, utiliser `transcription.text`.
+**Commit** : `ac8cf387`
+
+---
+
+## Erreur 43 — Pas de timestamps dans la transcription
+
+**Date** : 5 avril 2026
+**Contexte** : Enhancement, pas un bug.
+**Cause** : L'API Whisper en mode defaut retourne du texte brut sans timing.
+**Solution** : Ajout de `response_format="verbose_json"` a l'appel Whisper. Retourne des segments avec `.start` et `.end`. Formatte en `[MM:SS]` par segment.
+**Commit** : `8ffaec3f`
+
+---
+
+## Etat actuel (5 avril 2026)
+
+**Recording pipeline** : LiveKit Egress → MinIO upload → backend webhook → tout en 200
+**Transcription pipeline** : Summary service → Whisper (faster-whisper large-v3 CPU) → MinIO → backend webhook → email notification
+**Download** : nginx auth subrequest → S3 SigV4 headers → MinIO proxy → fichier servi
+**Emails** : Templates francais (transcription + recording), signature alignee a droite
+**Timestamps** : `[MM:SS]` par segment dans les transcriptions
+
+### Decision strategique — Approche B (LLM centralise)
+
+**Date** : 5 avril 2026
+**Decision** : On passe directement sur l'Approche B (LLM centralise multi-applications) au lieu de l'Approche A (Docker Model Runner par app).
+**Modele** : Gemma 4 31B (~19 GB RAM Q4) — licence Apache 2.0 (changement vs Gemma 1-3 qui avaient des restrictions), plus leger que Qwen 3 32B, meilleur raisonnement.
+**Runtime** : Ollama (mode serveur permanent, file de requetes concurrentes) — pas Docker Model Runner (concu pour du charge/decharge idle).
+**Raison** : L'ecosysteme Aiobi (Meet, ERP futur, Mail futur) necessitera un LLM partage. Autant poser l'infra des maintenant plutot que de migrer plus tard.
+
 ### Ce qui reste
 
-1. Augmenter le buffer UDP (`net.core.rmem_max=5000000`) pour LiveKit
-2. Supprimer les references open source (plan dans `.claude/plans/remove-opensource-refs.md`)
-3. Passer a la production (domaine `meet.aiobi.world`)
+1. Deployer via CI (tous les fixes sont commites et pushes)
+2. Tester le flow complet post-deploiement (record → transcription → download)
+3. Phase 2 — LLM summarization (Gemma 4 31B via Ollama, service centralise)
+4. Speaker diarization (pyannote, si besoin futur)

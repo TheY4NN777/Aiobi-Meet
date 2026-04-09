@@ -1,0 +1,15 @@
+log_level: info
+api_key: meet
+api_secret: __LIVEKIT_API_SECRET__
+ws_url: "ws://livekit:47880"
+insecure: true
+redis:
+  address: redis:6379
+
+s3:
+  access_key: __MINIO_ACCESS_KEY__
+  secret: __MINIO_SECRET_KEY__
+  region: us-east-1
+  endpoint: http://minio:9000
+  bucket: meet-media-storage
+  force_path_style: true

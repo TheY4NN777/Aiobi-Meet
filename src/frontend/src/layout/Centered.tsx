@@ -11,7 +11,7 @@ export const Centered = ({
 }) => {
   return (
     <VerticallyOffCenter>
-      <Div margin="auto" width={width} maxWidth="100%">
+      <Div margin="auto" width={width} maxWidth="100%" paddingX="1rem">
         {children}
       </Div>
     </VerticallyOffCenter>

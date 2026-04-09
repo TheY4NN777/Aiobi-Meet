@@ -4,7 +4,8 @@ import { useUser, UserAware } from '@/features/auth'
 import { generateRoomId, useCreateRoom } from '@/features/rooms'
 import { navigateTo } from '@/navigation/navigateTo'
 import { usePersistentUserChoices } from '@/features/rooms/livekit/hooks/usePersistentUserChoices'
-import { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import type { ApiRoom } from '@/features/rooms/api/ApiRoom'
+import { PlanLaterModal } from '@/features/rooms/components/PlanLaterModal'
 import './Dashboard.css'
 
 // Load Fontshare fonts
@@ -31,7 +32,6 @@ const DashboardContent = () => {
 
   const [joinCode, setJoinCode] = useState('')
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const handleCreateInstant = useCallback(async () => {
     const slug = generateRoomId()
@@ -61,15 +61,8 @@ const DashboardContent = () => {
     }
   }, [joinCode])
 
-  const handleCopyLink = useCallback(() => {
-    if (!laterRoom) return
-    const url = `${window.location.origin}/${laterRoom.slug}`
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }, [laterRoom])
 
-  const displayName = user?.full_name || username || ''
+  const displayName = user?.short_name || user?.full_name || username || ''
 
   const headlines = [
     'Prêt pour votre prochaine réunion ?',
@@ -124,7 +117,7 @@ const DashboardContent = () => {
           {headlines[headlineIndex]}
         </h1>
         <p className="dash-subtitle">
-          Lancez une réunion instantanée, planifiez pour plus tard ou rejoignez un appel en cours.
+          Lancez une réunion, planifiez pour plus tard ou gérez vos réunions planifiées.
         </p>
       </div>
 
@@ -162,6 +155,24 @@ const DashboardContent = () => {
           <h3>Planifier pour plus tard</h3>
           <p>Créez un lien à partager</p>
         </div>
+        <div
+          className="dash-action-card"
+          onClick={() => navigateTo('meetings')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && navigateTo('meetings')}
+        >
+          <div className="dash-action-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </div>
+          <h3>Mes réunions</h3>
+          <p>Gérez vos réunions planifiées</p>
+        </div>
       </div>
 
       {/* Join Bar */}
@@ -183,27 +194,8 @@ const DashboardContent = () => {
         </button>
       </div>
 
-      {/* Later Meeting Dialog */}
       {laterRoom && (
-        <div className="dash-later-overlay" onClick={() => setLaterRoom(null)}>
-          <div className="dash-later-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Votre réunion est prête</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Partagez ce lien avec les participants :
-            </p>
-            <div className="dash-later-url">
-              {window.location.origin}/{laterRoom.slug}
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="dash-later-copy" onClick={handleCopyLink}>
-                {copied ? 'Copié !' : 'Copier le lien'}
-              </button>
-              <button className="dash-later-close" onClick={() => setLaterRoom(null)}>
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
+        <PlanLaterModal room={laterRoom} onClose={() => setLaterRoom(null)} />
       )}
     </div>
   )
@@ -212,7 +204,7 @@ const DashboardContent = () => {
 export const Dashboard = () => {
   return (
     <UserAware>
-      <Screen header={true} footer={true}>
+      <Screen header={true} footer={false}>
         <DashboardContent />
       </Screen>
     </UserAware>

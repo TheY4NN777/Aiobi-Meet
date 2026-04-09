@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 
 import uuid
+from datetime import timedelta
 from logging import getLogger
 from urllib.parse import unquote, urlparse
 
@@ -10,6 +11,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
@@ -44,6 +46,7 @@ from core.recording.event.exceptions import (
 )
 from core.recording.event.notification import notification_service
 from core.recording.event.parsers import get_parser
+from core.recording.event.summary_authentication import SummaryServiceAuthentication
 from core.recording.worker.exceptions import (
     RecordingStartError,
     RecordingStopError,
@@ -204,6 +207,44 @@ class UserViewSet(
             self.serializer_class(request.user, context=context).data
         )
 
+    @decorators.action(
+        detail=False,
+        methods=["get"],
+        url_path="me/usage",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def get_usage(self, request):
+        """Return monthly usage counts for recordings and transcriptions."""
+        user = request.user
+        now = timezone.now()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        recordings_count = models.RecordingAccess.objects.filter(
+            user=user,
+            recording__mode=models.RecordingModeChoices.SCREEN_RECORDING,
+            recording__created_at__gte=start_of_month,
+        ).count()
+
+        transcriptions_count = models.RecordingAccess.objects.filter(
+            user=user,
+            recording__mode=models.RecordingModeChoices.TRANSCRIPT,
+            recording__created_at__gte=start_of_month,
+        ).count()
+
+        is_enterprise = (
+            getattr(user, "account_tier", None) == models.User.AccountTier.ENTERPRISE
+        )
+        limit = None if is_enterprise else 10
+
+        return drf_response.Response(
+            {
+                "recordings_this_month": recordings_count,
+                "transcriptions_this_month": transcriptions_count,
+                "recording_limit": limit,
+                "transcription_limit": limit,
+            }
+        )
+
 
 class RoomViewSet(
     mixins.CreateModelMixin,
@@ -266,7 +307,10 @@ class RoomViewSet(
 
         if user.is_authenticated:
             queryset = (
-                self.filter_queryset(self.get_queryset()).filter(users=user).distinct()
+                self.filter_queryset(self.get_queryset())
+                .filter(users=user)
+                .prefetch_related("sessions")
+                .distinct()
             )
         else:
             queryset = self.get_queryset().none()
@@ -313,6 +357,26 @@ class RoomViewSet(
         mode = serializer.validated_data["mode"]
         options = serializer.validated_data.get("options")
         room = self.get_object()
+
+        # Enforce monthly quota for free-tier users
+        user = request.user
+        is_enterprise = (
+            getattr(user, "account_tier", None) == models.User.AccountTier.ENTERPRISE
+        )
+        if not is_enterprise:
+            start_of_month = timezone.now().replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            count = models.RecordingAccess.objects.filter(
+                user=user,
+                recording__mode=mode,
+                recording__created_at__gte=start_of_month,
+            ).count()
+            if count >= 10:
+                return drf_response.Response(
+                    {"error": "rate_limit_exceeded"},
+                    status=drf_status.HTTP_429_TOO_MANY_REQUESTS,
+                )
 
         # May raise exception if an active or initiated recording already exist for the room
         recording = models.Recording.objects.create(
@@ -470,6 +534,7 @@ class RoomViewSet(
         detail=False,
         methods=["post"],
         url_path="webhooks-livekit",
+        authentication_classes=[],
         permission_classes=[],
     )
     def webhooks_livekit(self, request):
@@ -538,8 +603,27 @@ class RoomViewSet(
         emails = serializer.validated_data.get("emails")
         emails = list(set(emails))
 
+        scheduled_date = serializer.validated_data.get("scheduled_date")
+        scheduled_time = serializer.validated_data.get("scheduled_time")
+        timezone = serializer.validated_data.get("timezone", "")
+
+        # Persist scheduled date on the room if not already set
+        if scheduled_date and not room.scheduled_date:
+            room.scheduled_date = scheduled_date
+            room.scheduled_time = scheduled_time
+            room.save(update_fields=["scheduled_date", "scheduled_time"])
+
+        # Accumulate invited emails
+        room.invited_emails = list(set((room.invited_emails or []) + emails))
+        room.save(update_fields=["invited_emails"])
+
         InvitationService().invite_to_room(
-            room=room, sender=request.user, emails=emails
+            room=room,
+            sender=request.user,
+            emails=emails,
+            scheduled_date=serializer.validated_data.get("scheduled_date"),
+            scheduled_time=serializer.validated_data.get("scheduled_time"),
+            timezone_label=timezone,
         )
 
         return drf_response.Response(
@@ -798,6 +882,133 @@ class RecordingViewSet(
             {"message": "Event processed."},
         )
 
+    @decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="delete-transcription",
+    )
+    def delete_transcription(self, request, pk=None):
+        """Delete the transcription file associated with a recording.
+
+        Removes the file from storage and clears the transcription_key field.
+        Only the room owner or admin can perform this action.
+        """
+        recording = get_object_or_404(models.Recording, pk=pk)
+
+        abilities = recording.get_abilities(request.user)
+        if not abilities.get("retrieve"):
+            raise drf_exceptions.PermissionDenied()
+
+        if not recording.transcription_key:
+            raise drf_exceptions.ValidationError(
+                {"detail": "This recording has no transcription."}
+            )
+
+        default_storage.delete(recording.transcription_key)
+        recording.transcription_key = None
+        recording.save(update_fields=["transcription_key", "updated_at"])
+
+        return drf_response.Response(
+            {"message": "Transcription deleted."},
+            status=drf_status.HTTP_200_OK,
+        )
+
+    @decorators.action(
+        detail=True,
+        methods=["post"],
+        url_path="transcription-ready",
+        authentication_classes=[SummaryServiceAuthentication],
+        permission_classes=[],
+    )
+    def transcription_ready(self, request, pk=None):
+        """Handle transcription-ready webhook from the summary service.
+
+        Called after the summary service uploads a transcription to MinIO.
+        Updates the recording's transcription_key and notifies the owner by email.
+        """
+
+        recording = get_object_or_404(models.Recording, pk=pk)
+
+        transcription_key = request.data.get("transcription_key")
+        if not transcription_key:
+            raise drf_exceptions.ValidationError(
+                {"transcription_key": "This field is required."}
+            )
+
+        recording.transcription_key = transcription_key
+        recording.save(update_fields=["transcription_key", "updated_at"])
+
+        # Lot 4 — enforce transcription storage limit per user
+        self._enforce_transcription_limit(recording)
+
+        notification_service.notify_transcription_ready(recording)
+
+        return drf_response.Response(
+            {"message": "Transcription registered.", "id": str(recording.id)},
+        )
+
+    def _enforce_transcription_limit(self, new_recording: models.Recording) -> None:
+        """Enforce the per-user transcription storage limit.
+
+        If the user already has the maximum number of transcriptions, schedule
+        the oldest one for deletion in 48h and send a warning email.
+        """
+        owner_access = (
+            models.RecordingAccess.objects.select_related("user")
+            .filter(
+                role=models.RoleChoices.OWNER,
+                recording_id=new_recording.id,
+            )
+            .first()
+        )
+
+        if not owner_access:
+            return
+
+        user = owner_access.user
+        max_keep = (
+            settings.TRANSCRIPTION_MAX_KEEP_ENTERPRISE
+            if user.account_tier == models.User.AccountTier.ENTERPRISE
+            else settings.TRANSCRIPTION_MAX_KEEP_DEFAULT
+        )
+
+        # All recordings owned by this user that have an active transcription,
+        # ordered oldest first, excluding the one we just saved.
+        owned_with_transcription = (
+            models.Recording.objects.filter(
+                room__accesses__user=user,
+                room__accesses__role__in=[
+                    models.RoleChoices.OWNER,
+                    models.RoleChoices.ADMIN,
+                ],
+                transcription_key__isnull=False,
+                transcription_deletion_scheduled_at__isnull=True,
+            )
+            .exclude(pk=new_recording.pk)
+            .distinct()
+            .order_by("created_at")
+        )
+
+        count = owned_with_transcription.count()
+        if count < max_keep:
+            return
+
+        # Limit exceeded: schedule the oldest for deferred deletion
+        oldest = owned_with_transcription.first()
+        if not oldest:
+            return
+
+        deletion_at = timezone.now() + timedelta(hours=48)
+        models.Recording.objects.filter(pk=oldest.pk).update(
+            transcription_deletion_scheduled_at=deletion_at
+        )
+        oldest.transcription_deletion_scheduled_at = deletion_at
+
+        deletion_date_str = deletion_at.strftime("%Y-%m-%d %H:%M UTC")
+        notification_service.notify_transcription_deletion_warning(
+            oldest, deletion_date=deletion_date_str
+        )
+
     def _auth_get_original_url(self, request):
         """
         Extracts and parses the original URL from the "HTTP_X_ORIGINAL_URL" header.
@@ -838,7 +1049,7 @@ class RecordingViewSet(
     def media_auth(self, request, *args, **kwargs):
         """
         This view is used by an Nginx subrequest to control access to a recording's
-        media file.
+        media file or transcription file.
         When we let the request go through, we compute authorization headers that will be added to
         the request going through thanks to the nginx.ingress.kubernetes.io/auth-response-headers
         annotation. The request will then be proxied to the object storage backend who will
@@ -846,6 +1057,15 @@ class RecordingViewSet(
         """
 
         parsed_url = self._auth_get_original_url(request)
+
+        # Try transcription pattern first, then recording pattern
+        transcription_match = enums.TRANSCRIPTION_STORAGE_URL_PATTERN.search(
+            parsed_url.path
+        )
+        if transcription_match:
+            return self._auth_transcription_media(
+                request, transcription_match.groupdict(), parsed_url.path
+            )
 
         url_params = self._auth_get_url_params(
             enums.RECORDING_STORAGE_URL_PATTERN, parsed_url.path
@@ -878,6 +1098,30 @@ class RecordingViewSet(
 
         request = utils.generate_s3_authorization_headers(recording.key)
 
+        return drf_response.Response("authorized", headers=request.headers, status=200)
+
+    def _auth_transcription_media(self, request, url_params, original_path):
+        """Authorize access to a transcription file stored in MinIO.
+
+        Transcription files follow the pattern: /media/transcriptions/{uuid}.md
+        Access is granted if the user has retrieve ability on the recording.
+        """
+        user = request.user
+        recording_id = url_params["recording_id"]
+
+        try:
+            recording = models.Recording.objects.get(id=recording_id)
+        except models.Recording.DoesNotExist as e:
+            raise drf_exceptions.NotFound("No recording found.") from e
+
+        if not recording.transcription_key:
+            raise drf_exceptions.NotFound("No transcription available.")
+
+        abilities = recording.get_abilities(user)
+        if not abilities["retrieve"]:
+            raise drf_exceptions.PermissionDenied()
+
+        request = utils.generate_s3_authorization_headers(recording.transcription_key)
         return drf_response.Response("authorized", headers=request.headers, status=200)
 
 
@@ -1200,3 +1444,54 @@ class FileViewSet(
         request = utils.generate_s3_authorization_headers(f"{url_params.get('key'):s}")
 
         return drf_response.Response("authorized", headers=request.headers, status=200)
+
+
+class RoomSessionViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """API endpoints to access past room sessions."""
+
+    pagination_class = Pagination
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.RoomSessionSerializer
+
+    def get_queryset(self):
+        """Return sessions for rooms the user has access to."""
+        user = self.request.user
+        archived = self.request.query_params.get("archived", "false").lower() == "true"
+        return (
+            models.RoomSession.objects.filter(
+                room__accesses__user=user,
+                is_archived=archived,
+            )
+            .select_related("room")
+            .prefetch_related("participants", "participants__user")
+            .distinct()
+            .order_by("-started_at")
+        )
+
+    @decorators.action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        """Archive a single session (hide from history)."""
+        session = self.get_object()
+        session.is_archived = True
+        session.save(update_fields=["is_archived"])
+        return drf_response.Response(status=204)
+
+    @decorators.action(detail=False, methods=["post"], url_path="clear")
+    def clear(self, request):
+        """Archive all sessions from the user's history."""
+        self.get_queryset().update(is_archived=True)
+        return drf_response.Response(status=204)
+
+    @decorators.action(detail=False, methods=["post"], url_path="bulk-archive")
+    def bulk_archive(self, request):
+        """Archive a list of sessions by ID."""
+        ids = request.data.get("ids", [])
+        if not isinstance(ids, list):
+            return drf_response.Response({"detail": "ids must be a list."}, status=400)
+        self.get_queryset().filter(id__in=ids).update(is_archived=True)
+        return drf_response.Response(status=204)

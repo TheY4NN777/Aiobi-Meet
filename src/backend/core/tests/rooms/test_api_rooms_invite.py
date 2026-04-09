@@ -273,9 +273,8 @@ def test_api_rooms_invite_success(mock_send_mail, settings):
 
     subject, body, sender, recipients = mock_send_mail.call_args[0]
 
-    assert (
-        subject == f"Video call in progress: {user.email} is waiting for you to connect"
-    )
+    sender_display = user.full_name or user.short_name or user.email
+    assert subject == f"{sender_display} is waiting for you to join a video call"
 
     # Verify email contains expected content
     required_content = [
@@ -292,3 +291,144 @@ def test_api_rooms_invite_success(mock_send_mail, settings):
 
     # Verify all owners received the email (order-independent comparison)
     assert sorted(recipients) == sorted(["fabien@yopmail.com", "gerald@yopmail.com"])
+
+
+@mock.patch.object(InvitationService, "invite_to_room")
+def test_api_rooms_invite_with_scheduled_date_and_time(mock_invite_to_room):
+    """Test invite with scheduled date and time passes them to the service."""
+
+    client = APIClient()
+    room = RoomFactory()
+    user = UserFactory()
+
+    room.accesses.create(user=user, role="owner")
+    client.force_login(user)
+
+    data = {
+        "emails": ["alice@yopmail.com"],
+        "scheduled_date": "2026-04-10",
+        "scheduled_time": "14:30",
+    }
+
+    response = client.post(
+        f"/api/v1.0/rooms/{room.id}/invite/",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    mock_invite_to_room.assert_called_once()
+
+    _, kwargs = mock_invite_to_room.call_args
+    assert kwargs["room"] == room
+    assert kwargs["sender"] == user
+    assert kwargs["emails"] == ["alice@yopmail.com"]
+    assert str(kwargs["scheduled_date"]) == "2026-04-10"
+    assert str(kwargs["scheduled_time"]) == "14:30:00"
+
+
+@mock.patch.object(InvitationService, "invite_to_room")
+def test_api_rooms_invite_with_date_only(mock_invite_to_room):
+    """Test invite with only scheduled date (no time) works correctly."""
+
+    client = APIClient()
+    room = RoomFactory()
+    user = UserFactory()
+
+    room.accesses.create(user=user, role="owner")
+    client.force_login(user)
+
+    data = {
+        "emails": ["alice@yopmail.com"],
+        "scheduled_date": "2026-04-10",
+    }
+
+    response = client.post(
+        f"/api/v1.0/rooms/{room.id}/invite/",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    mock_invite_to_room.assert_called_once()
+
+    _, kwargs = mock_invite_to_room.call_args
+    assert str(kwargs["scheduled_date"]) == "2026-04-10"
+    assert kwargs["scheduled_time"] is None
+
+
+@mock.patch.object(InvitationService, "invite_to_room")
+def test_api_rooms_invite_without_date(mock_invite_to_room):
+    """Test invite without date/time behaves like the original endpoint."""
+
+    client = APIClient()
+    room = RoomFactory()
+    user = UserFactory()
+
+    room.accesses.create(user=user, role="owner")
+    client.force_login(user)
+
+    data = {"emails": ["alice@yopmail.com"]}
+
+    response = client.post(
+        f"/api/v1.0/rooms/{room.id}/invite/",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    mock_invite_to_room.assert_called_once()
+
+    _, kwargs = mock_invite_to_room.call_args
+    assert kwargs["scheduled_date"] is None
+    assert kwargs["scheduled_time"] is None
+
+
+def test_api_rooms_invite_invalid_date_format():
+    """Test invalid date format should return validation error."""
+
+    client = APIClient()
+    room = RoomFactory()
+    user = UserFactory()
+
+    room.accesses.create(user=user, role="owner")
+    client.force_login(user)
+
+    data = {
+        "emails": ["alice@yopmail.com"],
+        "scheduled_date": "not-a-date",
+    }
+
+    response = client.post(
+        f"/api/v1.0/rooms/{room.id}/invite/",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert "scheduled_date" in response.json()
+
+
+def test_api_rooms_invite_invalid_time_format():
+    """Test invalid time format should return validation error."""
+
+    client = APIClient()
+    room = RoomFactory()
+    user = UserFactory()
+
+    room.accesses.create(user=user, role="owner")
+    client.force_login(user)
+
+    data = {
+        "emails": ["alice@yopmail.com"],
+        "scheduled_time": "not-a-time",
+    }
+
+    response = client.post(
+        f"/api/v1.0/rooms/{room.id}/invite/",
+        json.dumps(data),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert "scheduled_time" in response.json()

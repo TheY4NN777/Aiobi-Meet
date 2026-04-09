@@ -109,7 +109,7 @@ export const SelectDevice = ({
   if (cannotUseDevice) {
     const deviceOrigin = kind === 'videoinput' ? 'videoinput' : 'audioinput'
     return (
-      <div onClick={() => openPermissionsDialog(deviceOrigin)} style={{ cursor: 'pointer' }}>
+      <div onClick={() => openPermissionsDialog(deviceOrigin)} onKeyDown={(e) => e.key === 'Enter' && openPermissionsDialog(deviceOrigin)} role="button" tabIndex={0} style={{ cursor: 'pointer' }}>
         <Select
           aria-label={t(`${kind}.permissionsNeeded`)}
           label=""

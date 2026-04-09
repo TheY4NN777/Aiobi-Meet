@@ -94,7 +94,16 @@
     "phone": {
       "call": "Bel:",
       "pinCode": "Code:"
-    }
+    },
+    "inviteByEmail": "of nodig uit via e-mail",
+    "emailPlaceholder": "Voer een e-mail in en druk op Enter",
+    "scheduledDate": "Datum van de vergadering",
+    "scheduledTime": "Tijd",
+    "sendInvites": "Uitnodigingen versturen",
+    "invitesSent": "Uitnodigingen verstuurd!",
+    "inviteError": "Uitnodigingen konden niet worden verstuurd",
+    "invalidEmail": "Ongeldig e-mailadres",
+    "optional": "optioneel"
   },
   "pagination": {
     "count": "{{currentPage}} van {{totalPageCount}}",
@@ -124,7 +133,8 @@
     "body": {
       "openMenu": {
         "others": "Klik op het instellingenpictogram ICON_PLACEHOLDER in de adresbalk van uw browser",
-        "safari": "Klik op het menu 'Safari' en open 'Instellingen voor {{appDomain}}'."
+        "safari": "Klik op het menu 'Safari' en open 'Instellingen voor {{appDomain}}'.",
+        "mobile": "Open de instellingen van uw browser en sta toegang toe voor deze site"
       },
       "details": {
         "camera": "Toegang tot de camera toestaan",
