@@ -175,7 +175,9 @@ deploy-staging:
     - echo "=== Deploying Keycloak ==="
     - docker compose -f compose.keycloak.yaml up -d
     - |
-      if git diff --name-only HEAD~1 HEAD | grep -qE "docker/keycloak/themes/|docker/staging/env.d/keycloak|docker/auth/realm.json"; then
+      DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      if [ "$DIFF_BASE" = "0000000000000000000000000000000000000000" ]; then DIFF_BASE="HEAD~1"; fi
+      if git diff --name-only "$DIFF_BASE" HEAD | grep -qE "docker/keycloak/themes/|docker/staging/env.d/keycloak|docker/auth/realm.json"; then
         echo "  Keycloak theme/env/realm changed — force-recreating to apply changes"
         docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
       else
@@ -492,8 +494,10 @@ deploy-production:
     # --- 2. Keycloak (force-recreate si env.d/keycloak a change, sinon preserve sessions) ---
     - echo "=== Deploying Keycloak ==="
     - |
-      if git diff --name-only HEAD~1 HEAD | grep -q "docker/production/env.d/keycloak"; then
-        echo "  Keycloak env changed — force-recreating (sessions will be lost)"
+      DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      if [ "$DIFF_BASE" = "0000000000000000000000000000000000000000" ]; then DIFF_BASE="HEAD~1"; fi
+      if git diff --name-only "$DIFF_BASE" HEAD | grep -qE "docker/keycloak/themes/|docker/production/env.d/keycloak|docker/auth/realm.json"; then
+        echo "  Keycloak theme/env/realm changed — force-recreating (sessions will be lost)"
         docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
       else
         echo "  Keycloak env unchanged — preserving sessions"
