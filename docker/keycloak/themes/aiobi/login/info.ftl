@@ -23,15 +23,13 @@
             <#elseif actionUri?has_content>
                 <#assign continueHref = actionUri>
             <#elseif (client.baseUrl)?has_content>
-                <#assign continueHref = client.baseUrl>
+                <#assign continueHref = client.baseUrl + "authenticate/?returnTo=/home">
             </#if>
-            <#if continueHref?has_content>
-                <div style="margin:20px 0 8px 0;">
-                    <a href="${continueHref}" class="pf-c-button pf-m-primary pf-m-block btn-lg" style="display:inline-block;padding:14px 32px;background-color:#a251fc;color:#ffffff;font-family:'Roboto',-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;border:none;min-width:220px;text-align:center;">
-                        ${kcSanitize(msg("backToApplication"))?no_esc} &rarr;
-                    </a>
-                </div>
-            </#if>
+            <div style="margin:20px 0 8px 0;">
+                <a href="${continueHref?has_content?then(continueHref, '/authenticate/?returnTo=/home')}" class="pf-c-button pf-m-primary pf-m-block btn-lg" style="display:inline-block;padding:14px 32px;background-color:#4A3C5C;color:#ffffff;font-family:'Roboto',-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;border:none;min-width:220px;text-align:center;">
+                    Se connecter &rarr;
+                </a>
+            </div>
         </#if>
     </div>
     </#if>
