@@ -11,7 +11,7 @@ import {
   TimeField,
   Label,
 } from 'react-aria-components'
-import { today, getLocalTimeZone } from '@internationalized/date'
+import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
 import { fetchApi } from '@/api/fetchApi'
 import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
@@ -24,22 +24,51 @@ type PlanLaterModalProps = {
   onClose: () => void
 }
 
+// Parse "HH:MM" or "HH:MM:SS" into a react-aria Time, null on failure.
+const parseRoomTime = (value?: string | null): Time | null => {
+  if (!value) return null
+  try {
+    return parseTime(value.length >= 5 ? value.substring(0, 5) : value)
+  } catch {
+    return null
+  }
+}
+
+// Parse "YYYY-MM-DD" into a react-aria CalendarDate, null on failure.
+const parseRoomDate = (value?: string | null): CalendarDate | null => {
+  if (!value) return null
+  try {
+    return parseDate(value)
+  } catch {
+    return null
+  }
+}
+
 export const PlanLaterModal = ({ room, onClose }: PlanLaterModalProps) => {
-  const [roomTitle, setRoomTitle] = useState('')
+  const [roomTitle, setRoomTitle] = useState(room.name ?? '')
   const [copied, setCopied] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
   const [inviteEmails, setInviteEmails] = useState<string[]>([])
   const [inviteInput, setInviteInput] = useState('')
-  const [inviteDate, setInviteDate] = useState<CalendarDate | null>(null)
-  const [inviteTime, setInviteTime] = useState<Time | null>(null)
+  const [inviteDate, setInviteDate] = useState<CalendarDate | null>(() =>
+    parseRoomDate(room.scheduled_date),
+  )
+  const [inviteTime, setInviteTime] = useState<Time | null>(() =>
+    parseRoomTime(room.scheduled_time),
+  )
   const [inviteSent, setInviteSent] = useState(false)
   const [inviteError, setInviteError] = useState('')
   const [sentEmails, setSentEmails] = useState<string[]>(room.invited_emails ?? [])
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
 
+  // Resync when the modal is re-opened for a different room, or when the
+  // room prop gets refreshed with updated scheduled_date/time/name after save.
   useEffect(() => {
     setSentEmails(room.invited_emails ?? [])
-  }, [room.id])
+    setRoomTitle(room.name ?? '')
+    setInviteDate(parseRoomDate(room.scheduled_date))
+    setInviteTime(parseRoomTime(room.scheduled_time))
+  }, [room.id, room.scheduled_date, room.scheduled_time, room.name, room.invited_emails])
 
   const inviteMutation = useInviteToRoom({
     onSuccess: () => {

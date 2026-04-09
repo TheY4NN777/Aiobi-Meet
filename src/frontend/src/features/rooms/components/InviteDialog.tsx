@@ -16,7 +16,7 @@ import {
   TimeField,
   Label,
 } from 'react-aria-components'
-import { today, getLocalTimeZone } from '@internationalized/date'
+import { today, getLocalTimeZone, parseDate, parseTime } from '@internationalized/date'
 import type { CalendarDate, Time } from '@internationalized/date'
 import { Text, text } from '@/primitives/Text'
 import {
@@ -26,7 +26,7 @@ import {
   RiMailSendLine,
   RiSpam2Fill,
 } from '@remixicon/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { css } from '@/styled-system/css'
 import { useQuery } from '@tanstack/react-query'
 import { useRoomData } from '@/features/rooms/livekit/hooks/useRoomData'
@@ -41,6 +41,26 @@ import { useCopyRoomToClipboard } from '@/features/rooms/livekit/hooks/useCopyRo
 import { useInviteToRoom } from '@/features/rooms/api/inviteToRoom'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Parse "HH:MM" or "HH:MM:SS" into a react-aria Time, null on failure.
+const parseRoomTime = (value?: string | null): Time | null => {
+  if (!value) return null
+  try {
+    return parseTime(value.length >= 5 ? value.substring(0, 5) : value)
+  } catch {
+    return null
+  }
+}
+
+// Parse "YYYY-MM-DD" into a react-aria CalendarDate, null on failure.
+const parseRoomDate = (value?: string | null): CalendarDate | null => {
+  if (!value) return null
+  try {
+    return parseDate(value)
+  } catch {
+    return null
+  }
+}
 
 // fixme - extract in a proper primitive this dialog without overlay
 const StyledRACDialog = styled(Dialog, {
@@ -99,6 +119,24 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
   const [showCalendar, setShowCalendar] = useState(false)
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
 
+  // Pre-fill the date/time fields when the room detail is loaded and the room
+  // already has a scheduled date/time set. Without this, reopening the invite
+  // dialog on an already-scheduled room shows empty fields and a subsequent
+  // send would ship a null schedule, making the invitee receive an
+  // "ongoing call" email instead of a "scheduled meeting" one.
+  useEffect(() => {
+    if (!roomDetail) return
+    if (scheduledDate === null && roomDetail.scheduled_date) {
+      setScheduledDate(parseRoomDate(roomDetail.scheduled_date))
+    }
+    if (scheduledTime === null && roomDetail.scheduled_time) {
+      setScheduledTime(parseRoomTime(roomDetail.scheduled_time))
+    }
+    // Intentionally depend only on the loaded values, not on the local state —
+    // we only want to seed on first load, not overwrite user edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomDetail?.id, roomDetail?.scheduled_date, roomDetail?.scheduled_time])
+
   const inviteMutation = useInviteToRoom({
     onSuccess: () => {
       setInviteSent(true)
@@ -148,16 +186,34 @@ export const InviteDialog = (props: Omit<DialogProps, 'title'>) => {
 
   const handleSendInvites = useCallback(() => {
     if (!roomData?.id || emails.length === 0) return
+    // Fall back to the room's persisted schedule if the local state is still
+    // null (e.g. the useQuery hasn't resolved yet, or a race during fast
+    // clicks). This guarantees a scheduled room always sends a "scheduled
+    // meeting" email, never an "ongoing call" one.
+    const dateStr =
+      scheduledDate?.toString() || roomDetail?.scheduled_date || null
+    const timeStr = scheduledTime
+      ? `${String(scheduledTime.hour).padStart(2, '0')}:${String(scheduledTime.minute).padStart(2, '0')}`
+      : roomDetail?.scheduled_time
+        ? roomDetail.scheduled_time.substring(0, 5)
+        : null
     inviteMutation.mutate({
       roomId: roomData.id,
       emails,
-      scheduledDate: scheduledDate?.toString() || null,
-      scheduledTime: scheduledTime
-        ? `${String(scheduledTime.hour).padStart(2, '0')}:${String(scheduledTime.minute).padStart(2, '0')}`
-        : null,
+      scheduledDate: dateStr,
+      scheduledTime: timeStr,
       timezone,
     })
-  }, [roomData?.id, emails, scheduledDate, scheduledTime, inviteMutation])
+  }, [
+    roomData?.id,
+    emails,
+    scheduledDate,
+    scheduledTime,
+    roomDetail?.scheduled_date,
+    roomDetail?.scheduled_time,
+    timezone,
+    inviteMutation,
+  ])
 
   const canInvite = roomData?.is_administrable
 
