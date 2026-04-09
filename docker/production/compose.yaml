@@ -190,6 +190,86 @@ services:
       - aiobi-public
       - default
 
+  # ---------------------------------------------------------------------------
+  # Whisper (faster-whisper-server — transcription ASR)
+  # ---------------------------------------------------------------------------
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Redis pour le summary service (broker Celery + result backend)
+  # ---------------------------------------------------------------------------
+  redis-summary:
+    image: redis:5
+    restart: always
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Summary service (FastAPI — transcription + resume IA)
+  # ---------------------------------------------------------------------------
+  summary:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/summary:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — transcription (queue: transcribe-queue)
+  # ---------------------------------------------------------------------------
+  celery-transcribe:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/summary:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q transcribe-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — resume IA (queue: summarize-queue)
+  # ---------------------------------------------------------------------------
+  celery-summarize:
+    image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/summary:${IMAGE_TAG:-latest}
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q summarize-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis-summary
+    networks:
+      - default
+
+volumes:
+  whisper-models:
+
 networks:
   aiobi-public:
     external: true
