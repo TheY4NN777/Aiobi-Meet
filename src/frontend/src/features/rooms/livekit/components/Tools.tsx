@@ -3,7 +3,6 @@ import { css } from '@/styled-system/css'
 import { Button as RACButton } from 'react-aria-components'
 import { useTranslation } from 'react-i18next'
 import { ReactNode } from 'react'
-import { RiMicLine, RiRecordCircleLine } from '@remixicon/react'
 import { SubPanelId, useSidePanel } from '../hooks/useSidePanel'
 import { useRestoreFocus } from '@/hooks/useRestoreFocus'
 import {
@@ -127,7 +126,7 @@ export const Tools = () => {
   )
 
   const isEnterprise = useIsEnterprise()
-  const { recordingLimitReached, transcriptionLimitReached, data: usage } = useUsage()
+  const { recordingLimitReached, transcriptionLimitReached } = useUsage()
 
   switch (activeSubPanelId) {
     case SubPanelId.TRANSCRIPT:
@@ -185,31 +184,26 @@ export const Tools = () => {
       {isTranscriptEnabled && (
         transcriptionLimitReached ? (
           <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
-            <div className={css({ padding: '1rem 1rem 0.75rem' })}>
-              <div className={css({ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' })}>
-                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
-                  <RiMicLine size={16} color="#E4D3E6" />
-                </div>
-                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
-                  <RiRecordCircleLine size={16} color="#E4D3E6" />
-                </div>
-              </div>
-              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.25rem' })}>
-                Limite atteinte — {usage?.transcriptions_this_month}/10 transcriptions ce mois
+            <div className={css({ padding: '1.25rem 1rem 1rem' })}>
+              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.5rem' })}>
+                Transcription indisponible
               </Text>
-              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0' })}>
-                Veuillez passer au plan supérieur pour continuer.
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+                Vous avez atteint la limite de votre plan ce mois-ci.
               </Text>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.65rem', borderRadius: '8px', background: '#4A3C5C', color: 'white', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#5d4d6f' }, transition: 'background 0.2s', marginBottom: '0.5rem' })}>
+                Passer à Entreprise
+              </a>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'block', textAlign: 'center', color: '#d4bfe8', fontSize: '0.75rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } })}>
+                En savoir plus sur les offres
+              </a>
             </div>
-            <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.75rem', background: '#E4D3E6', color: '#2d1f3d', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#cdb8d0' }, transition: 'background 0.2s' })}>
-              Découvrir Aïobi Enterprise →
-            </a>
           </div>
         ) : (
           <ToolButton
             icon={<Icon type="symbols" name="speech_to_text" />}
             title={t('tools.transcript.title')}
-            description={isEnterprise ? t('tools.transcript.body') : `${usage?.transcriptions_this_month ?? 0}/10 ce mois · ${t('tools.transcript.body')}`}
+            description={t('tools.transcript.body')}
             onPress={() => openTranscript()}
           />
         )
@@ -217,31 +211,26 @@ export const Tools = () => {
       {isScreenRecordingEnabled && (
         recordingLimitReached ? (
           <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
-            <div className={css({ padding: '1rem 1rem 0.75rem' })}>
-              <div className={css({ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' })}>
-                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
-                  <RiRecordCircleLine size={16} color="#E4D3E6" />
-                </div>
-                <div className={css({ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(228,211,230,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 })}>
-                  <RiMicLine size={16} color="#E4D3E6" />
-                </div>
-              </div>
-              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.25rem' })}>
-                Limite atteinte — {usage?.recordings_this_month}/10 enregistrements ce mois
+            <div className={css({ padding: '1.25rem 1rem 1rem' })}>
+              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.5rem' })}>
+                Enregistrement indisponible
               </Text>
-              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0' })}>
-                Veuillez passer au plan supérieur pour continuer.
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+                Vous avez atteint la limite de votre plan ce mois-ci.
               </Text>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.65rem', borderRadius: '8px', background: '#4A3C5C', color: 'white', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#5d4d6f' }, transition: 'background 0.2s', marginBottom: '0.5rem' })}>
+                Passer à Entreprise
+              </a>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'block', textAlign: 'center', color: '#d4bfe8', fontSize: '0.75rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } })}>
+                En savoir plus sur les offres
+              </a>
             </div>
-            <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.75rem', background: '#E4D3E6', color: '#2d1f3d', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#cdb8d0' }, transition: 'background 0.2s' })}>
-              Découvrir Aïobi Enterprise →
-            </a>
           </div>
         ) : (
           <ToolButton
             icon={<Icon type="symbols" name="mode_standby" />}
             title={t('tools.screenRecording.title')}
-            description={isEnterprise ? t('tools.screenRecording.body') : `${usage?.recordings_this_month ?? 0}/10 ce mois · ${t('tools.screenRecording.body')}`}
+            description={t('tools.screenRecording.body')}
             onPress={() => openScreenRecording()}
           />
         )
