@@ -19,7 +19,7 @@
     font-family: var(--font-body);
     color: var(--text);
     width: 100%;
-    min-height: calc(100vh - 64px);
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
