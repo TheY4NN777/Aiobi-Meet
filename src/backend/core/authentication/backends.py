@@ -37,10 +37,28 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
 
         """
         return {
-            # Get user's full name from OIDC fields defined in settings
             "full_name": self.compute_full_name(user_info),
             "short_name": user_info.get(settings.OIDC_USERINFO_SHORTNAME_FIELD),
+            # Propagate realm_access so post_get_or_create_user can read
+            # realm roles (used by _sync_account_tier to set ENTERPRISE tier).
+            # lasuite's get_or_create_user only forwards sub/email + extra
+            # claims to post_get_or_create_user, so we must include it here.
+            "realm_access": user_info.get("realm_access", {}),
         }
+
+    def create_user(self, claims):
+        """Create a new User, stripping non-model claims.
+
+        lasuite's base ``create_user`` instantiates the model with
+        ``User(**claims)``. Our ``get_extra_claims`` injects ``realm_access``
+        (needed by ``_sync_account_tier``) which is not a User field, so we
+        must drop it before delegating — otherwise registration raises
+        ``TypeError: User() got unexpected keyword arguments: 'realm_access'``.
+        ``claims`` is not mutated so ``post_get_or_create_user`` still sees
+        ``realm_access`` afterwards.
+        """
+        filtered = {k: v for k, v in claims.items() if k != "realm_access"}
+        return super().create_user(filtered)
 
     def post_get_or_create_user(self, user, claims, is_new_user):
         """
@@ -58,6 +76,28 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         email = claims["email"]
         if is_new_user and email and settings.SIGNUP_NEW_USER_TO_MARKETING_EMAIL:
             self.signup_to_marketing_email(email)
+
+        self._sync_account_tier(user, claims)
+
+    def _sync_account_tier(self, user, claims):
+        """Sync account_tier from Keycloak realm roles on every login.
+
+        Reads 'realm_access.roles' from the OIDC claims. If the 'enterprise'
+        role is present, the user is promoted; otherwise they remain 'normal'.
+        Skips the Keycloak API back-sync (signal) by using update_fields.
+        """
+        realm_roles = claims.get("realm_access", {}).get("roles", [])
+        new_tier = (
+            User.AccountTier.ENTERPRISE
+            if "enterprise" in realm_roles
+            else User.AccountTier.NORMAL
+        )
+
+        if user.account_tier != new_tier:
+            # Use queryset.update() to bypass the post_save signal and avoid
+            # a Keycloak write-back loop (Keycloak is the source of truth here).
+            User.objects.filter(pk=user.pk).update(account_tier=new_tier)
+            user.account_tier = new_tier  # keep in-memory object consistent
 
     @staticmethod
     def signup_to_marketing_email(email):

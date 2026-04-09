@@ -1,13 +1,17 @@
 """File service to encapsulate files' manipulations."""
 
+import io
 import logging
 import os
+import re
 import subprocess
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
 import mutagen
+from docx import Document
+from docx.shared import Pt, RGBColor
 from minio import Minio
 from minio.error import MinioException, S3Error
 
@@ -48,6 +52,69 @@ class FileService:
 
         self._allowed_extensions = settings.recording_allowed_extensions
         self._max_duration = settings.recording_max_duration
+
+    def markdown_to_docx(self, content: str, title: str = "") -> bytes:
+        """Convert markdown transcription content to a docx document.
+
+        Handles: H1/H2 headings (# / ##), timestamp lines ([MM:SS]), plain paragraphs.
+
+        Returns raw bytes of the .docx file.
+        """
+        doc = Document()
+
+        if title:
+            heading = doc.add_heading(title, level=1)
+            heading.runs[0].font.size = Pt(18)
+            heading.runs[0].font.color.rgb = RGBColor(0x4A, 0x3C, 0x5C)
+
+        for line in content.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("## "):
+                doc.add_heading(stripped[3:], level=2)
+            elif stripped.startswith("# "):
+                doc.add_heading(stripped[2:], level=1)
+            elif re.match(r"^\[\d{2}:\d{2}\]", stripped):
+                # Timestamp line — monospace-style paragraph
+                para = doc.add_paragraph(stripped)
+                for run in para.runs:
+                    run.font.name = "Courier New"
+                    run.font.size = Pt(10)
+            else:
+                doc.add_paragraph(stripped)
+
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        return buffer.getvalue()
+
+    def upload_to_minio(self, object_key: str, content: str | bytes, content_type: str = "text/markdown") -> None:
+        """Upload text content to MinIO storage.
+
+        Args:
+            object_key: Destination path in MinIO (e.g. "transcriptions/{uuid}.md").
+            content: Text content to upload.
+            content_type: MIME type of the content.
+
+        Raises:
+            FileServiceException: If the upload fails.
+        """
+        logger.info("Uploading to MinIO | object_key: %s", object_key)
+
+        data = content if isinstance(content, bytes) else content.encode("utf-8")
+        try:
+            self._minio_client.put_object(
+                self._bucket_name,
+                object_key,
+                io.BytesIO(data),
+                length=len(data),
+                content_type=content_type,
+            )
+            logger.info("Upload successful | object_key: %s", object_key)
+        except (MinioException, S3Error) as e:
+            raise FileServiceException(
+                f"Failed to upload {object_key}"
+            ) from e
 
     def _download_from_minio(self, remote_object_key) -> Path:
         """Download file from MinIO to local temporary file.

@@ -182,6 +182,21 @@ class User(AbstractBaseUser, BaseModel, auth_models.PermissionsMixin):
         default=settings.TIME_ZONE,
         help_text=_("The timezone in which the user wants to see times."),
     )
+
+    class AccountTier(models.TextChoices):
+        NORMAL = "normal", _("Normal")
+        ENTERPRISE = "enterprise", _("Enterprise")
+
+    account_tier = models.CharField(
+        _("account tier"),
+        max_length=20,
+        choices=AccountTier.choices,
+        default=AccountTier.NORMAL,
+        help_text=_(
+            "Subscription tier. Enterprise users have access to recording and transcription."
+        ),
+    )
+
     is_device = models.BooleanField(
         _("device"),
         default=False,
@@ -402,6 +417,13 @@ class Room(Resource):
         verbose_name=_("Room PIN code"),
         help_text=_("Unique n-digit code that identifies this room in telephony mode."),
     )
+    scheduled_date = models.DateField(_("scheduled date"), null=True, blank=True)
+    scheduled_time = models.TimeField(_("scheduled time"), null=True, blank=True)
+    invited_emails = models.JSONField(
+        blank=True,
+        default=list,
+        verbose_name=_("Invited emails"),
+    )
 
     class Meta:
         db_table = "meet_room"
@@ -427,13 +449,17 @@ class Room(Resource):
         We don't want any overlapping between the `slug` and the `id` fields because they can
         both be used to get a room detail view on the API.
         """
-        self.slug = slugify(self.name)
-        try:
-            uuid.UUID(self.slug)
-        except ValueError:
-            pass
-        else:
-            raise ValidationError({"name": f'Room name "{self.name:s}" is reserved.'})
+        # Only generate slug on creation (when slug is empty), not on update
+        if not self.slug:
+            self.slug = slugify(self.name)
+            try:
+                uuid.UUID(self.slug)
+            except ValueError:
+                pass
+            else:
+                raise ValidationError(
+                    {"name": f'Room name "{self.name:s}" is reserved.'}
+                )
 
         super().clean_fields(exclude=exclude)
 
@@ -590,6 +616,22 @@ class Recording(BaseModel):
         verbose_name=_("Recording options"),
         help_text=_("Recording options"),
     )
+    transcription_key = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name=_("Transcription key"),
+        help_text=_("MinIO object key for the transcription file (.md)."),
+    )
+    transcription_deletion_scheduled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Transcription deletion scheduled at"),
+        help_text=_(
+            "When set, the transcription will be automatically deleted at this datetime. "
+            "Used to give users a 48h warning before deletion when the storage limit is reached."
+        ),
+    )
 
     class Meta:
         db_table = "meet_recording"
@@ -623,11 +665,16 @@ class Recording(BaseModel):
 
         is_final_status = RecordingStatusChoices.is_final(self.status)
 
+        is_enterprise = (
+            user.is_authenticated
+            and getattr(user, "account_tier", None) == User.AccountTier.ENTERPRISE
+        )
+
         return {
             "destroy": is_owner_or_admin and is_final_status,
             "partial_update": False,
-            "retrieve": is_owner_or_admin,
-            "stop": is_owner_or_admin and not is_final_status,
+            "retrieve": is_owner_or_admin and is_enterprise,
+            "stop": is_owner_or_admin and not is_final_status and is_enterprise,
             "update": False,
         }
 
@@ -689,6 +736,11 @@ class Recording(BaseModel):
             return False
 
         return self.expired_at < timezone.now()
+
+    @property
+    def has_transcription(self) -> bool:
+        """Check if a transcription file is available for this recording."""
+        return bool(self.transcription_key)
 
 
 class RecordingAccess(BaseAccess):
@@ -1015,3 +1067,95 @@ class File(BaseModel):
 
         self.hard_deleted_at = timezone.now()
         self.save(update_fields=["hard_deleted_at"])
+
+
+class RoomSession(BaseModel):
+    """Tracks a single LiveKit room session (from room_started to room_finished)."""
+
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name="sessions",
+        verbose_name=_("Room"),
+    )
+    livekit_room_sid = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name=_("LiveKit room SID"),
+    )
+    started_at = models.DateTimeField(verbose_name=_("Started at"))
+    ended_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Ended at"),
+    )
+    is_archived = models.BooleanField(
+        default=False,
+        verbose_name=_("Archived"),
+    )
+
+    class Meta:
+        db_table = "meet_room_session"
+        verbose_name = _("Room session")
+        verbose_name_plural = _("Room sessions")
+        ordering = ("-started_at",)
+
+    def __str__(self):
+        return f"{self.room} — {self.started_at:%Y-%m-%d %H:%M}"
+
+    @property
+    def duration(self):
+        """Return session duration in seconds, or None if still ongoing."""
+        if self.ended_at and self.started_at:
+            return int((self.ended_at - self.started_at).total_seconds())
+        return None
+
+
+class RoomParticipant(BaseModel):
+    """Tracks a participant's presence in a RoomSession."""
+
+    session = models.ForeignKey(
+        RoomSession,
+        on_delete=models.CASCADE,
+        related_name="participants",
+        verbose_name=_("Session"),
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="room_participations",
+        verbose_name=_("User"),
+    )
+    livekit_identity = models.CharField(
+        max_length=255,
+        verbose_name=_("LiveKit identity"),
+    )
+    display_name = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Display name"),
+    )
+    joined_at = models.DateTimeField(verbose_name=_("Joined at"))
+    left_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Left at"),
+    )
+
+    class Meta:
+        db_table = "meet_room_participant"
+        verbose_name = _("Room participant")
+        verbose_name_plural = _("Room participants")
+        ordering = ("joined_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["session", "livekit_identity"],
+                name="unique_participant_per_session",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.display_name or self.livekit_identity} in {self.session}"

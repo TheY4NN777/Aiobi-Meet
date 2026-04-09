@@ -4,10 +4,13 @@
 
 import re
 import uuid
+from datetime import datetime
+from datetime import timezone as dt_timezone
 from enum import Enum
 from logging import getLogger
 
 from django.conf import settings
+from django.utils import timezone as utils_timezone
 
 from livekit import api
 
@@ -111,6 +114,10 @@ class LiveKitEventsService:
         if not auth_token:
             raise AuthenticationError("Authorization header missing")
 
+        # LiveKit server v1.8+ sends "Bearer <jwt>" instead of raw JWT
+        if auth_token.startswith("Bearer "):
+            auth_token = auth_token[len("Bearer ") :]
+
         try:
             data = self.webhook_receiver.receive(
                 request.body.decode("utf-8"), auth_token
@@ -210,6 +217,17 @@ class LiveKitEventsService:
                     f"Failed to create telephony dispatch rule for room {room_id}"
                 ) from e
 
+        started_at = (
+            datetime.fromtimestamp(data.room.creation_time, tz=dt_timezone.utc)
+            if data.room.creation_time
+            else utils_timezone.now()
+        )
+        models.RoomSession.objects.get_or_create(
+            room=room,
+            livekit_room_sid=data.room.sid or None,
+            defaults={"started_at": started_at},
+        )
+
     def _handle_room_finished(self, data):
         """Handle 'room_finished' event."""
 
@@ -236,3 +254,93 @@ class LiveKitEventsService:
             raise ActionFailedError(
                 f"Failed to clear room cache for room {room_id}"
             ) from e
+
+        session = (
+            models.RoomSession.objects.filter(room__id=room_id, ended_at__isnull=True)
+            .order_by("-started_at")
+            .first()
+        )
+        if session:
+            session.ended_at = utils_timezone.now()
+            session.save(update_fields=["ended_at", "updated_at"])
+            session.participants.filter(left_at__isnull=True).update(
+                left_at=session.ended_at
+            )
+
+    def _handle_participant_joined(self, data):
+        """Handle 'participant_joined' event."""
+
+        try:
+            room_id = uuid.UUID(data.room.name)
+        except ValueError:
+            logger.warning(
+                "Ignoring participant event: room name '%s' is not a valid UUID.",
+                data.room.name,
+            )
+            return
+
+        session = (
+            models.RoomSession.objects.filter(room__id=room_id, ended_at__isnull=True)
+            .order_by("-started_at")
+            .first()
+        )
+        if not session:
+            logger.info(
+                "No open session found for room %s on participant_joined — skipping.",
+                room_id,
+            )
+            return
+
+        # Skip non-human participants (egress bots, ingress, agents)
+        # kind: 0=STANDARD, 1=INGRESS, 2=EGRESS, 3=SIP, 4=AGENT
+        if getattr(data.participant, "kind", 0) != 0:
+            return
+
+        identity = data.participant.identity
+        user = None
+        try:
+            user = models.User.objects.get(sub=identity)
+        except models.User.DoesNotExist:
+            pass
+
+        joined_at = (
+            datetime.fromtimestamp(data.participant.joined_at, tz=dt_timezone.utc)
+            if data.participant.joined_at
+            else utils_timezone.now()
+        )
+
+        models.RoomParticipant.objects.get_or_create(
+            session=session,
+            livekit_identity=identity,
+            defaults={
+                "user": user,
+                "display_name": data.participant.name or "",
+                "joined_at": joined_at,
+            },
+        )
+
+    def _handle_participant_left(self, data):
+        """Handle 'participant_left' event."""
+
+        try:
+            room_id = uuid.UUID(data.room.name)
+        except ValueError:
+            logger.warning(
+                "Ignoring participant event: room name '%s' is not a valid UUID.",
+                data.room.name,
+            )
+            return
+
+        session = (
+            models.RoomSession.objects.filter(room__id=room_id, ended_at__isnull=True)
+            .order_by("-started_at")
+            .first()
+        )
+        if not session:
+            return
+
+        models.RoomParticipant.objects.filter(
+            session=session,
+            livekit_identity=data.participant.identity,
+            left_at__isnull=True,
+        ).update(left_at=utils_timezone.now())

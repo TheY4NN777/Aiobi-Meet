@@ -21,4 +21,9 @@ export type ApiRoom = {
   configuration?: {
     [key: string]: string | number | boolean | string[]
   }
+  scheduled_date?: string | null
+  scheduled_time?: string | null
+  has_ended_session?: boolean
+  invited_emails?: string[]
+  invited_users_info?: { email: string; full_name: string | null }[]
 }

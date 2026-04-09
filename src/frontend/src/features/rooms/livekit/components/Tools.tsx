@@ -12,6 +12,8 @@ import {
   ScreenRecordingSidePanel,
 } from '@/features/recording'
 import { useConfig } from '@/api/useConfig'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
+import { useUsage } from '@/features/auth/hooks/useUsage'
 
 export interface ToolsButtonProps {
   icon: ReactNode
@@ -123,6 +125,9 @@ export const Tools = () => {
     RecordingMode.ScreenRecording
   )
 
+  const isEnterprise = useIsEnterprise()
+  const { recordingLimitReached, transcriptionLimitReached } = useUsage()
+
   switch (activeSubPanelId) {
     case SubPanelId.TRANSCRIPT:
       return <TranscriptSidePanel />
@@ -142,6 +147,16 @@ export const Tools = () => {
       alignItems="start"
       gap={0.5}
     >
+      {isEnterprise && (
+        <div className={css({ width: 'full', borderRadius: '10px', background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)', padding: '0.6rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' })}>
+          <span style={{ background: '#E4D3E6', color: '#4A3C5C', fontSize: '0.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', letterSpacing: '0.06em', flexShrink: 0 }}>
+            ENTERPRISE
+          </span>
+          <span style={{ color: '#E4D3E6', fontSize: '0.78rem', fontWeight: 500 }}>
+            Enregistrements &amp; transcriptions illimités
+          </span>
+        </div>
+      )}
       <Text
         variant="note"
         wrap="balance"
@@ -167,20 +182,58 @@ export const Tools = () => {
         )}
       </Text>
       {isTranscriptEnabled && (
-        <ToolButton
-          icon={<Icon type="symbols" name="speech_to_text" />}
-          title={t('tools.transcript.title')}
-          description={t('tools.transcript.body')}
-          onPress={() => openTranscript()}
-        />
+        transcriptionLimitReached ? (
+          <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
+            <div className={css({ padding: '1.25rem 1rem 1rem' })}>
+              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.5rem' })}>
+                Transcription indisponible
+              </Text>
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+                Vous avez atteint la limite de votre plan ce mois-ci.
+              </Text>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.65rem', borderRadius: '8px', background: '#4A3C5C', color: 'white', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#5d4d6f' }, transition: 'background 0.2s', marginBottom: '0.5rem' })}>
+                Passer à Entreprise
+              </a>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'block', textAlign: 'center', color: '#d4bfe8', fontSize: '0.75rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } })}>
+                En savoir plus sur les offres
+              </a>
+            </div>
+          </div>
+        ) : (
+          <ToolButton
+            icon={<Icon type="symbols" name="speech_to_text" />}
+            title={t('tools.transcript.title')}
+            description={t('tools.transcript.body')}
+            onPress={() => openTranscript()}
+          />
+        )
       )}
       {isScreenRecordingEnabled && (
-        <ToolButton
-          icon={<Icon type="symbols" name="mode_standby" />}
-          title={t('tools.screenRecording.title')}
-          description={t('tools.screenRecording.body')}
-          onPress={() => openScreenRecording()}
-        />
+        recordingLimitReached ? (
+          <div className={css({ width: 'full', borderRadius: '12px', overflow: 'hidden', background: 'linear-gradient(145deg, #2d1f3d 0%, #4A3C5C 100%)', color: 'white' })}>
+            <div className={css({ padding: '1.25rem 1rem 1rem' })}>
+              <Text margin={false} as="h2" className={css({ fontWeight: 'bold', fontSize: 'sm', color: 'white', marginBottom: '0.5rem' })}>
+                Enregistrement indisponible
+              </Text>
+              <Text as="p" variant="smNote" className={css({ color: '#d4bfe8', marginBottom: '0.75rem' })}>
+                Vous avez atteint la limite de votre plan ce mois-ci.
+              </Text>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.65rem', borderRadius: '8px', background: '#4A3C5C', color: 'white', fontWeight: 'bold', fontSize: 'sm', textDecoration: 'none', '&:hover': { background: '#5d4d6f' }, transition: 'background 0.2s', marginBottom: '0.5rem' })}>
+                Passer à Entreprise
+              </a>
+              <a href="https://meet.aiobi.world/#pricing" target="_blank" rel="noopener noreferrer" className={css({ display: 'block', textAlign: 'center', color: '#d4bfe8', fontSize: '0.75rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } })}>
+                En savoir plus sur les offres
+              </a>
+            </div>
+          </div>
+        ) : (
+          <ToolButton
+            icon={<Icon type="symbols" name="mode_standby" />}
+            title={t('tools.screenRecording.title')}
+            description={t('tools.screenRecording.body')}
+            onPress={() => openScreenRecording()}
+          />
+        )
       )}
     </Div>
   )

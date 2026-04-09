@@ -73,6 +73,23 @@ build-frontend-staging:
   only:
     - develop
 
+build-summary-staging:
+  stage: build
+  tags:
+    - dev
+    - docker
+  image: docker:27
+  script:
+    - docker build
+      --no-cache
+      --file src/summary/Dockerfile
+      --target production
+      --tag aiobi-meet/summary:${CI_COMMIT_SHORT_SHA}
+      --tag aiobi-meet/summary:latest
+      src/summary
+  only:
+    - develop
+
 # =============================================================================
 # DEPLOY STAGING
 # =============================================================================
@@ -104,7 +121,44 @@ deploy-staging:
     - cp docker/staging/compose*.yaml $HOST_STAGING/
     - cp docker/staging/default.conf.template $HOST_STAGING/
     - cp docker/staging/livekit-server.yaml $HOST_STAGING/
+    - cp docker/staging/livekit-egress.yaml $HOST_STAGING/
+    # Injecter les secrets dans la config egress
+    - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_STAGING/livekit-egress.yaml
+    - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_STAGING/livekit-egress.yaml
+    - sed -i "s|__MINIO_SECRET_KEY__|${POSTGRES_PASSWORD}|g" $HOST_STAGING/livekit-egress.yaml
     - cp docker/staging/env.d/* $HOST_STAGING/env.d/
+
+    # --- Injecter les variables email CI dans env.d/common (ecrase les defaults) ---
+    - |
+      if [ -n "$DJANGO_EMAIL_HOST" ]; then
+        sed -i "s|^DJANGO_EMAIL_HOST=.*|DJANGO_EMAIL_HOST=$DJANGO_EMAIL_HOST|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_PORT=.*|DJANGO_EMAIL_PORT=$DJANGO_EMAIL_PORT|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_FROM=.*|DJANGO_EMAIL_FROM=$DJANGO_EMAIL_FROM|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_BRAND_NAME=.*|DJANGO_EMAIL_BRAND_NAME=\"$DJANGO_EMAIL_BRAND_NAME\"|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_DOMAIN=.*|DJANGO_EMAIL_DOMAIN=$DJANGO_EMAIL_DOMAIN|" $HOST_STAGING/env.d/common
+        sed -i "s|^DJANGO_EMAIL_APP_BASE_URL=.*|DJANGO_EMAIL_APP_BASE_URL=$DJANGO_EMAIL_APP_BASE_URL|" $HOST_STAGING/env.d/common
+        # Ajouter les variables qui n'existent pas dans le fichier par defaut
+        echo "DJANGO_EMAIL_USE_SSL=$DJANGO_EMAIL_USE_SSL" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_USE_TLS=$DJANGO_EMAIL_USE_TLS" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_HOST_USER=$DJANGO_EMAIL_HOST_USER" >> $HOST_STAGING/env.d/common
+        echo "DJANGO_EMAIL_HOST_PASSWORD=$DJANGO_EMAIL_HOST_PASSWORD" >> $HOST_STAGING/env.d/common
+        echo "=== Email config injected from CI variables ==="
+      fi
+
+    # --- Injecter les tokens IA/recording dans le .env staging -----------------
+    - |
+      for VAR_NAME in SUMMARY_API_TOKEN RECORDING_STORAGE_EVENT_TOKEN; do
+        eval VAR_VALUE=\$$VAR_NAME
+        if [ -n "$VAR_VALUE" ]; then
+          if grep -q "^${VAR_NAME}=" $HOST_STAGING/.env 2>/dev/null; then
+            sed -i "s|^${VAR_NAME}=.*|${VAR_NAME}=${VAR_VALUE}|" $HOST_STAGING/.env
+          else
+            echo "${VAR_NAME}=${VAR_VALUE}" >> $HOST_STAGING/.env
+          fi
+          echo "=== ${VAR_NAME} injected ==="
+        fi
+      done
+
     - mkdir -p $HOST_STAGING/vhost.d
     - cp docker/staging/vhost.d/* $HOST_STAGING/vhost.d/
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
@@ -117,9 +171,9 @@ deploy-staging:
     - echo "=== Deploying nginx-proxy (preserve TLS certs) ==="
     - docker compose -f compose.nginx-proxy.yaml up -d
 
-    # --- 2. Keycloak (preserve sessions) -------------------------------------
-    - echo "=== Deploying Keycloak ==="
-    - docker compose -f compose.keycloak.yaml up -d
+    # --- 2. Keycloak (always force-recreate on staging to pick up theme/env changes) ---
+    - echo "=== Deploying Keycloak (force-recreate) ==="
+    - docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
 
     # --- 3. App containers (force recreate pour nouvelles images + env) ------
     - echo "=== Deploying app containers (force recreate) ==="
@@ -208,6 +262,10 @@ deploy-staging:
     # --- 7. Configuration Keycloak post-deploy ---------------------------------
     - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
     - |
+      # Keycloak parses smtpServer booleans in lowercase only ("true"/"false").
+      # Django-style "True"/"False" would be treated as false and break SSL/STARTTLS.
+      EMAIL_SSL_LC=$(echo "${DJANGO_EMAIL_USE_SSL:-false}" | tr '[:upper:]' '[:lower:]')
+      EMAIL_TLS_LC=$(echo "${DJANGO_EMAIL_USE_TLS:-false}" | tr '[:upper:]' '[:lower:]')
       echo "Waiting for Keycloak to be ready..."
       for i in $(seq 1 30); do
         if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
@@ -239,6 +297,8 @@ deploy-staging:
               \"id\":\"$CLIENT_UUID\",
               \"clientId\":\"meet\",
               \"secret\":\"${OIDC_RP_CLIENT_SECRET}\",
+              \"rootUrl\":\"https://${MEET_HOST}:8443\",
+              \"baseUrl\":\"https://${MEET_HOST}:8443/\",
               \"redirectUris\":[\"https://${MEET_HOST}:8443/*\",\"http://localhost:3000/*\",\"http://localhost:8070/*\"],
               \"webOrigins\":[\"https://${MEET_HOST}:8443\",\"http://localhost:3000\",\"http://localhost:8070\"],
               \"attributes\":{\"post.logout.redirect.uris\":\"https://${MEET_HOST}:8443/*\"}
@@ -248,8 +308,27 @@ deploy-staging:
             "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
             -H 'Authorization: Bearer $TOKEN' \
             -H 'Content-Type: application/json' \
-            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
-            && echo "  Realm locale set to FR"
+            -d '{
+              \"defaultLocale\":\"fr\",
+              \"internationalizationEnabled\":true,
+              \"supportedLocales\":[\"fr\"],
+              \"loginTheme\":\"aiobi\",
+              \"emailTheme\":\"aiobi\",
+              \"verifyEmail\":true,
+              \"smtpServer\":{
+                \"host\":\"${DJANGO_EMAIL_HOST}\",
+                \"port\":\"${DJANGO_EMAIL_PORT}\",
+                \"ssl\":\"${EMAIL_SSL_LC}\",
+                \"starttls\":\"${EMAIL_TLS_LC}\",
+                \"auth\":\"true\",
+                \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
+                \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
+                \"from\":\"${DJANGO_EMAIL_FROM}\",
+                \"fromDisplayName\":\"${DJANGO_EMAIL_BRAND_NAME}\",
+                \"replyTo\":\"support@aiobi.world\"
+              }
+            }'" \
+            && echo "  Realm: locale FR + aiobi themes + SMTP + verifyEmail applied"
         else
           echo "WARNING: Client 'meet' not found."
         fi
@@ -281,6 +360,7 @@ deploy-staging:
   needs:
     - build-backend-staging
     - build-frontend-staging
+    - build-summary-staging
 
 # =============================================================================
 # ========================== PRODUCTION (main) ================================
@@ -396,6 +476,8 @@ deploy-production:
       DOCKER_USER=${DOCKER_USER:-1000}
       IMAGE_TAG=${CI_COMMIT_SHORT_SHA}
       CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}
+      SUMMARY_API_TOKEN=${SUMMARY_API_TOKEN}
+      RECORDING_STORAGE_EVENT_TOKEN=${RECORDING_STORAGE_EVENT_TOKEN}
       ENVEOF
     - sed -i 's/^      //' .env
     - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"
@@ -403,8 +485,10 @@ deploy-production:
     # --- 2. Keycloak (force-recreate si env.d/keycloak a change, sinon preserve sessions) ---
     - echo "=== Deploying Keycloak ==="
     - |
-      if git diff --name-only HEAD~1 HEAD | grep -q "docker/production/env.d/keycloak"; then
-        echo "  Keycloak env changed — force-recreating (sessions will be lost)"
+      DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      if [ "$DIFF_BASE" = "0000000000000000000000000000000000000000" ]; then DIFF_BASE="HEAD~1"; fi
+      if git diff --name-only "$DIFF_BASE" HEAD | grep -qE "docker/keycloak/themes/|docker/production/env.d/keycloak|docker/auth/realm.json"; then
+        echo "  Keycloak theme/env/realm changed — force-recreating (sessions will be lost)"
         docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
       else
         echo "  Keycloak env unchanged — preserving sessions"
@@ -440,6 +524,10 @@ deploy-production:
     # Cela garantit que meme apres un destroy+recreate, Keycloak est configure.
     - echo "=== Configuring Keycloak (OIDC client, locale, redirect URIs) ==="
     - |
+      # Keycloak parses smtpServer booleans in lowercase only ("true"/"false").
+      # Django-style "True"/"False" would be treated as false and break SSL/STARTTLS.
+      EMAIL_SSL_LC=$(echo "${DJANGO_EMAIL_USE_SSL:-false}" | tr '[:upper:]' '[:lower:]')
+      EMAIL_TLS_LC=$(echo "${DJANGO_EMAIL_USE_TLS:-false}" | tr '[:upper:]' '[:lower:]')
       echo "Waiting for Keycloak to be ready..."
       for i in $(seq 1 30); do
         if docker compose -f compose.keycloak.yaml exec -T keycloak curl -sf http://localhost:8080/realms/meet > /dev/null 2>&1; then
@@ -478,18 +566,39 @@ deploy-production:
               \"id\":\"$CLIENT_UUID\",
               \"clientId\":\"meet\",
               \"secret\":\"${OIDC_RP_CLIENT_SECRET}\",
+              \"rootUrl\":\"https://${MEET_HOST}\",
+              \"baseUrl\":\"https://${MEET_HOST}/\",
               \"redirectUris\":[\"https://${MEET_HOST}/*\",\"http://localhost:3000/*\",\"http://localhost:8070/*\"],
               \"webOrigins\":[\"https://${MEET_HOST}\",\"http://localhost:3000\",\"http://localhost:8070\"],
               \"attributes\":{\"post.logout.redirect.uris\":\"https://${MEET_HOST}/*\"}
             }'" && echo "  Client secret + URIs updated"
 
-          # Set realm locale to FR only (no language dropdown)
+          # Set realm config: locale FR + aiobi themes + SMTP + verifyEmail
           docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
             "curl -sf -X PUT 'http://localhost:8080/admin/realms/meet' \
             -H 'Authorization: Bearer $TOKEN' \
             -H 'Content-Type: application/json' \
-            -d '{\"defaultLocale\":\"fr\",\"internationalizationEnabled\":true,\"supportedLocales\":[\"fr\"]}'" \
-            && echo "  Realm locale set to FR"
+            -d '{
+              \"defaultLocale\":\"fr\",
+              \"internationalizationEnabled\":true,
+              \"supportedLocales\":[\"fr\"],
+              \"loginTheme\":\"aiobi\",
+              \"emailTheme\":\"aiobi\",
+              \"verifyEmail\":true,
+              \"smtpServer\":{
+                \"host\":\"${DJANGO_EMAIL_HOST}\",
+                \"port\":\"${DJANGO_EMAIL_PORT}\",
+                \"ssl\":\"${EMAIL_SSL_LC}\",
+                \"starttls\":\"${EMAIL_TLS_LC}\",
+                \"auth\":\"true\",
+                \"user\":\"${DJANGO_EMAIL_HOST_USER}\",
+                \"password\":\"${DJANGO_EMAIL_HOST_PASSWORD}\",
+                \"from\":\"${DJANGO_EMAIL_FROM}\",
+                \"fromDisplayName\":\"${DJANGO_EMAIL_BRAND_NAME}\",
+                \"replyTo\":\"support@aiobi.world\"
+              }
+            }'" \
+            && echo "  Realm: locale FR + aiobi themes + SMTP + verifyEmail applied"
         else
           echo "WARNING: Could not find client 'meet'. First deploy? Realm may need import."
         fi

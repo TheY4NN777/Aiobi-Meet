@@ -98,7 +98,16 @@
     "phone": {
       "call": "Call:",
       "pinCode": "Code:"
-    }
+    },
+    "inviteByEmail": "or invite by email",
+    "emailPlaceholder": "Type an email then press Enter",
+    "scheduledDate": "Meeting date",
+    "scheduledTime": "Time",
+    "sendInvites": "Send invitations",
+    "invitesSent": "Invitations sent!",
+    "inviteError": "Failed to send invitations",
+    "invalidEmail": "Invalid email",
+    "optional": "optional"
   },
   "pagination": {
     "count": "{{currentPage}} of {{totalPageCount}}",
@@ -128,7 +137,8 @@
     "body": {
       "openMenu": {
         "others": "Click on the settings icon ICON_PLACEHOLDER in your browser’s address bar",
-        "safari": "Click the 'Safari' menu, and open 'Settings for {{appDomain}}'."
+        "safari": "Click the ‘Safari’ menu, and open ‘Settings for {{appDomain}}’.",
+        "mobile": "Open your browser settings, then allow access for this site"
       },
       "details": {
         "camera": "Allow access to the camera",

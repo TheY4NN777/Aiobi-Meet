@@ -45,12 +45,19 @@ class Settings(BaseSettings):
     # ISO 639-1 language code (e.g., "en", "fr", "es")
     whisperx_default_language: Optional[str] = None
     whisperx_allowed_languages: Set[str] = {"en", "fr", "de", "nl"}
-    llm_base_url: str
-    llm_api_key: SecretStr
-    llm_model: str
+    llm_base_url: Optional[str] = None
+    llm_api_key: Optional[SecretStr] = None
+    llm_model: Optional[str] = None
 
     # Transcription processing
     hallucination_patterns: List[str] = ["Vap'n'Roll Thierry"]
+
+    # Transcription output (MinIO storage for results)
+    transcription_output_prefix: str = "transcriptions/"
+
+    # Webhook mode: "minio" uploads to MinIO then notifies backend,
+    # "legacy" posts content directly to webhook_url (upstream Docs compat)
+    webhook_mode: Literal["minio", "legacy"] = "minio"
 
     # Webhook-related settings
     webhook_max_retries: int = 2

@@ -1,77 +1,96 @@
 <mjml>
   <mj-include path="./partial/header.mjml" />
 
-  <mj-body mj-class="bg--blue-100">
-    <mj-wrapper css-class="wrapper" padding="5px 25px 0px 25px">
-      <mj-section css-class="wrapper-logo">
+  <mj-body background-color="#f4f0fa">
+    <mj-section padding="40px 0 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <mj-wrapper css-class="wrapper" padding="0 12px 0 12px">
+      <!-- Logo header (dark background) -->
+      <mj-section css-class="wrapper-logo" padding="20px 12px">
         <mj-column>
           <mj-image
             align="center"
             src="{{logo_img}}"
-            width="320px"
-            alt="{%trans 'Logo email' %} {{brandname}}"
+            width="160px"
+            alt="{{brandname}}"
           />
         </mj-column>
       </mj-section>
-      <mj-section mj-class="bg--white-100" padding="0px 20px 60px 20px">
+
+      <!-- Content -->
+      <mj-section css-class="mobile-section-top" background-color="#ffffff" padding="24px 16px 12px 16px">
         <mj-column>
-          <mj-text align="center">
-            <h1>{% trans "Your recording is ready!"%}</h1>
+          <mj-text align="center" padding="4px 8px 16px 8px">
+            <h1>Votre enregistrement est prêt !</h1>
           </mj-text>
-          <!-- Main Message -->
-          <mj-text>
-            {% blocktrans %}
-            Your recording of "{{room_name}}" on {{recording_date}} at {{recording_time}} is now ready to download.
-            {% endblocktrans %}
+
+          <mj-text font-size="15px" color="#1a1a2e" line-height="1.6em" padding="0 8px 10px 8px">
+            Votre enregistrement de « {{room_name}} » du {{recording_date}} à {{recording_time}} est maintenant disponible au téléchargement.
             {% if recording_expiration_days %}
-            {% blocktrans with days=recording_expiration_days %}
-            The recording will expire in {{days}} days.
-            {% endblocktrans %}
+            L'enregistrement expirera dans {{recording_expiration_days}} jours.
             {% endif %}
           </mj-text>
-          <mj-text>
-            {% blocktrans %}
-            Sharing the recording via link is not yet available. Only organizers can download it.
-            {% endblocktrans %}
+
+          <mj-text font-size="14px" color="#4a4a68" padding="0 8px 10px 8px" line-height="1.6em">
+            Le partage de l'enregistrement par lien n'est pas encore disponible. Seuls les organisateurs peuvent le télécharger.
           </mj-text>
-          <mj-text>
-            <p>{% trans "To keep this recording permanently:" %}</p>
-            <ol>
-              <li>{% blocktrans %}Click the "Open" button below {% endblocktrans %}</li>
-              <li>{% blocktrans %}Use the "Download" button in the interface {% endblocktrans %}</li>
-              <li>{% blocktrans %}Save the file to your preferred location{% endblocktrans %}</li>
+
+          <mj-text font-size="14px" color="#1a1a2e" padding="6px 8px 0 8px" line-height="1.8em">
+            <p style="margin-bottom: 4px;">Pour conserver cet enregistrement définitivement :</p>
+            <ol style="margin: 4px 0 0 0; padding-left: 20px;">
+              <li>Cliquez sur le bouton « Ouvrir » ci-dessous</li>
+              <li>Utilisez le bouton « Télécharger » dans l'interface</li>
+              <li>Enregistrez le fichier à l'emplacement de votre choix</li>
             </ol>
           </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- Open button -->
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 16px 20px 16px">
+        <mj-column>
           <mj-button
+            css-class="mobile-btn"
             href="{{link}}"
             background-color="#a251fc"
             color="white"
-            padding-bottom="30px"
+            border-radius="8px"
+            font-weight="600"
+            font-size="15px"
+            padding="10px 0 16px 0"
+            inner-padding="12px 28px"
           >
-            {% trans "Open"%}
+            Ouvrir
           </mj-button>
-          <mj-text>
-            {% blocktrans %}
-            If you have any questions or need assistance, please contact our support team at {{support_email}}.
-            {% endblocktrans %}
+        </mj-column>
+      </mj-section>
+
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 16px 24px 16px">
+        <mj-column>
+          <mj-divider border-width="1px" border-style="solid" border-color="#ebebf0" padding="0 0 20px 0" />
+
+          {% if support_email %}
+          <mj-text css-class="mobile-text-sm" font-size="13px" color="#8b8ba3" line-height="1.6em" padding="4px 8px">
+            Si vous avez des questions ou besoin d'assistance, contactez notre équipe support à <a href="mailto:{{support_email}}" style="color: #a251fc;">{{support_email}}</a>.
           </mj-text>
-          <mj-divider
-            border-width="1px"
-            border-style="solid"
-            border-color="#DDDDDD"
-            width="30%"
-            align="center"
-          />
+          {% endif %}
+
           <!-- Signature -->
-          <mj-text>
+          <mj-text align="right" font-size="14px" color="#1a1a2e" padding="20px 8px 0 8px">
             <p>
-              {% blocktrans %}
-              Thank you for using {{brandname}}.
-              {% endblocktrans %}
+              Merci d'utiliser {{brandname}}.
             </p>
           </mj-text>
         </mj-column>
       </mj-section>
     </mj-wrapper>
+
+    <mj-include path="./partial/footer.mjml" />
+
+    <mj-section padding="0 0 40px 0">
+      <mj-column></mj-column>
+    </mj-section>
   </mj-body>
 </mjml>

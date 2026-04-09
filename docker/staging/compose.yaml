@@ -33,6 +33,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${POSTGRES_USER}
       MINIO_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+      # Webhook vers le backend quand un fichier est uploade dans recordings/
+      MINIO_NOTIFY_WEBHOOK_ENABLE_meet: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_meet: http://backend:8000/api/v1.0/recordings/storage-hook/
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_meet: ${RECORDING_STORAGE_EVENT_TOKEN}
     volumes:
       - ./data/media:/data
     command: server /data --console-address :9001
@@ -49,10 +53,14 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+      backend:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       mc alias set meet http://minio:9000 $${POSTGRES_USER} $${POSTGRES_PASSWORD} &&
-      mc mb meet/meet-media-storage --ignore-existing;
+      mc mb meet/meet-media-storage --ignore-existing &&
+      mc event add meet/meet-media-storage arn:minio:sqs::meet:webhook --event put --prefix recordings/ --ignore-existing 2>/dev/null;
+      echo 'Buckets and events configured';
       "
     env_file:
       - .env
@@ -176,6 +184,105 @@ services:
     networks:
       - proxy-tier
       - default
+
+  # ---------------------------------------------------------------------------
+  # LiveKit Egress (enregistrement des rooms → upload MinIO)
+  # ---------------------------------------------------------------------------
+  livekit-egress:
+    image: livekit/egress:v1.11.0
+    restart: always
+    environment:
+      EGRESS_CONFIG_FILE: /egress-config.yaml
+    volumes:
+      - ./livekit-egress.yaml:/egress-config.yaml:ro
+    depends_on:
+      - redis
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Whisper local (transcription audio — faster-whisper-server)
+  # API compatible OpenAI : POST /v1/audio/transcriptions
+  # Premier demarrage : telecharge le modele large-v3 (~3 GB)
+  # ---------------------------------------------------------------------------
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Redis pour le summary service (broker Celery + result backend)
+  # ---------------------------------------------------------------------------
+  redis-summary:
+    image: redis:5
+    restart: always
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Summary service (FastAPI — transcription + resume IA)
+  # ---------------------------------------------------------------------------
+  summary:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — transcription (queue: transcribe-queue)
+  # ---------------------------------------------------------------------------
+  celery-transcribe:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q transcribe-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    depends_on:
+      - redis-summary
+      - whisper
+      - minio
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — resume IA (queue: summarize-queue)
+  # Pret pour Phase 2 (Docker Model Runner)
+  # ---------------------------------------------------------------------------
+  celery-summarize:
+    image: aiobi-meet/summary:latest
+    user: ${DOCKER_USER:-1000}
+    restart: always
+    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q summarize-queue --concurrency=2
+    env_file:
+      - .env
+      - env.d/summary
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis-summary
+    networks:
+      - default
+
+volumes:
+  whisper-models:
 
 networks:
   proxy-tier:

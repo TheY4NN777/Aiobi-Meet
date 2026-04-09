@@ -13,6 +13,7 @@ import {
   RiVideoOnLine,
   RiEyeLine,
   RiKeyboardBoxLine,
+  RiInformationLine,
 } from '@remixicon/react'
 import { AccountTab } from './tabs/AccountTab'
 import { NotificationsTab } from './tabs/NotificationsTab'
@@ -26,6 +27,7 @@ import { useMediaQuery } from '@/features/rooms/livekit/hooks/useMediaQuery'
 import { SettingsDialogExtendedKey } from '@/features/settings/type'
 import { useIsAdminOrOwner } from '@/features/rooms/livekit/hooks/useIsAdminOrOwner'
 import { AccessibilityTab } from './tabs/AccessibilityTab'
+import { AboutTab } from './tabs/AboutTab'
 
 const tabsStyle = css({
   maxHeight: '40.625rem', // fixme size copied from meet settings modal
@@ -126,6 +128,11 @@ export const SettingsDialogExtended = (props: SettingsDialogExtended) => {
               {isWideScreen &&
                 t(`tabs.${SettingsDialogExtendedKey.ACCESSIBILITY}`)}
             </Tab>
+            <Tab icon highlight id={SettingsDialogExtendedKey.ABOUT}>
+              <RiInformationLine />
+              {isWideScreen &&
+                t(`tabs.${SettingsDialogExtendedKey.ABOUT}`)}
+            </Tab>
           </TabList>
         </div>
         <div className={tabPanelContainerStyle}>
@@ -141,6 +148,7 @@ export const SettingsDialogExtended = (props: SettingsDialogExtended) => {
           {/* Transcription tab won't be accessible if the tab is not active in the tab list */}
           <TranscriptionTab id={SettingsDialogExtendedKey.TRANSCRIPTION} />
           <AccessibilityTab id={SettingsDialogExtendedKey.ACCESSIBILITY} />
+          <AboutTab id={SettingsDialogExtendedKey.ABOUT} />
         </div>
       </Tabs>
     </Dialog>

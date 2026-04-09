@@ -7,18 +7,24 @@ export interface CreateRoomParams {
   slug: string
   callbackId?: string
   username?: string
+  scheduledDate?: string | null
+  scheduledTime?: string | null
 }
 
 const createRoom = ({
   slug,
   callbackId,
   username = '',
+  scheduledDate,
+  scheduledTime,
 }: CreateRoomParams): Promise<ApiRoom> => {
   return fetchApi(`rooms/?username=${encodeURIComponent(username)}`, {
     method: 'POST',
     body: JSON.stringify({
       name: slug,
       callback_id: callbackId,
+      scheduled_date: scheduledDate || null,
+      scheduled_time: scheduledTime || null,
     }),
   })
 }

@@ -10,7 +10,7 @@ import {
   ANIMATION_DURATION,
   ReactionPortals,
 } from '@/features/rooms/livekit/components/ReactionPortal'
-import { getEmojiLabel } from '@/features/rooms/livekit/utils/reactionUtils'
+import { getEmojiLabel, emojiIcons } from '@/features/rooms/livekit/utils/reactionUtils'
 import { useRegisterKeyboardShortcut } from '@/features/shortcuts/useRegisterKeyboardShortcut'
 import {
   Popover as RACPopover,
@@ -31,6 +31,12 @@ export enum Emoji {
   SURPRISED = 'face-with-open-mouth',
   CELEBRATION = 'party-popper',
   PLEASE = 'folded-hands',
+  RAISED_HAND = 'raised-hand',
+  FIRE = 'fire',
+  STAR = 'star',
+  ROCKET = 'rocket',
+  TROPHY = 'trophy',
+  CHECK = 'check',
 }
 
 export interface Reaction {
@@ -137,16 +143,7 @@ export const ReactionsToggle = () => {
                       square
                       data-attr={`send-reaction-${emoji}`}
                     >
-                      <img
-                        src={`/assets/reactions/${emoji}.png`}
-                        alt=""
-                        className={css({
-                          width: '28px',
-                          height: '28px',
-                          pointerEvents: 'none',
-                          userSelect: 'none',
-                        })}
-                      />
+                      {(() => { const Icon = emojiIcons[emoji]; return Icon ? <Icon size={24} /> : null })()}
                     </Button>
                   ))}
                 </div>

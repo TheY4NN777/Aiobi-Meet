@@ -109,7 +109,7 @@ const LandingContent = () => {
       {/* ===== NAVBAR ===== */}
       <nav className={`lp-navbar ${navScrolled ? 'scrolled' : ''}`}>
         <div className="lp-container">
-          <a href="#" className="nav-logo">
+          <a href="/" className="nav-logo">
             <img src="/assets/logo.svg" alt="Aïobi Meet" />
           </a>
           <ul className="nav-links">
@@ -120,7 +120,6 @@ const LandingContent = () => {
             <li><a href="#faq">FAQ</a></li>
           </ul>
           <div className="nav-actions">
-            <button className="btn btn-ghost" onClick={() => setJoinOpen(true)}>Rejoindre</button>
             {isLoggedIn ? (
               <a href="/home" className="btn btn-primary">Mon espace</a>
             ) : (
@@ -173,9 +172,7 @@ const LandingContent = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
               Lancer une réunion
             </a>
-            <button className="btn btn-ghost btn-lg" onClick={() => setJoinOpen(true)}>
-              Rejoindre une réunion
-            </button>
+            <button className="btn btn-ghost btn-lg" onClick={() => setJoinOpen(true)}>Rejoindre une réunion</button>
           </div>
           <p className="hero-note reveal reveal-delay-4" ref={addRevealRef}>
             Gratuit, sans installation, depuis votre navigateur
@@ -384,6 +381,7 @@ const LandingContent = () => {
                 <li>Chiffrement TLS</li>
                 <li>Aucune installation</li>
                 <li>Durée max 1h30</li>
+                <li>IA intégrée (fair use applicable)</li>
               </ul>
               <a href={loginUrl} className="btn btn-ghost btn-lg">Créer un compte gratuit</a>
             </div>
@@ -441,7 +439,7 @@ const LandingContent = () => {
               <tbody>
                 <tr>
                   <td>Version gratuite</td>
-                  <td className="highlight"><span className="check">&#10003;</span> Complète</td>
+                  <td className="highlight">90 min max</td>
                   <td>Limitée (40 min)</td>
                   <td>Limitée (60 min)</td>
                   <td>Limitée</td>
@@ -462,7 +460,7 @@ const LandingContent = () => {
                 </tr>
                 <tr>
                   <td>IA intégrée</td>
-                  <td className="highlight">Bientôt</td>
+                  <td className="highlight"><span className="check">&#10003;</span> Fair use</td>
                   <td>Payant</td>
                   <td>Payant</td>
                   <td>Payant</td>
@@ -624,8 +622,8 @@ const LandingContent = () => {
       {/* ===== FOOTER ===== */}
       {/* ===== JOIN POPUP ===== */}
       {joinOpen && (
-        <div className="join-overlay" onClick={() => setJoinOpen(false)}>
-          <div className="join-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="join-overlay" onClick={() => setJoinOpen(false)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Escape' && setJoinOpen(false)}>
+          <div className="join-modal" onClick={(e) => e.stopPropagation()} role="presentation">
             <button className="join-modal-close" onClick={() => setJoinOpen(false)}>&times;</button>
             <h3>Rejoindre une réunion</h3>
             <p>Entrez le code ou le lien de la réunion</p>
@@ -636,6 +634,7 @@ const LandingContent = () => {
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
               />
               <button className="btn btn-primary" onClick={handleJoinRoom}>
@@ -657,7 +656,7 @@ const LandingContent = () => {
               <p>Première DeepTech du continent dédiée à l&apos;IA appliquée aux entreprises. Filiale de BBS Holding / BURVAL Corporate.</p>
               <div className="footer-status">
                 <span>Disponible maintenant</span>
-                <span className="status-secondary">Afrique &middot; Europe &middot; Monde</span>
+                <span className="status-secondary">Afrique &middot; Océanie &middot; Monde</span>
               </div>
               <div className="footer-socials">
                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
@@ -668,7 +667,7 @@ const LandingContent = () => {
             <div className="footer-nav">
               <h5>Navigation</h5>
               <div className="footer-links">
-                <a href="#">Accueil</a>
+                <a href="/">Accueil</a>
                 <a href="#features">Fonctionnalités</a>
                 <a href="#pricing">Tarifs</a>
                 <a href="#about">À propos</a>

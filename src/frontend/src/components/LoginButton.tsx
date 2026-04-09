@@ -17,7 +17,7 @@ export const LoginButton = ({ proConnectHint = true }: LoginButtonProps) => {
   }
 
   return (
-    <LinkButton href={authUrl()} data-attr="login" variant="primary">
+    <LinkButton href={authUrl()} data-attr="login" variant="primary" style={{ whiteSpace: 'nowrap' }}>
       {t('buttonLabel')}
     </LinkButton>
   )

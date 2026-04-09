@@ -13,13 +13,14 @@ import { LoginButton } from '@/components/LoginButton'
 import { VisualOnlyTooltip } from '@/primitives/VisualOnlyTooltip'
 
 import { useLoginHint } from '@/hooks/useLoginHint'
+import { useIsEnterprise } from '@/features/auth/hooks/useIsEnterprise'
 
 const Logo = () => (
   <img
     src="/assets/logo.svg"
     alt={`${import.meta.env.VITE_APP_TITLE}`}
     className={`Header-logo ${css({
-      maxWidth: { base: '160px', sm: '200px' },
+      maxWidth: { base: '110px', sm: '200px' },
       marginTop: { base: '4px', sm: '2px' },
       flexShrink: 0,
     })}`}
@@ -91,6 +92,7 @@ export const Header = () => {
   const isTermsOfService = useMatchesRoute('termsOfService')
   const isRoom = useMatchesRoute('room')
   const { user, isLoggedIn, logout } = useUser()
+  const isEnterprise = useIsEnterprise()
   const userLabel = user?.full_name || user?.email
   const loggedInTooltip = t('loggedInUserTooltip')
   const loggedInAriaLabel = userLabel
@@ -110,7 +112,7 @@ export const Header = () => {
       >
         <HStack gap={0} justify="space-between" alignItems="center">
           <header>
-            <Stack gap={2.25} direction="row" align="center">
+            <Stack gap={{ base: 0.5, sm: 2.25 }} direction="row" align="center">
               <Link
                 className={css({
                   display: 'flex',
@@ -131,7 +133,7 @@ export const Header = () => {
                     event.preventDefault()
                   }
                 }}
-                to="/"
+                to={isLoggedIn ? '/home' : '/'}
               >
                 {/* this is there only as a hook for custom CSS users who might want to show something before the app logo */}
                 <div
@@ -164,16 +166,33 @@ export const Header = () => {
                       ariaLabel={loggedInAriaLabel}
                       tooltipPosition="bottom"
                     >
-                      <span
-                        className={css({
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          maxWidth: '350px',
-                          display: { base: 'none', xsm: 'block' },
-                        })}
-                      >
-                        {user?.full_name || user?.email}
+                      <span className={css({ display: 'flex', alignItems: 'center', gap: '0.5rem' })}>
+                        <span
+                          className={css({
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '350px',
+                            display: { base: 'none', xsm: 'block' },
+                          })}
+                        >
+                          {user?.full_name || user?.email}
+                        </span>
+                        {isEnterprise && (
+                          <span style={{
+                            background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)',
+                            color: '#E4D3E6',
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: '20px',
+                            letterSpacing: '0.06em',
+                            flexShrink: 0,
+                            display: 'inline-block',
+                          }}>
+                            ENTERPRISE
+                          </span>
+                        )}
                       </span>
                     </VisualOnlyTooltip>
                   </Button>
