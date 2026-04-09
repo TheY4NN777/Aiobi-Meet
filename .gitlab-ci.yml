@@ -410,6 +410,27 @@ build-frontend-prod:
   only:
     - main
 
+build-summary-prod:
+  stage: build
+  tags:
+    - aiobi-prod
+    - docker
+  image: docker:27
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build
+      --no-cache
+      --file src/summary/Dockerfile
+      --target production
+      --tag $CI_REGISTRY_IMAGE/summary:${CI_COMMIT_SHORT_SHA}
+      --tag $CI_REGISTRY_IMAGE/summary:latest
+      src/summary
+    - docker push $CI_REGISTRY_IMAGE/summary:${CI_COMMIT_SHORT_SHA}
+    - docker push $CI_REGISTRY_IMAGE/summary:latest
+  only:
+    - main
+
 # =============================================================================
 # DEPLOY PRODUCTION
 # =============================================================================
@@ -623,6 +644,7 @@ deploy-production:
   needs:
     - build-backend-prod
     - build-frontend-prod
+    - build-summary-prod
 
 # =============================================================================
 # DIAGNOSTIC (temporaire — a supprimer apres le premier deploy reussi)
