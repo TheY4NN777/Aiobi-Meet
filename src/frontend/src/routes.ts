@@ -10,6 +10,7 @@ import { TermsOfServiceRoute } from '@/features/legalsTerms/TermsOfService'
 import { CreatePopup } from '@/features/sdk/routes/CreatePopup'
 import { CreateMeetingButton } from '@/features/sdk/routes/CreateMeetingButton'
 import { RecordingDownloadRoute } from '@/features/recording'
+import { ReleaseNotesRoute } from '@/features/releaseNotes/ReleaseNotes'
 
 const roomIdRegex = new RegExp(`^[/](?<roomId>${flexibleRoomIdPattern})$`)
 
@@ -23,6 +24,7 @@ export const routes: Record<
   | 'termsOfService'
   | 'sdkCreatePopup'
   | 'sdkCreateButton'
+  | 'releaseNotes'
   | 'recordingDownload',
   {
     name: RouteName
@@ -77,6 +79,11 @@ export const routes: Record<
     name: 'sdkCreateButton',
     path: '/sdk/create-button',
     Component: CreateMeetingButton,
+  },
+  releaseNotes: {
+    name: 'releaseNotes',
+    path: '/release-notes',
+    Component: ReleaseNotesRoute,
   },
   recordingDownload: {
     name: 'recordingDownload',
