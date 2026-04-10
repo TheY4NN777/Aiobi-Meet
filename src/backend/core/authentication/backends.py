@@ -83,18 +83,17 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         """Sync account_tier from Keycloak realm roles on every login.
 
         Reads 'realm_access.roles' from the OIDC claims. If the 'enterprise'
-        role is present, the user is promoted; otherwise they remain 'normal'.
+        role is present, the user is promoted. If realm_access is missing or
+        empty (mapper not configured), the current tier is preserved to avoid
+        accidentally downgrading users promoted via other means (admin, CI).
         Skips the Keycloak API back-sync (signal) by using update_fields.
         """
-        realm_roles = claims.get("realm_access", {}).get("roles", [])
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(
-            "account_tier sync for %s: realm_access=%s, roles=%s",
-            user.email,
-            claims.get("realm_access"),
-            realm_roles,
-        )
+        realm_access = claims.get("realm_access")
+        if not realm_access or not realm_access.get("roles"):
+            # Mapper not returning roles — don't touch the tier
+            return
+
+        realm_roles = realm_access.get("roles", [])
         new_tier = (
             User.AccountTier.ENTERPRISE
             if "enterprise" in realm_roles
