@@ -463,7 +463,25 @@ deploy-production:
     - cp docker/production/compose*.yaml $HOST_PROD/
     - cp docker/production/default.conf.template $HOST_PROD/
     - cp docker/production/livekit-server.yaml $HOST_PROD/
+    - cp docker/production/livekit-egress.yaml $HOST_PROD/
+    # Injecter les secrets dans la config egress
+    - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_PROD/livekit-egress.yaml
+    - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_PROD/livekit-egress.yaml
+    - sed -i "s|__MINIO_SECRET_KEY__|${POSTGRES_PASSWORD}|g" $HOST_PROD/livekit-egress.yaml
     - cp docker/production/env.d/* $HOST_PROD/env.d/
+    # Injecter les variables email CI dans env.d/common (remplace mailcatcher)
+    - |
+      if [ -n "$DJANGO_EMAIL_HOST" ]; then
+        sed -i "s|^DJANGO_EMAIL_HOST=.*|DJANGO_EMAIL_HOST=$DJANGO_EMAIL_HOST|" $HOST_PROD/env.d/common
+        sed -i "s|^DJANGO_EMAIL_PORT=.*|DJANGO_EMAIL_PORT=$DJANGO_EMAIL_PORT|" $HOST_PROD/env.d/common
+        sed -i "s|^DJANGO_EMAIL_FROM=.*|DJANGO_EMAIL_FROM=$DJANGO_EMAIL_FROM|" $HOST_PROD/env.d/common
+        sed -i "s|^DJANGO_EMAIL_BRAND_NAME=.*|DJANGO_EMAIL_BRAND_NAME=\"$DJANGO_EMAIL_BRAND_NAME\"|" $HOST_PROD/env.d/common
+        echo "DJANGO_EMAIL_USE_SSL=$DJANGO_EMAIL_USE_SSL" >> $HOST_PROD/env.d/common
+        echo "DJANGO_EMAIL_USE_TLS=$DJANGO_EMAIL_USE_TLS" >> $HOST_PROD/env.d/common
+        echo "DJANGO_EMAIL_HOST_USER=$DJANGO_EMAIL_HOST_USER" >> $HOST_PROD/env.d/common
+        echo "DJANGO_EMAIL_HOST_PASSWORD=$DJANGO_EMAIL_HOST_PASSWORD" >> $HOST_PROD/env.d/common
+        echo "  Django SMTP configured from CI variables"
+      fi
     - mkdir -p $HOST_PROJECT/docker/auth
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
     - mkdir -p $HOST_PROJECT/docker/keycloak/themes/aiobi

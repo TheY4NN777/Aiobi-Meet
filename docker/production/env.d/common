@@ -30,7 +30,11 @@ OIDC_OP_USER_ENDPOINT=http://keycloak:8080/realms/${REALM_NAME}/protocol/openid-
 OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
 OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
 OIDC_RP_SIGN_ALGO=RS256
-OIDC_RP_SCOPES="openid email"
+OIDC_RP_SCOPES="openid email profile"
+
+# Keycloak custom mappers use first_name/last_name (not standard given_name/family_name)
+OIDC_USERINFO_FULLNAME_FIELDS=first_name,last_name
+OIDC_USERINFO_SHORTNAME_FIELD=first_name
 
 # Keycloak Admin API — sync account_tier depuis Django Admin
 KEYCLOAK_INTERNAL_URL=http://keycloak:8080
