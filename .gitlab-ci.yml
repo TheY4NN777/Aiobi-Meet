@@ -625,7 +625,41 @@ deploy-production:
         fi
       fi
 
-    # --- 8. Verification rapide Traefik (TLS est automatique) ----------------
+    # --- 8. Promote enterprise users from file --------------------------------
+    - echo "=== Promoting enterprise users ==="
+    - |
+      if [ -f "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" ]; then
+        EMAILS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | tr '\n' ',' | sed 's/,$//')
+        docker compose -f compose.yaml exec -T backend python manage.py shell -c "
+      from core.models import User
+      emails = '$EMAILS'.split(',')
+      for email in emails:
+          email = email.strip()
+          if not email:
+              continue
+          try:
+              u = User.objects.get(email=email)
+              changed = False
+              if u.account_tier != 'enterprise':
+                  u.account_tier = 'enterprise'
+                  changed = True
+              if not u.is_superuser:
+                  u.is_superuser = True
+                  u.is_staff = True
+                  changed = True
+              if changed:
+                  u.save(update_fields=['account_tier', 'is_superuser', 'is_staff'])
+                  print(f'{email} -> promoted to enterprise + admin')
+              else:
+                  print(f'{email} -> already enterprise + admin')
+          except User.DoesNotExist:
+              print(f'{email} -> not found (will be promoted on next login)')
+      " 2>&1
+      else
+        echo "  No enterprise-users.txt found, skipping"
+      fi
+
+    # --- 9. Verification rapide Traefik (TLS est automatique) ----------------
     - echo "=== Verifying Traefik routing ==="
     - |
       sleep 10
@@ -719,8 +753,22 @@ debug-production:
       docker compose exec -T backend python manage.py shell -c "
       from core.models import User
       for u in User.objects.all():
-          print(f'{u.email} -> account_tier={u.account_tier}')
+          print(f'{u.email} -> account_tier={u.account_tier} is_superuser={u.is_superuser}')
       " 2>&1 || echo "Could not query users"
+
+    - echo "=== Promote CEO to enterprise + create superuser ==="
+    - |
+      docker compose exec -T backend python manage.py shell -c "
+      from core.models import User
+      import os
+      for u in User.objects.all():
+          if not u.is_superuser:
+              u.is_superuser = True
+              u.is_staff = True
+              u.account_tier = 'enterprise'
+              u.save()
+              print(f'Promoted {u.email} to enterprise + superuser')
+      " 2>&1 || echo "Could not promote users"
 
     - echo "=== .env check ==="
     - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG" .env 2>/dev/null || echo "No .env found"
