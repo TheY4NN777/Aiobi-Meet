@@ -873,22 +873,43 @@ debug-production:
           print(f'{u.email} -> account_tier={u.account_tier} is_superuser={u.is_superuser}')
       " 2>&1 || echo "Could not query users"
 
-    - echo "=== Promote CEO to enterprise + create superuser ==="
+    - echo "=== Backend SMTP config ==="
+    - docker compose exec -T backend env 2>/dev/null | grep -i "EMAIL" || echo "Could not read backend env"
+
+    - echo "=== Test email send ==="
     - |
       docker compose exec -T backend python manage.py shell -c "
-      from core.models import User
-      import os
-      for u in User.objects.all():
-          if not u.is_superuser:
-              u.is_superuser = True
-              u.is_staff = True
-              u.account_tier = 'enterprise'
-              u.save()
-              print(f'Promoted {u.email} to enterprise + superuser')
-      " 2>&1 || echo "Could not promote users"
+      from django.core.mail import send_mail
+      try:
+          send_mail('Debug test', 'Test from debug-production', None, ['yanisaxel.dabo@aiobi.world'])
+          print('EMAIL SEND: OK')
+      except Exception as e:
+          print(f'EMAIL SEND FAILED: {e}')
+      " 2>&1 || echo "Could not test email"
+
+    - echo "=== Backend errors (last 100 lines) ==="
+    - docker compose logs backend --tail 100 2>&1 | grep -i "error\|exception\|traceback\|failed\|500\|502\|503\|504" | tail -30 || echo "No errors found"
+
+    - echo "=== LiveKit Egress logs ==="
+    - docker compose logs livekit-egress --tail 30 2>&1 || echo "No egress container"
+
+    - echo "=== Summary service logs ==="
+    - docker compose logs summary --tail 30 2>&1 || echo "No summary container"
+
+    - echo "=== Celery transcribe logs ==="
+    - docker compose logs celery-transcribe --tail 30 2>&1 || echo "No celery-transcribe container"
+
+    - echo "=== Whisper logs ==="
+    - docker compose logs whisper --tail 20 2>&1 || echo "No whisper container"
+
+    - echo "=== MinIO health ==="
+    - docker compose exec -T minio mc ready local 2>&1 || echo "MinIO not ready"
 
     - echo "=== .env check ==="
-    - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG" .env 2>/dev/null || echo "No .env found"
+    - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG|EMAIL_HOST|SUMMARY" .env 2>/dev/null || echo "No .env found"
+
+    - echo "=== env.d/common SMTP section ==="
+    - grep -i "EMAIL" env.d/common 2>/dev/null || echo "No env.d/common"
 
     - echo "=== Restarting Traefik ==="
     - docker restart traefik
