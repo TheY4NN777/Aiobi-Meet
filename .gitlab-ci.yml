@@ -715,10 +715,11 @@ debug-production:
     - docker logs --tail 50 $(docker ps -qf "name=backend" | head -1) 2>&1 || echo "No backend container"
 
     - echo "=== Enterprise users in Django DB ==="
-    - docker compose exec -T backend python manage.py shell -c "
-      from core.models import User;
+    - |
+      docker compose exec -T backend python manage.py shell -c "
+      from core.models import User
       for u in User.objects.all():
-        print(f'{u.email} -> account_tier={u.account_tier}')
+          print(f'{u.email} -> account_tier={u.account_tier}')
       " 2>&1 || echo "Could not query users"
 
     - echo "=== .env check ==="
