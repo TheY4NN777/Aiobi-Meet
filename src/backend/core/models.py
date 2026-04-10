@@ -709,22 +709,34 @@ class Recording(BaseModel):
 
         return f"{settings.RECORDING_OUTPUT_FOLDER}/{self.id}.{self.extension}"
 
+    def _get_recording_retention_days(self) -> Optional[int]:
+        """Return retention days based on the room owner's account tier."""
+        owner = (
+            User.objects.filter(
+                resourceaccess__resource_id=self.room_id,
+                resourceaccess__role=RoleChoices.OWNER,
+            )
+            .first()
+        )
+        if owner and owner.account_tier == User.AccountTier.ENTERPRISE:
+            return settings.RECORDING_RETENTION_DAYS_ENTERPRISE
+        return settings.RECORDING_RETENTION_DAYS_DEFAULT
+
     @property
     def expired_at(self) -> Optional[datetime]:
         """
-        Calculate the expiration date based on created_at and RECORDING_EXPIRATION_DAYS.
-        Returns None if no expiration is configured.
-
-        Note: This is a naive and imperfect implementation since recordings are actually
-        saved to the bucket after created_at timestamp is set. The actual expiration
-        will be determined by the bucket lifecycle policy which operates on the object's
-        timestamp in the storage system, not this value.
+        Calculate the expiration date based on created_at and the room owner's tier.
+        Enterprise owners get 365 days, free users get 14 days.
+        Falls back to RECORDING_EXPIRATION_DAYS if set.
         """
+        retention = self._get_recording_retention_days()
+        if retention is None:
+            # Fallback to legacy global setting
+            if not settings.RECORDING_EXPIRATION_DAYS:
+                return None
+            retention = settings.RECORDING_EXPIRATION_DAYS
 
-        if not settings.RECORDING_EXPIRATION_DAYS:
-            return None
-
-        return self.created_at + timedelta(days=settings.RECORDING_EXPIRATION_DAYS)
+        return self.created_at + timedelta(days=retention)
 
     @property
     def is_expired(self) -> bool:

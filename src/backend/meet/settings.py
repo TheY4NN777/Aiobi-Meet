@@ -700,10 +700,17 @@ class Base(Configuration):
     RECORDING_STORAGE_EVENT_TOKEN = SecretFileValue(
         None, environ_name="RECORDING_STORAGE_EVENT_TOKEN", environ_prefix=None
     )
-    # Number of days before recordings expire - must be synced with bucket lifecycle policy
+    # Number of days before recordings expire (legacy global setting, used as fallback)
     # Set to None for no expiration
     RECORDING_EXPIRATION_DAYS = values.IntegerValue(
         None, environ_name="RECORDING_EXPIRATION_DAYS", environ_prefix=None
+    )
+    # Recording retention per tier (days before auto-purge)
+    RECORDING_RETENTION_DAYS_DEFAULT = values.IntegerValue(
+        14, environ_name="RECORDING_RETENTION_DAYS_DEFAULT", environ_prefix=None
+    )
+    RECORDING_RETENTION_DAYS_ENTERPRISE = values.IntegerValue(
+        365, environ_name="RECORDING_RETENTION_DAYS_ENTERPRISE", environ_prefix=None
     )
     # Recording max duration in milliseconds - must be synced with LiveKit Egress configuration
     # Set to None for no max duration
