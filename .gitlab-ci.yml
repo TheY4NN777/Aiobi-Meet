@@ -350,6 +350,69 @@ deploy-staging:
       # Mise a jour immediate
       $HOST_STAGING/duckdns-update.sh || true
 
+    # --- 9. Promote enterprise users (same file as prod) ----------------------
+    - echo "=== Promoting enterprise users ==="
+    - |
+      if [ -f "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" ]; then
+        DOMAINS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep '^@' | sed 's/^@//' | tr '\n' ',' | sed 's/,$//')
+        docker compose -f compose.yaml exec -T backend python manage.py shell -c "
+      from core.models import User
+      domains = '$DOMAINS'.split(',')
+      for u in User.objects.all():
+          if any(u.email.endswith('@' + d.strip()) for d in domains if d.strip()):
+              changed = False
+              if u.account_tier != 'enterprise':
+                  u.account_tier = 'enterprise'
+                  changed = True
+              if not u.is_superuser:
+                  u.is_superuser = True
+                  u.is_staff = True
+                  changed = True
+              if changed:
+                  User.objects.filter(pk=u.pk).update(account_tier=u.account_tier, is_superuser=u.is_superuser, is_staff=u.is_staff)
+                  print(f'{u.email} -> promoted to enterprise + admin')
+              else:
+                  print(f'{u.email} -> already enterprise + admin')
+      " 2>&1
+        echo "  Assigning enterprise role in Keycloak..."
+        KC_TOKEN=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+          'curl -sf -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+          -d "client_id=admin-cli" \
+          -d "username=$KEYCLOAK_ADMIN" \
+          -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
+          -d "grant_type=password"' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+        if [ -n "$KC_TOKEN" ]; then
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -o /dev/null -w '%{http_code}' 'http://localhost:8080/admin/realms/meet/roles/enterprise' \
+            -H 'Authorization: Bearer $KC_TOKEN'" | grep -q 200 || \
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X POST 'http://localhost:8080/admin/realms/meet/roles' \
+            -H 'Authorization: Bearer $KC_TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{\"name\":\"enterprise\",\"description\":\"Enterprise tier\"}'" && echo "    Created enterprise role"
+          ROLE_JSON=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf 'http://localhost:8080/admin/realms/meet/roles/enterprise' \
+            -H 'Authorization: Bearer $KC_TOKEN'")
+          for DOMAIN in $(echo "$DOMAINS" | tr ',' ' '); do
+            USERS_JSON=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+              "curl -sf 'http://localhost:8080/admin/realms/meet/users?max=500' \
+              -H 'Authorization: Bearer $KC_TOKEN'")
+            for USER_ID in $(echo "$USERS_JSON" | grep -o '"id":"[^"]*","createdTimestamp":[^,]*,"username":"[^"]*","enabled":[^,]*,"totp":[^,]*,"emailVerified":[^,]*,"firstName":"[^"]*","lastName":"[^"]*","email":"[^"]*@'"$DOMAIN"'"' | grep -o '"id":"[^"]*"' | cut -d'"' -f4); do
+              docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+                "curl -sf -X POST 'http://localhost:8080/admin/realms/meet/users/$USER_ID/role-mappings/realm' \
+                -H 'Authorization: Bearer $KC_TOKEN' \
+                -H 'Content-Type: application/json' \
+                -d '[$ROLE_JSON]'" 2>/dev/null
+            done
+            echo "    @$DOMAIN -> enterprise role assigned"
+          done
+        else
+          echo "  WARNING: Could not get Keycloak admin token"
+        fi
+      else
+        echo "  No enterprise-users.txt found, skipping"
+      fi
+
     - echo "=== Deploy complete ==="
 
   environment:
@@ -647,16 +710,13 @@ deploy-production:
     - echo "=== Promoting enterprise users ==="
     - |
       if [ -f "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" ]; then
-        EMAILS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | tr '\n' ',' | sed 's/,$//')
+        DOMAINS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep '^@' | sed 's/^@//' | tr '\n' ',' | sed 's/,$//')
+        # Promote matching users in Django DB
         docker compose -f compose.yaml exec -T backend python manage.py shell -c "
       from core.models import User
-      emails = '$EMAILS'.split(',')
-      for email in emails:
-          email = email.strip()
-          if not email:
-              continue
-          try:
-              u = User.objects.get(email=email)
+      domains = '$DOMAINS'.split(',')
+      for u in User.objects.all():
+          if any(u.email.endswith('@' + d.strip()) for d in domains if d.strip()):
               changed = False
               if u.account_tier != 'enterprise':
                   u.account_tier = 'enterprise'
@@ -666,13 +726,52 @@ deploy-production:
                   u.is_staff = True
                   changed = True
               if changed:
-                  u.save(update_fields=['account_tier', 'is_superuser', 'is_staff'])
-                  print(f'{email} -> promoted to enterprise + admin')
+                  User.objects.filter(pk=u.pk).update(account_tier=u.account_tier, is_superuser=u.is_superuser, is_staff=u.is_staff)
+                  print(f'{u.email} -> promoted to enterprise + admin')
               else:
-                  print(f'{email} -> already enterprise + admin')
-          except User.DoesNotExist:
-              print(f'{email} -> not found (will be promoted on next login)')
+                  print(f'{u.email} -> already enterprise + admin')
       " 2>&1
+        # Assign enterprise role in Keycloak for matching users
+        echo "  Assigning enterprise role in Keycloak..."
+        KC_TOKEN=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+          'curl -sf -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+          -d "client_id=admin-cli" \
+          -d "username=$KEYCLOAK_ADMIN" \
+          -d "password=$KEYCLOAK_ADMIN_PASSWORD" \
+          -d "grant_type=password"' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+        if [ -n "$KC_TOKEN" ]; then
+          # Ensure enterprise role exists
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -o /dev/null -w '%{http_code}' 'http://localhost:8080/admin/realms/meet/roles/enterprise' \
+            -H 'Authorization: Bearer $KC_TOKEN'" | grep -q 200 || \
+          docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf -X POST 'http://localhost:8080/admin/realms/meet/roles' \
+            -H 'Authorization: Bearer $KC_TOKEN' \
+            -H 'Content-Type: application/json' \
+            -d '{\"name\":\"enterprise\",\"description\":\"Enterprise tier\"}'" && echo "    Created enterprise role"
+
+          ROLE_JSON=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+            "curl -sf 'http://localhost:8080/admin/realms/meet/roles/enterprise' \
+            -H 'Authorization: Bearer $KC_TOKEN'")
+
+          # Get all Keycloak users and assign role to matching domains
+          for DOMAIN in $(echo "$DOMAINS" | tr ',' ' '); do
+            USERS_JSON=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+              "curl -sf 'http://localhost:8080/admin/realms/meet/users?max=500' \
+              -H 'Authorization: Bearer $KC_TOKEN'")
+            for USER_ID in $(echo "$USERS_JSON" | grep -o '"id":"[^"]*","createdTimestamp":[^,]*,"username":"[^"]*","enabled":[^,]*,"totp":[^,]*,"emailVerified":[^,]*,"firstName":"[^"]*","lastName":"[^"]*","email":"[^"]*@'"$DOMAIN"'"' | grep -o '"id":"[^"]*"' | cut -d'"' -f4); do
+              docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+                "curl -sf -X POST 'http://localhost:8080/admin/realms/meet/users/$USER_ID/role-mappings/realm' \
+                -H 'Authorization: Bearer $KC_TOKEN' \
+                -H 'Content-Type: application/json' \
+                -d '[$ROLE_JSON]'" 2>/dev/null
+            done
+            echo "    @$DOMAIN -> enterprise role assigned for all matching users"
+          done
+        else
+          echo "  WARNING: Could not get Keycloak admin token for role assignment"
+        fi
       else
         echo "  No enterprise-users.txt found, skipping"
       fi
