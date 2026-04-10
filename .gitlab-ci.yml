@@ -364,15 +364,11 @@ deploy-staging:
               if u.account_tier != 'enterprise':
                   u.account_tier = 'enterprise'
                   changed = True
-              if not u.is_superuser:
-                  u.is_superuser = True
-                  u.is_staff = True
-                  changed = True
               if changed:
-                  User.objects.filter(pk=u.pk).update(account_tier=u.account_tier, is_superuser=u.is_superuser, is_staff=u.is_staff)
-                  print(f'{u.email} -> promoted to enterprise + admin')
+                  User.objects.filter(pk=u.pk).update(account_tier='enterprise')
+                  print(f'{u.email} -> promoted to enterprise')
               else:
-                  print(f'{u.email} -> already enterprise + admin')
+                  print(f'{u.email} -> already enterprise')
       " 2>&1
         echo "  Assigning enterprise role in Keycloak..."
         KC_TOKEN=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
@@ -721,15 +717,11 @@ deploy-production:
               if u.account_tier != 'enterprise':
                   u.account_tier = 'enterprise'
                   changed = True
-              if not u.is_superuser:
-                  u.is_superuser = True
-                  u.is_staff = True
-                  changed = True
               if changed:
-                  User.objects.filter(pk=u.pk).update(account_tier=u.account_tier, is_superuser=u.is_superuser, is_staff=u.is_staff)
-                  print(f'{u.email} -> promoted to enterprise + admin')
+                  User.objects.filter(pk=u.pk).update(account_tier='enterprise')
+                  print(f'{u.email} -> promoted to enterprise')
               else:
-                  print(f'{u.email} -> already enterprise + admin')
+                  print(f'{u.email} -> already enterprise')
       " 2>&1
         # Assign enterprise role in Keycloak for matching users
         echo "  Assigning enterprise role in Keycloak..."
