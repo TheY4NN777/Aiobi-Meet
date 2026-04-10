@@ -673,8 +673,8 @@ class Recording(BaseModel):
         return {
             "destroy": is_owner_or_admin and is_final_status,
             "partial_update": False,
-            "retrieve": is_owner_or_admin and is_enterprise,
-            "stop": is_owner_or_admin and not is_final_status and is_enterprise,
+            "retrieve": is_owner_or_admin,
+            "stop": is_owner_or_admin and not is_final_status,
             "update": False,
         }
 
