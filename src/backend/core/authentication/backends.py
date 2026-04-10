@@ -87,6 +87,14 @@ class OIDCAuthenticationBackend(LaSuiteOIDCAuthenticationBackend):
         Skips the Keycloak API back-sync (signal) by using update_fields.
         """
         realm_roles = claims.get("realm_access", {}).get("roles", [])
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            "account_tier sync for %s: realm_access=%s, roles=%s",
+            user.email,
+            claims.get("realm_access"),
+            realm_roles,
+        )
         new_tier = (
             User.AccountTier.ENTERPRISE
             if "enterprise" in realm_roles
