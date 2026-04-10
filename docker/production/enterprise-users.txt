@@ -1,0 +1,16 @@
+# Emails des utilisateurs à promouvoir en Enterprise + admin Django.
+# Un email par ligne. Les lignes vides et les commentaires (#) sont ignorés.
+# La CI applique ces promotions à chaque déploiement production.
+
+# Aïobi team
+bowendsom@aiobi.world
+yanisaxel.dabo@aiobi.world
+kaboreabdoulazizousmane@gmail.com
+angemichelromaric.tiendrebeogo@aiobi.world
+
+# Burval / BBS Holding
+lcompaore@bbsholding.net
+rsibcg@burvalcorporate.com
+kzoundi@burvalcorporate.com
+samira.nikiema@bbsholding.net
+anikiema@bbsholding.com
