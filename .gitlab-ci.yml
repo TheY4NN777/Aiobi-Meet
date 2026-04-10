@@ -712,7 +712,15 @@ debug-production:
     - docker logs --tail 20 $(docker ps -qf "name=frontend" | head -1) 2>&1 || echo "No frontend container"
 
     - echo "=== Backend logs ==="
-    - docker logs --tail 20 $(docker ps -qf "name=backend" | head -1) 2>&1 || echo "No backend container"
+    - docker logs --tail 50 $(docker ps -qf "name=backend" | head -1) 2>&1 || echo "No backend container"
+
+    - echo "=== Enterprise users in Django DB ==="
+    - |
+      docker compose exec -T backend python manage.py shell -c "
+      from core.models import User
+      for u in User.objects.all():
+          print(f'{u.email} -> account_tier={u.account_tier}')
+      " 2>&1 || echo "Could not query users"
 
     - echo "=== .env check ==="
     - grep -E "MEET_HOST|KEYCLOAK_HOST|LIVEKIT_HOST|IMAGE_TAG" .env 2>/dev/null || echo "No .env found"
