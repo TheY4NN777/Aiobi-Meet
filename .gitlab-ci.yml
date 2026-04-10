@@ -868,6 +868,21 @@ debug-production:
     - echo "=== Backend SMTP config ==="
     - docker compose exec -T backend env 2>/dev/null | grep -i "EMAIL" || echo "Could not read backend env"
 
+    - echo "=== Network + DNS test from backend ==="
+    - |
+      docker compose exec -T backend bash -c "
+        echo '--- DNS resolution ---'
+        timeout 10 python3 -c 'import socket,time; t=time.time(); r=socket.getaddrinfo(\"smtp.gmail.com\",465); print(f\"DNS resolved in {time.time()-t:.2f}s: {r[0][4]}\")' 2>&1 || echo 'DNS TIMEOUT'
+        echo '--- TCP connect to smtp.gmail.com:465 ---'
+        timeout 10 python3 -c 'import socket,time,ssl; t=time.time(); s=ssl.wrap_socket(socket.socket()); s.settimeout(5); s.connect((\"smtp.gmail.com\",465)); print(f\"Connected in {time.time()-t:.2f}s\"); s.close()' 2>&1 || echo 'TCP CONNECT FAILED'
+      " 2>&1 || echo "Could not run network test"
+
+    - echo "=== Network + DNS test from Keycloak ==="
+    - |
+      docker compose -f compose.keycloak.yaml exec -T keycloak bash -c "
+        curl -sf -o /dev/null -w 'Keycloak -> smtp.gmail.com:465 connect time: %{time_connect}s\n' --max-time 10 https://smtp.gmail.com:465 2>&1 || echo 'Keycloak network test done'
+      " 2>&1 || echo "Could not run keycloak network test"
+
     - echo "=== Test email send ==="
     - |
       docker compose exec -T backend python manage.py shell -c "
