@@ -40,7 +40,7 @@ def get_frontend_configuration(request):
         "recording": {
             "is_enabled": settings.RECORDING_ENABLE,
             "available_modes": settings.RECORDING_WORKER_CLASSES.keys(),
-            "expiration_days": settings.RECORDING_EXPIRATION_DAYS,
+            "expiration_days": settings.RECORDING_RETENTION_DAYS_DEFAULT,
             "max_duration": settings.RECORDING_MAX_DURATION,
         },
         "background_image": {

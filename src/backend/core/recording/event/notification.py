@@ -85,7 +85,7 @@ class NotificationService:
             "logo_img": settings.EMAIL_LOGO_IMG,
             "domain": settings.EMAIL_DOMAIN,
             "room_name": recording.room.name,
-            "recording_expiration_days": settings.RECORDING_EXPIRATION_DAYS,
+            "recording_expiration_days": recording._get_recording_retention_days(),
             "link": f"{get_recording_download_base_url()}/{recording.id}",
         }
 
