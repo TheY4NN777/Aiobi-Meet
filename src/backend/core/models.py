@@ -713,8 +713,8 @@ class Recording(BaseModel):
         """Return retention days based on the room owner's account tier."""
         owner = (
             User.objects.filter(
-                resourceaccess__resource_id=self.room_id,
-                resourceaccess__role=RoleChoices.OWNER,
+                accesses__resource_id=self.room_id,
+                accesses__role=RoleChoices.OWNER,
             )
             .first()
         )

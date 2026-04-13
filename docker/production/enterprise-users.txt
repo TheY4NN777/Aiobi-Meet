@@ -1,7 +1,13 @@
-# Domaines email dont les utilisateurs sont automatiquement promus Enterprise.
-# Un domaine par ligne (prefixe @). Les lignes vides et commentaires (#) sont ignorés.
-# La CI applique ces promotions à chaque déploiement.
+# Promotion automatique Enterprise à chaque déploiement.
+# La CI applique ces promotions dans Django DB et Keycloak.
+#
+# Deux formats supportés :
+#   @domaine.com    — tous les emails de ce domaine
+#   user@email.com  — un email spécifique
+#
+# Les lignes vides et commentaires (#) sont ignorés.
 
+# Domaines entreprise
 @aiobi.world
 @bbsholding.net
 @bbsholding.com
@@ -11,3 +17,6 @@
 @bowendsom.com
 @bureausuretas.com
 @burvalse.com
+
+# Emails individuels
+jocelynebayala@yahoo.fr
