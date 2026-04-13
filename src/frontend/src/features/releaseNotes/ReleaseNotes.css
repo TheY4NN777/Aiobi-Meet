@@ -67,7 +67,7 @@
 }
 .rn-badge {
   display: inline-block;
-  background: var(--violet);
+  background: var(--accent);
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
@@ -240,7 +240,7 @@
   display: inline-block;
   margin-top: 1rem;
   padding: 14px 36px;
-  background: var(--violet);
+  background: var(--accent);
   color: #fff;
   font-weight: 600;
   font-size: 1rem;
@@ -249,7 +249,7 @@
   transition: background 0.2s;
 }
 .rn-btn-primary:hover {
-  background: var(--accent);
+  background: var(--accent-hover);
 }
 
 /* Footer */
