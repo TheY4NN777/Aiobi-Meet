@@ -142,12 +142,14 @@ export const RecordingDownload = () => {
                 )}
               </span>
             </Text>
-            <LinkButton
-              href={mediaUrl(data.key)}
-              download={`${data.room.name}-${formatDate(data.created_at)}`}
-            >
-              {t('success.button')}
-            </LinkButton>
+            {data.mode === 'screen_recording' && (
+              <LinkButton
+                href={mediaUrl(data.key)}
+                download={`${data.room.name}-${formatDate(data.created_at)}`}
+              >
+                {t('success.button')}
+              </LinkButton>
+            )}
             {data.has_transcription && data.transcription_key && (
               <LinkButton
                 href={mediaUrl(data.transcription_key)}
@@ -155,6 +157,28 @@ export const RecordingDownload = () => {
               >
                 {t('success.transcription_button')}
               </LinkButton>
+            )}
+            {data.mode === 'transcript' && (
+              <a
+                href={mediaUrl(data.key)}
+                download={`${data.room.name}-${formatDate(data.created_at)}-audio`}
+                className={css({
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.5rem 1.25rem',
+                  fontSize: '0.85rem',
+                  color: 'greyscale.600',
+                  background: 'greyscale.100',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  _hover: { background: 'greyscale.200' },
+                  transition: 'background 0.2s',
+                })}
+              >
+                Télécharger la piste audio
+              </a>
             )}
             <div
               className={css({

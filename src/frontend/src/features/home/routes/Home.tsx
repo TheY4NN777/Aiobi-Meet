@@ -672,6 +672,7 @@ const LandingContent = () => {
                 <a href="#pricing">Tarifs</a>
                 <a href="#about">À propos</a>
                 <a href="#faq">FAQ</a>
+                <a href="/release-notes">Nouveautés</a>
               </div>
             </div>
             <div className="footer-contact-col">
