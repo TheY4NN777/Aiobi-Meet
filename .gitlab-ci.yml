@@ -350,21 +350,32 @@ deploy-staging:
       # Mise a jour immediate
       $HOST_STAGING/duckdns-update.sh || true
 
-    # --- 9. Promote enterprise users (same file as prod) ----------------------
-    - echo "=== Promoting enterprise users ==="
+    # --- 9. Cleanup + Promote enterprise users (same file as prod) -------------
+    - echo "=== Cleaning up and promoting enterprise users ==="
     - |
       if [ -f "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" ]; then
         DOMAINS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep '^@' | sed 's/^@//' | tr '\n' ',' | sed 's/,$//')
+        EMAILS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep -v '^@' | grep '@' | tr '\n' ',' | sed 's/,$//')
         docker compose -f compose.yaml exec -T backend python manage.py shell -c "
       from core.models import User
-      domains = '$DOMAINS'.split(',')
+      domains = [d.strip() for d in '$DOMAINS'.split(',') if d.strip()]
+      emails = [e.strip() for e in '$EMAILS'.split(',') if e.strip()]
       for u in User.objects.all():
-          if any(u.email.endswith('@' + d.strip()) for d in domains if d.strip()):
-              changed = False
-              if u.account_tier != 'enterprise':
-                  u.account_tier = 'enterprise'
-                  changed = True
+          is_enterprise = any(u.email.endswith('@' + d) for d in domains) or u.email in emails
+          if not is_enterprise:
+              changed = u.account_tier == 'enterprise' or u.is_superuser or u.is_staff
               if changed:
+                  User.objects.filter(pk=u.pk).update(account_tier='normal', is_superuser=False, is_staff=False)
+                  print(f'{u.email} -> reset to normal')
+      " 2>&1
+        docker compose -f compose.yaml exec -T backend python manage.py shell -c "
+      from core.models import User
+      domains = [d.strip() for d in '$DOMAINS'.split(',') if d.strip()]
+      emails = [e.strip() for e in '$EMAILS'.split(',') if e.strip()]
+      for u in User.objects.all():
+          is_enterprise = any(u.email.endswith('@' + d) for d in domains) or u.email in emails
+          if is_enterprise:
+              if u.account_tier != 'enterprise':
                   User.objects.filter(pk=u.pk).update(account_tier='enterprise')
                   print(f'{u.email} -> promoted to enterprise')
               else:
@@ -702,22 +713,34 @@ deploy-production:
         fi
       fi
 
-    # --- 8. Promote enterprise users from file --------------------------------
-    - echo "=== Promoting enterprise users ==="
+    # --- 8. Cleanup + Promote enterprise users from file -----------------------
+    - echo "=== Cleaning up and promoting enterprise users ==="
     - |
       if [ -f "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" ]; then
         DOMAINS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep '^@' | sed 's/^@//' | tr '\n' ',' | sed 's/,$//')
+        EMAILS=$(grep -v '^\s*#' "$CI_PROJECT_DIR/docker/production/enterprise-users.txt" | grep -v '^\s*$' | grep -v '^@' | grep '@' | tr '\n' ',' | sed 's/,$//')
+        # Reset non-matching users to normal + remove superuser
+        docker compose -f compose.yaml exec -T backend python manage.py shell -c "
+      from core.models import User
+      domains = [d.strip() for d in '$DOMAINS'.split(',') if d.strip()]
+      emails = [e.strip() for e in '$EMAILS'.split(',') if e.strip()]
+      for u in User.objects.all():
+          is_enterprise = any(u.email.endswith('@' + d) for d in domains) or u.email in emails
+          if not is_enterprise:
+              changed = u.account_tier == 'enterprise' or u.is_superuser or u.is_staff
+              if changed:
+                  User.objects.filter(pk=u.pk).update(account_tier='normal', is_superuser=False, is_staff=False)
+                  print(f'{u.email} -> reset to normal')
+      " 2>&1
         # Promote matching users in Django DB
         docker compose -f compose.yaml exec -T backend python manage.py shell -c "
       from core.models import User
-      domains = '$DOMAINS'.split(',')
+      domains = [d.strip() for d in '$DOMAINS'.split(',') if d.strip()]
+      emails = [e.strip() for e in '$EMAILS'.split(',') if e.strip()]
       for u in User.objects.all():
-          if any(u.email.endswith('@' + d.strip()) for d in domains if d.strip()):
-              changed = False
+          is_enterprise = any(u.email.endswith('@' + d) for d in domains) or u.email in emails
+          if is_enterprise:
               if u.account_tier != 'enterprise':
-                  u.account_tier = 'enterprise'
-                  changed = True
-              if changed:
                   User.objects.filter(pk=u.pk).update(account_tier='enterprise')
                   print(f'{u.email} -> promoted to enterprise')
               else:
@@ -747,7 +770,7 @@ deploy-production:
             "curl -sf 'http://localhost:8080/admin/realms/meet/roles/enterprise' \
             -H 'Authorization: Bearer $KC_TOKEN'")
 
-          # Get all Keycloak users and assign role to matching domains
+          # Assign role to matching domain users
           for DOMAIN in $(echo "$DOMAINS" | tr ',' ' '); do
             USERS_JSON=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
               "curl -sf 'http://localhost:8080/admin/realms/meet/users?max=500' \
@@ -759,7 +782,22 @@ deploy-production:
                 -H 'Content-Type: application/json' \
                 -d '[$ROLE_JSON]'" 2>/dev/null
             done
-            echo "    @$DOMAIN -> enterprise role assigned for all matching users"
+            echo "    @$DOMAIN -> enterprise role assigned"
+          done
+
+          # Assign role to individual email users
+          for EMAIL in $(echo "$EMAILS" | tr ',' ' '); do
+            USER_ID=$(docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+              "curl -sf 'http://localhost:8080/admin/realms/meet/users?email=$EMAIL&exact=true' \
+              -H 'Authorization: Bearer $KC_TOKEN'" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+            if [ -n "$USER_ID" ]; then
+              docker compose -f compose.keycloak.yaml exec -T keycloak bash -c \
+                "curl -sf -X POST 'http://localhost:8080/admin/realms/meet/users/$USER_ID/role-mappings/realm' \
+                -H 'Authorization: Bearer $KC_TOKEN' \
+                -H 'Content-Type: application/json' \
+                -d '[$ROLE_JSON]'" 2>/dev/null
+              echo "    $EMAIL -> enterprise role assigned"
+            fi
           done
         else
           echo "  WARNING: Could not get Keycloak admin token for role assignment"
@@ -870,11 +908,26 @@ debug-production:
 
     - echo "=== Network + DNS test from backend ==="
     - |
-      docker compose exec -T backend bash -c "
-        echo '--- DNS resolution ---'
-        timeout 10 python3 -c 'import socket,time; t=time.time(); r=socket.getaddrinfo(\"smtp.gmail.com\",465); print(f\"DNS resolved in {time.time()-t:.2f}s: {r[0][4]}\")' 2>&1 || echo 'DNS TIMEOUT'
-        echo '--- TCP connect to smtp.gmail.com:465 ---'
-        timeout 10 python3 -c 'import socket,time,ssl; t=time.time(); s=ssl.wrap_socket(socket.socket()); s.settimeout(5); s.connect((\"smtp.gmail.com\",465)); print(f\"Connected in {time.time()-t:.2f}s\"); s.close()' 2>&1 || echo 'TCP CONNECT FAILED'
+      docker compose exec -T backend python3 -c "
+      import socket, time, ssl
+      print('--- DNS resolution ---')
+      try:
+          t = time.time()
+          r = socket.getaddrinfo('smtp.gmail.com', 465)
+          print(f'DNS resolved in {time.time()-t:.2f}s: {r[0][4]}')
+      except Exception as e:
+          print(f'DNS FAILED: {e}')
+      print('--- TCP connect to smtp.gmail.com:465 ---')
+      try:
+          t = time.time()
+          ctx = ssl.create_default_context()
+          s = ctx.wrap_socket(socket.socket(), server_hostname='smtp.gmail.com')
+          s.settimeout(5)
+          s.connect(('smtp.gmail.com', 465))
+          print(f'Connected in {time.time()-t:.2f}s')
+          s.close()
+      except Exception as e:
+          print(f'TCP CONNECT FAILED: {e}')
       " 2>&1 || echo "Could not run network test"
 
     - echo "=== Network + DNS test from Keycloak ==="
