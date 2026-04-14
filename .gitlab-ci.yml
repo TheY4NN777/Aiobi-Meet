@@ -175,9 +175,12 @@ deploy-staging:
     - echo "=== Deploying Keycloak (force-recreate) ==="
     - docker compose -f compose.keycloak.yaml up -d --force-recreate keycloak
 
-    # --- 3. App containers (force recreate pour nouvelles images + env) ------
-    - echo "=== Deploying app containers (force recreate) ==="
-    - docker compose -f compose.yaml up -d --force-recreate
+    # --- 3. App containers (compose recreates only services whose image tag or env changed) ---
+    # NB: pas de --force-recreate pour preserver les services stateful (Redis, Postgres, MinIO)
+    # qui ne changent pas entre deploys. IMAGE_TAG=${CI_COMMIT_SHORT_SHA} assure que les
+    # services applicatifs (backend, frontend, celery, summary) sont bien recrees.
+    - echo "=== Deploying app containers ==="
+    - docker compose -f compose.yaml up -d
 
     # --- 4. Attendre le backend ----------------------------------------------
     - echo "=== Waiting for backend health check ==="

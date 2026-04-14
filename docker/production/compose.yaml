@@ -27,7 +27,14 @@ services:
   redis:
     image: redis:5
     restart: always
-    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server
+      --maxmemory 2gb
+      --maxmemory-policy volatile-lru
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis-data:/data
     networks:
       - default
 
@@ -292,6 +299,7 @@ services:
 volumes:
   whisper-models:
   whisper-uv-cache:
+  redis-data:
 
 networks:
   aiobi-public:
