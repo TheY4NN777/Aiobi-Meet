@@ -147,44 +147,74 @@ export const RecordingDownload = () => {
                 )}
               </span>
             </Text>
-            {data.mode === 'screen_recording' && (
-              <LinkButton
-                href={mediaUrl(data.key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}`}
-              >
-                {t('success.button')}
-              </LinkButton>
-            )}
-            {data.has_transcription && data.transcription_key && (
-              <LinkButton
-                href={mediaUrl(data.transcription_key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}-transcription.md`}
-              >
-                {t('success.transcription_button')}
-              </LinkButton>
-            )}
-            {data.mode === 'transcript' && (
-              <a
-                href={mediaUrl(data.key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}-audio`}
-                className={css({
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.5rem 1.25rem',
-                  fontSize: '0.85rem',
-                  color: 'greyscale.600',
-                  background: 'greyscale.100',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                  _hover: { background: 'greyscale.200' },
-                  transition: 'background 0.2s',
-                })}
-              >
-                Télécharger la piste audio
-              </a>
-            )}
+            {(() => {
+              const baseName = `${data.room.name}-${formatDate(data.created_at)}`
+              const transcriptionReady = data.has_transcription && data.transcription_key
+              const secondaryLinkClass = css({
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.5rem 1.25rem',
+                fontSize: '0.85rem',
+                color: 'greyscale.600',
+                background: 'greyscale.100',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: 500,
+                _hover: { background: 'greyscale.200' },
+                transition: 'background 0.2s',
+              })
+
+              const isVideo = data.mode === 'screen_recording'
+              const mediaExt =
+                data.key.split('.').pop() || (isVideo ? 'mp4' : 'ogg')
+              const mediaDownloadName = isVideo
+                ? `${baseName}.${mediaExt}`
+                : `${baseName}-audio.${mediaExt}`
+              const mediaLabel = isVideo
+                ? t('success.button')
+                : 'Télécharger la piste audio'
+
+              if (transcriptionReady) {
+                const transcriptionKey = data.transcription_key as string
+                const transcriptionExt =
+                  transcriptionKey.split('.').pop() || 'docx'
+                return (
+                  <>
+                    <LinkButton
+                      href={mediaUrl(transcriptionKey)}
+                      download={`${baseName}-transcription.${transcriptionExt}`}
+                    >
+                      {t('success.transcription_button')}
+                    </LinkButton>
+                    <a
+                      href={mediaUrl(data.key)}
+                      download={mediaDownloadName}
+                      className={secondaryLinkClass}
+                    >
+                      {mediaLabel}
+                    </a>
+                  </>
+                )
+              }
+
+              return (
+                <>
+                  <LinkButton
+                    href={mediaUrl(data.key)}
+                    download={mediaDownloadName}
+                  >
+                    {mediaLabel}
+                  </LinkButton>
+                  {data.mode === 'transcript' && (
+                    <Text centered variant="smNote" margin="sm">
+                      La transcription est en cours de préparation, vous la
+                      recevrez par email dès qu'elle sera prête.
+                    </Text>
+                  )}
+                </>
+              )
+            })()}
             <div
               className={css({
                 backgroundColor: 'greyscale.50',
