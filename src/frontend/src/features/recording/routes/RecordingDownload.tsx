@@ -12,7 +12,6 @@ import { ErrorScreen } from '@/components/ErrorScreen'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import { fetchRecording } from '../api/fetchRecording'
 import { RecordingStatus } from '@/features/recording'
-import { useConfig } from '@/api/useConfig'
 import { navigateTo } from '@/navigation/navigateTo'
 
 const BetaBadge = () => (
@@ -39,7 +38,6 @@ const BetaBadge = () => (
 
 export const RecordingDownload = () => {
   const { t } = useTranslation('recording')
-  const { data: configData } = useConfig()
   const { recordingId } = useParams()
   const { isLoggedIn, isLoading: isAuthLoading } = useUser()
 
@@ -132,11 +130,18 @@ export const RecordingDownload = () => {
                 })}
               </span>
               <span>
-                {configData?.recording?.expiration_days && (
+                {data.expired_at && data.created_at && (
                   <>
                     {' '}
                     {t('success.expiration', {
-                      expiration_days: configData?.recording?.expiration_days,
+                      expiration_days: Math.max(
+                        1,
+                        Math.round(
+                          (new Date(data.expired_at).getTime() -
+                            new Date(data.created_at).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                      ),
                     })}
                   </>
                 )}
