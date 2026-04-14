@@ -397,7 +397,7 @@ const LandingContent = () => {
                 <li>Administration des comptes</li>
                 <li>Arrière-plans personnalisés</li>
               </ul>
-              <a href="mailto:contact@aiobi.world" className="btn btn-primary btn-lg">Contactez-nous</a>
+              <a href="mailto:team@aiobi.world" className="btn btn-primary btn-lg">Contactez-nous</a>
             </div>
             <div className="pricing-card featured reveal reveal-delay-2" ref={addRevealRef}>
               <div className="pricing-badge">Recommandé</div>
@@ -412,7 +412,7 @@ const LandingContent = () => {
                 <li>Accès Aïobi Mail</li>
                 <li>Accompagnement dédié</li>
               </ul>
-              <a href="mailto:contact@aiobi.world" className="btn btn-primary btn-lg">Contactez-nous</a>
+              <a href="mailto:team@aiobi.world" className="btn btn-primary btn-lg">Contactez-nous</a>
             </div>
           </div>
         </div>
@@ -659,9 +659,9 @@ const LandingContent = () => {
                 <span className="status-secondary">Afrique &middot; Océanie &middot; Monde</span>
               </div>
               <div className="footer-socials">
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg></a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z" /></svg></a>
+                <a href="https://facebook.com/aiobi.world" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
+                <a href="https://linkedin.com/company/aiobi" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg></a>
+                <a href="https://instagram.com/aiobi.world/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z" /></svg></a>
               </div>
             </div>
             <div className="footer-nav">
@@ -678,8 +678,8 @@ const LandingContent = () => {
             <div className="footer-contact-col">
               <h5>Contact</h5>
               <div className="footer-contact-links">
-                <a href="mailto:contact@aiobi.world">contact@aiobi.world</a>
-                <a href="mailto:support-meet@aiobi.world">support-meet@aiobi.world</a>
+                <a href="mailto:team@aiobi.world">team@aiobi.world</a>
+                <a href="mailto:support@aiobi.world">support@aiobi.world</a>
                 <a href="https://aiobi.world" target="_blank" rel="noopener noreferrer">aiobi.world</a>
               </div>
               <h5 style={{ marginTop: '2rem' }}>Légal</h5>
