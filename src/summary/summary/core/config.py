@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     whisperx_base_url: str = "https://api.openai.com/v1"
     whisperx_asr_model: str = "whisper-1"
     whisperx_max_retries: int = 0
+    # HTTP timeout (seconds) for the OpenAI-compatible whisper client. CPU whisper
+    # processes ~50% of the audio duration. Under concurrent load, requests can
+    # queue inside whisper, multiplying the wait. The 6h default covers ~10 long
+    # meetings queued behind a request before it times out. Pair this with the
+    # Celery task time_limit (hard kill) for a belt-and-suspenders approach.
+    whisperx_timeout: int = 21600
     # ISO 639-1 language code (e.g., "en", "fr", "es")
     whisperx_default_language: Optional[str] = None
     whisperx_allowed_languages: Set[str] = {"en", "fr", "de", "nl"}

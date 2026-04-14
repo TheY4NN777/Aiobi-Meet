@@ -71,6 +71,7 @@ def transcribe_audio(task_id, filename, language):
         api_key=settings.whisperx_api_key.get_secret_value(),
         base_url=settings.whisperx_base_url,
         max_retries=settings.whisperx_max_retries,
+        timeout=settings.whisperx_timeout,
     )
 
     # Transcription
@@ -205,6 +206,11 @@ def _notify_backend(recording_id, transcription_key, email, sub, title):
     autoretry_for=[exceptions.HTTPError],
     max_retries=settings.celery_max_retries,
     queue=settings.transcribe_queue,
+    # Hard kill after 5h to cap worst-case duration, regardless of whisper client
+    # timeout. acks_late ensures the broker re-delivers the task if the worker
+    # crashes mid-processing, so transcriptions are not lost on container restart.
+    time_limit=18000,
+    acks_late=True,
 )
 def process_audio_transcribe_summarize_v2(
     self,
