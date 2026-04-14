@@ -678,8 +678,8 @@ const LandingContent = () => {
             <div className="footer-contact-col">
               <h5>Contact</h5>
               <div className="footer-contact-links">
-                <a href="mailto:team@aiobi.world">team@aiobi.world</a>
-                <a href="mailto:support@aiobi.world">support@aiobi.world</a>
+                <a href="mailto:contact@aiobi.world">contact@aiobi.world</a>
+                <a href="mailto:support-meet@aiobi.world">support-meet@aiobi.world</a>
                 <a href="https://aiobi.world" target="_blank" rel="noopener noreferrer">aiobi.world</a>
               </div>
               <h5 style={{ marginTop: '2rem' }}>Légal</h5>

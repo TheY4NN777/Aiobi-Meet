@@ -149,8 +149,8 @@ export const ReleaseNotesRoute = () => {
 
           <footer className="rn-footer">
             <p><strong>Questions ou retours ?</strong></p>
-            <p>Support utilisateurs : <a href="mailto:support@aiobi.world">support@aiobi.world</a></p>
-            <p>Demandes commerciales : <a href="mailto:team@aiobi.world">team@aiobi.world</a></p>
+            <p>Support utilisateurs : <a href="mailto:support-meet@aiobi.world">support-meet@aiobi.world</a></p>
+            <p>Demandes commerciales : <a href="mailto:contact@aiobi.world">contact@aiobi.world</a></p>
             <p className="rn-footer-note">Retrouvez les prochaines nouveautés Aïobi Meet sur cette même page, à chaque nouvelle version.</p>
             <p className="rn-footer-brand">L'équipe Aïobi</p>
           </footer>
