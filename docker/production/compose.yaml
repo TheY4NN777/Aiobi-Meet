@@ -326,7 +326,11 @@ services:
     image: ${CI_REGISTRY_IMAGE:-aiobi-meet}/summary:${IMAGE_TAG:-latest}
     user: ${DOCKER_USER:-1000}
     restart: always
-    command: celery -A summary.core.celery_worker worker --pool=solo -l INFO -Q transcribe-queue --concurrency=2
+    # prefork pool with concurrency=4 matches the 4 whisper backends: each celery
+    # worker can hold an HTTP connection open to whisper, so 4 workers feed 4 whisper
+    # instances in parallel via the nginx LB round-robin. RAM cost ~4x a solo worker
+    # (~1.5-2 GB total) which is negligible on this host.
+    command: celery -A summary.core.celery_worker worker --pool=prefork -l INFO -Q transcribe-queue --concurrency=4
     env_file:
       - .env
       - env.d/summary
