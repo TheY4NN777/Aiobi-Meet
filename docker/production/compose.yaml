@@ -223,6 +223,7 @@ services:
       - WHISPER__COMPUTE_TYPE=int8
     volumes:
       - whisper-models:/root/.cache/huggingface
+      - whisper-uv-cache:/root/.cache/uv
     networks:
       - default
 
@@ -290,6 +291,7 @@ services:
 
 volumes:
   whisper-models:
+  whisper-uv-cache:
 
 networks:
   aiobi-public:
