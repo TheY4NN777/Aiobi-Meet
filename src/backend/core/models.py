@@ -197,6 +197,16 @@ class User(AbstractBaseUser, BaseModel, auth_models.PermissionsMixin):
         ),
     )
 
+    tier_upgraded_notified_at = models.DateTimeField(
+        _("tier upgrade notified at"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Timestamp of the last time the user was notified by email of an enterprise tier upgrade. "
+            "Used to prevent duplicate welcome emails if the tier is re-synced."
+        ),
+    )
+
     is_device = models.BooleanField(
         _("device"),
         default=False,
