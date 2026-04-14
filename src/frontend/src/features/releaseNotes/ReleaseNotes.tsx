@@ -126,7 +126,7 @@ export const ReleaseNotesRoute = () => {
                 </ul>
               </div>
             </div>
-            <p className="rn-pricing-cta">Pour un plan Entreprise ou Platinum, écrivez-nous à <strong><a href="mailto:contact@aiobi.world">contact@aiobi.world</a></strong>.</p>
+            <p className="rn-pricing-cta">Pour un plan Entreprise ou Platinum, écrivez-nous à <strong><a href="mailto:team@aiobi.world">team@aiobi.world</a></strong>.</p>
           </section>
 
           <section className="rn-section">

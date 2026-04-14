@@ -150,7 +150,7 @@ export const Tools = () => {
       {isEnterprise && (
         <div className={css({ width: 'full', borderRadius: '10px', background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)', padding: '0.6rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' })}>
           <span style={{ background: '#E4D3E6', color: '#4A3C5C', fontSize: '0.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: '20px', letterSpacing: '0.06em', flexShrink: 0 }}>
-            ENTERPRISE
+            ENTREPRISE
           </span>
           <span style={{ color: '#E4D3E6', fontSize: '0.78rem', fontWeight: 500 }}>
             Enregistrements &amp; transcriptions illimités

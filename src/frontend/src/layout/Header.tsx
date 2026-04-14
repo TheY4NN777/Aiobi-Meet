@@ -190,7 +190,7 @@ export const Header = () => {
                             flexShrink: 0,
                             display: 'inline-block',
                           }}>
-                            ENTERPRISE
+                            ENTREPRISE
                           </span>
                         )}
                       </span>
