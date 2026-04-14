@@ -11,11 +11,7 @@ import {
   Room,
   RoomOptions,
   VideoPresets,
-  setLogLevel,
-  LogLevel,
 } from 'livekit-client'
-
-setLogLevel(LogLevel.warn)
 import { keys } from '@/api/queryKeys'
 import { queryClient } from '@/api/queryClient'
 import { Screen } from '@/layout/Screen'
