@@ -1,0 +1,105 @@
+<mjml>
+  <mj-include path="./partial/header.mjml" />
+
+  <mj-body background-color="#f4f0fa">
+    <mj-section padding="40px 0 0 0">
+      <mj-column></mj-column>
+    </mj-section>
+
+    <mj-wrapper css-class="wrapper" padding="0 12px 0 12px">
+      <!-- Logo header (dark background) -->
+      <mj-section css-class="wrapper-logo" padding="20px 12px">
+        <mj-column>
+          <mj-image
+            align="center"
+            src="{{logo_img}}"
+            width="160px"
+            alt="{{brandname}}"
+          />
+        </mj-column>
+      </mj-section>
+
+      <!-- Welcome title -->
+      <mj-section css-class="mobile-section-top" background-color="#ffffff" padding="24px 16px 8px 16px">
+        <mj-column>
+          <mj-text align="center" padding="4px 8px 8px 8px">
+            <h1>Bienvenue dans {{brandname}} Entreprise, {{first_name}} !</h1>
+          </mj-text>
+
+          <mj-text font-size="15px" color="#1a1a2e" line-height="1.6em" padding="0 8px 10px 8px">
+            Nous sommes ravis de vous compter parmi nos utilisateurs Entreprise. Merci de faire partie de l'aventure Aïobi.
+          </mj-text>
+
+          <mj-text font-size="15px" color="#1a1a2e" line-height="1.6em" padding="8px 8px 4px 8px">
+            Votre compte a été mis à niveau et vous bénéficiez désormais de :
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- Privileges list -->
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 16px 16px 16px">
+        <mj-column>
+          <mj-text font-size="14px" color="#4a4a68" line-height="1.8em" padding="4px 8px">
+            <ul style="margin: 0; padding-left: 20px;">
+              <li><strong>Durée de réunion illimitée</strong></li>
+              <li><strong>Participants illimités</strong> par réunion</li>
+              <li><strong>Enregistrement vidéo</strong> de vos réunions</li>
+              <li><strong>Transcription IA automatique</strong> au format Word (.docx)</li>
+              <li>Conservation de vos enregistrements pendant <strong>{{retention_days}} jours</strong></li>
+              <li>Stockage simultané de jusqu'à <strong>{{max_transcriptions}} transcriptions</strong></li>
+            </ul>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <!-- CTA -->
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 16px 20px 16px">
+        <mj-column>
+          <mj-text font-size="14px" color="#4a4a68" padding="6px 8px 14px 8px" line-height="1.6em" align="center">
+            Créez dès maintenant votre première réunion Entreprise.
+          </mj-text>
+          <mj-button
+            css-class="mobile-btn"
+            href="{{link}}"
+            background-color="#a251fc"
+            color="white"
+            border-radius="8px"
+            font-weight="600"
+            font-size="15px"
+            padding="10px 0 16px 0"
+            inner-padding="12px 28px"
+          >
+            Démarrer
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <!-- Footer section -->
+      <mj-section css-class="mobile-section" background-color="#ffffff" padding="0 16px 24px 16px">
+        <mj-column>
+          <mj-divider border-width="1px" border-style="solid" border-color="#ebebf0" padding="0 0 20px 0" />
+
+          {% if support_email %}
+          <mj-text css-class="mobile-text-sm" font-size="13px" color="#8b8ba3" line-height="1.6em" padding="4px 8px">
+            Pour toute question ou besoin d'accompagnement, contactez notre équipe à <a href="mailto:{{support_email}}" style="color: #a251fc;">{{support_email}}</a>.
+          </mj-text>
+          {% endif %}
+
+          <!-- Signature -->
+          <mj-text align="right" font-size="14px" color="#1a1a2e" padding="20px 8px 0 8px">
+            <p>
+              Bonne collaboration,<br />
+              L'équipe {{brandname}}
+            </p>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+
+    <mj-include path="./partial/footer.mjml" />
+
+    <mj-section padding="0 0 40px 0">
+      <mj-column></mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -219,9 +219,68 @@ services:
       - default
 
   # ---------------------------------------------------------------------------
-  # Whisper (faster-whisper-server — transcription ASR)
+  # Whisper load balancer (nginx) — round-robin across 4 whisper instances.
+  # The summary service still calls http://whisper:8000/v1, unchanged: this
+  # service keeps the name "whisper" and hides the horizontal scaling.
   # ---------------------------------------------------------------------------
   whisper:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./whisper-lb.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - whisper-1
+      - whisper-2
+      - whisper-3
+      - whisper-4
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Whisper backends (faster-whisper-server — transcription ASR)
+  # 4 instances in parallel to absorb concurrent meeting loads. Volumes are
+  # shared so the IA model is downloaded once and python deps are resolved once.
+  # ---------------------------------------------------------------------------
+  whisper-1:
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+      - whisper-uv-cache:/root/.cache/uv
+    networks:
+      - default
+
+  whisper-2:
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+      - whisper-uv-cache:/root/.cache/uv
+    networks:
+      - default
+
+  whisper-3:
+    image: fedirz/faster-whisper-server:latest-cpu
+    restart: always
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3
+      - WHISPER__DEVICE=cpu
+      - WHISPER__COMPUTE_TYPE=int8
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+      - whisper-uv-cache:/root/.cache/uv
+    networks:
+      - default
+
+  whisper-4:
     image: fedirz/faster-whisper-server:latest-cpu
     restart: always
     environment:
