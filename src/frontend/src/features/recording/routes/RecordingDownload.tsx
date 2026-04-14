@@ -12,7 +12,6 @@ import { ErrorScreen } from '@/components/ErrorScreen'
 import { LoadingScreen } from '@/components/LoadingScreen'
 import { fetchRecording } from '../api/fetchRecording'
 import { RecordingStatus } from '@/features/recording'
-import { useConfig } from '@/api/useConfig'
 import { navigateTo } from '@/navigation/navigateTo'
 
 const BetaBadge = () => (
@@ -39,7 +38,6 @@ const BetaBadge = () => (
 
 export const RecordingDownload = () => {
   const { t } = useTranslation('recording')
-  const { data: configData } = useConfig()
   const { recordingId } = useParams()
   const { isLoggedIn, isLoading: isAuthLoading } = useUser()
 
@@ -132,54 +130,91 @@ export const RecordingDownload = () => {
                 })}
               </span>
               <span>
-                {configData?.recording?.expiration_days && (
+                {data.expired_at && data.created_at && (
                   <>
                     {' '}
                     {t('success.expiration', {
-                      expiration_days: configData?.recording?.expiration_days,
+                      expiration_days: Math.max(
+                        1,
+                        Math.round(
+                          (new Date(data.expired_at).getTime() -
+                            new Date(data.created_at).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                      ),
                     })}
                   </>
                 )}
               </span>
             </Text>
-            {data.mode === 'screen_recording' && (
-              <LinkButton
-                href={mediaUrl(data.key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}`}
-              >
-                {t('success.button')}
-              </LinkButton>
-            )}
-            {data.has_transcription && data.transcription_key && (
-              <LinkButton
-                href={mediaUrl(data.transcription_key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}-transcription.md`}
-              >
-                {t('success.transcription_button')}
-              </LinkButton>
-            )}
-            {data.mode === 'transcript' && (
-              <a
-                href={mediaUrl(data.key)}
-                download={`${data.room.name}-${formatDate(data.created_at)}-audio`}
-                className={css({
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0.5rem 1.25rem',
-                  fontSize: '0.85rem',
-                  color: 'greyscale.600',
-                  background: 'greyscale.100',
-                  borderRadius: '8px',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                  _hover: { background: 'greyscale.200' },
-                  transition: 'background 0.2s',
-                })}
-              >
-                Télécharger la piste audio
-              </a>
-            )}
+            {(() => {
+              const baseName = `${data.room.name}-${formatDate(data.created_at)}`
+              const transcriptionReady = data.has_transcription && data.transcription_key
+              const secondaryLinkClass = css({
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.5rem 1.25rem',
+                fontSize: '0.85rem',
+                color: 'greyscale.600',
+                background: 'greyscale.100',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: 500,
+                _hover: { background: 'greyscale.200' },
+                transition: 'background 0.2s',
+              })
+
+              const isVideo = data.mode === 'screen_recording'
+              const mediaExt =
+                data.key.split('.').pop() || (isVideo ? 'mp4' : 'ogg')
+              const mediaDownloadName = isVideo
+                ? `${baseName}.${mediaExt}`
+                : `${baseName}-audio.${mediaExt}`
+              const mediaLabel = isVideo
+                ? t('success.button')
+                : 'Télécharger la piste audio'
+
+              if (transcriptionReady) {
+                const transcriptionKey = data.transcription_key as string
+                const transcriptionExt =
+                  transcriptionKey.split('.').pop() || 'docx'
+                return (
+                  <>
+                    <LinkButton
+                      href={mediaUrl(transcriptionKey)}
+                      download={`${baseName}-transcription.${transcriptionExt}`}
+                    >
+                      {t('success.transcription_button')}
+                    </LinkButton>
+                    <a
+                      href={mediaUrl(data.key)}
+                      download={mediaDownloadName}
+                      className={secondaryLinkClass}
+                    >
+                      {mediaLabel}
+                    </a>
+                  </>
+                )
+              }
+
+              return (
+                <>
+                  <LinkButton
+                    href={mediaUrl(data.key)}
+                    download={mediaDownloadName}
+                  >
+                    {mediaLabel}
+                  </LinkButton>
+                  {data.mode === 'transcript' && (
+                    <Text centered variant="smNote" margin="sm">
+                      La transcription est en cours de préparation, vous la
+                      recevrez par email dès qu'elle sera prête.
+                    </Text>
+                  )}
+                </>
+              )
+            })()}
             <div
               className={css({
                 backgroundColor: 'greyscale.50',
