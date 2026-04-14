@@ -25,6 +25,12 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
+    /* The top header consumes the vertical real estate above us, so flex-center
+       inside this container lands at (100vh - header)/2 + header = header/2
+       below the true viewport center. Extending padding-bottom by --aiobi-header-h
+       shrinks the flex-center content area asymmetrically, shifting the visual
+       center up by header/2 — which lands exactly on 50vh. */
+    padding-bottom: calc(2rem + var(--aiobi-header-h));
 }
 
 .app-dashboard h1, .app-dashboard h2, .app-dashboard h3 {

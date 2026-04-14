@@ -1,5 +1,19 @@
 @import './livekit.css';
 @layer reset, base, tokens, recipes, utilities;
+
+/* Global layout tokens.
+   --aiobi-header-h exposes the rendered height of the app top header.
+   Pages using the fullpage layout rely on this to compensate for the
+   header when they need true viewport-centered content. */
+:root {
+  --aiobi-header-h: 98px;
+}
+@media (max-width: 640px) {
+  :root {
+    --aiobi-header-h: 80px;
+  }
+}
+
 html,
 body,
 #root {
