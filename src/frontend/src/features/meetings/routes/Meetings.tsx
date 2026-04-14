@@ -52,28 +52,37 @@ const RecordingActions = ({ recordings, roomName }: { recordings: SessionRecordi
   const availableStatuses = [RecordingStatus.Saved, RecordingStatus.NotificationSucceed, RecordingStatus.FailedToStop]
   return (
     <>
-      {recordings.map((rec) => (
-        <div key={rec.id} style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          {availableStatuses.includes(rec.status as RecordingStatus) && !rec.is_expired && (
-            <a
-              className="meeting-btn primary"
-              href={mediaUrl(rec.key)}
-              download={`${roomName}-enregistrement.mp4`}
-            >
-              Enregistrement
-            </a>
-          )}
-          {rec.has_transcription && rec.transcription_key && !rec.is_expired && (
-            <a
-              className="meeting-btn"
-              href={mediaUrl(rec.transcription_key)}
-              download={`${roomName}-transcription`}
-            >
-              Transcription
-            </a>
-          )}
-        </div>
-      ))}
+      {recordings.map((rec) => {
+        const isAudioOnly = rec.mode === 'transcript'
+        const mediaExt = rec.key.split('.').pop() || (isAudioOnly ? 'ogg' : 'mp4')
+        const mediaSuffix = isAudioOnly ? 'audio' : 'enregistrement'
+        const mediaLabel = isAudioOnly ? 'Audio' : 'Enregistrement'
+        const transcriptionExt = rec.transcription_key
+          ? rec.transcription_key.split('.').pop() || 'docx'
+          : 'docx'
+        return (
+          <div key={rec.id} style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {availableStatuses.includes(rec.status as RecordingStatus) && !rec.is_expired && (
+              <a
+                className="meeting-btn primary"
+                href={mediaUrl(rec.key)}
+                download={`${roomName}-${mediaSuffix}.${mediaExt}`}
+              >
+                {mediaLabel}
+              </a>
+            )}
+            {rec.has_transcription && rec.transcription_key && !rec.is_expired && (
+              <a
+                className="meeting-btn"
+                href={mediaUrl(rec.transcription_key)}
+                download={`${roomName}-transcription.${transcriptionExt}`}
+              >
+                Transcription
+              </a>
+            )}
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -291,7 +300,6 @@ const MeetingsContent = () => {
   const queryClient = useQueryClient()
   const { mutateAsync: createRoom } = useCreateRoom()
   const { userChoices: { username } } = usePersistentUserChoices()
-  const isEnterprise = useIsEnterprise()
   const [laterRoom, setLaterRoom] = useState<ApiRoom | null>(null)
   const [inviteRoom, setInviteRoom] = useState<ApiRoom | null>(null)
   useFontshare()
@@ -406,14 +414,7 @@ const MeetingsContent = () => {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Tableau de bord
         </button>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          Mes réunions
-          {isEnterprise && (
-            <span style={{ background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)', color: '#E4D3E6', fontSize: '0.6rem', fontWeight: 700, padding: '3px 8px', borderRadius: '20px', letterSpacing: '0.06em', verticalAlign: 'middle' }}>
-              ENTERPRISE
-            </span>
-          )}
-        </h1>
+        <h1>Mes réunions</h1>
       </div>
 
       <div className="meetings-tabs">
