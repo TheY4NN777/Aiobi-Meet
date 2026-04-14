@@ -535,6 +535,7 @@ deploy-production:
     - export HOST_PROJECT=/opt/aiobi-meet
     - cp docker/production/compose*.yaml $HOST_PROD/
     - cp docker/production/default.conf.template $HOST_PROD/
+    - cp docker/production/whisper-lb.conf $HOST_PROD/
     - cp docker/production/livekit-server.yaml $HOST_PROD/
     - cp docker/production/livekit-egress.yaml $HOST_PROD/
     # Injecter les secrets dans la config egress
