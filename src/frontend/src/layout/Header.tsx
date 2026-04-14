@@ -181,7 +181,7 @@ export const Header = () => {
                         {isEnterprise && (
                           <span style={{
                             background: 'linear-gradient(135deg, #4A3C5C, #6b4f8a)',
-                            color: '#E4D3E6',
+                            color: '#FFFFFF',
                             fontSize: '0.6rem',
                             fontWeight: 700,
                             padding: '2px 7px',
