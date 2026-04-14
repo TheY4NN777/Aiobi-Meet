@@ -612,9 +612,17 @@ deploy-production:
     - echo "=== Pulling latest images from registry ==="
     - docker compose -f compose.yaml pull backend frontend
 
-    # --- 4. App containers (force recreate pour nouvelles images + env) ------
-    - echo "=== Deploying app containers (force recreate) ==="
-    - docker compose -f compose.yaml up -d --force-recreate
+    # --- 4. App containers ----------------------------------------------------
+    # Pas de --force-recreate: compose recreate uniquement les services dont
+    # l'image (IMAGE_TAG=${CI_COMMIT_SHORT_SHA}) ou la config compose a change.
+    # Les services statiques (postgres, redis, minio, livekit, whisper, ...)
+    # restent en place -> pas de perte de sessions, pas de reload du modele
+    # whisper en RAM, pas de coupure LiveKit pour les users en reunion.
+    # ATTENTION: si tu modifies un fichier bind-monte (whisper-lb.conf,
+    # livekit-egress.yaml, default.conf.template, env.d/*), fais un
+    # `docker compose restart <service>` manuel apres le deploy.
+    - echo "=== Deploying app containers ==="
+    - docker compose -f compose.yaml up -d
 
     # --- 5. Attendre le backend ----------------------------------------------
     - echo "=== Waiting for backend health check ==="
