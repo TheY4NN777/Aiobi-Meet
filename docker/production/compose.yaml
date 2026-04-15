@@ -98,6 +98,13 @@ services:
       # chaque worker exporterait ses propres counters et /metrics renverrait
       # les stats d'un seul worker (round-robin) au lieu de la somme.
       - PROMETHEUS_MULTIPROC_DIR=/tmp/prometheus_multiproc
+    # tmpfs monte un filesystem en RAM au chemin indique — cree automatiquement
+    # le dossier et le rend writable par le user du container. Necessaire car
+    # prometheus_client ouvre plusieurs .db files dedans au demarrage de chaque
+    # worker Gunicorn. Ephemere par design : les stats repartent de 0 au restart
+    # du container (aligne avec la semantique des counters Prometheus).
+    tmpfs:
+      - /tmp/prometheus_multiproc
     healthcheck:
       test: ["CMD", "python", "manage.py", "check"]
       interval: 15s
