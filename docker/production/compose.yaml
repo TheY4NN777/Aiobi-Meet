@@ -388,8 +388,12 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
+    # Bind 0.0.0.0 : accessible depuis le reseau WireGuard (10.13.13.0/24).
+    # UFW sur le host restreint l'acces au subnet VPN via la regle :
+    #   ufw allow from 10.13.13.0/24 to any port 9090 comment 'Prometheus-VPN'
+    # Meme pattern que GitLab (8929), Vault (18200), Teleport (33080) sur le meme host.
     ports:
-      - "127.0.0.1:9090:9090"
+      - "9090:9090"
     networks:
       - default
 
@@ -410,8 +414,12 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
+    # Bind 0.0.0.0 : accessible depuis le reseau WireGuard (10.13.13.0/24).
+    # UFW sur le host restreint l'acces au subnet VPN via la regle :
+    #   ufw allow from 10.13.13.0/24 to any port 3000 comment 'Grafana-VPN'
+    # Acces depuis un peer WG : http://10.13.13.1:3000
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     depends_on:
       - prometheus
     networks:
