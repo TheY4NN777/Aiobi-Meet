@@ -539,10 +539,18 @@ deploy-production:
     - cp docker/production/whisper-lb.conf $HOST_PROD/
     - cp docker/production/livekit-server.yaml $HOST_PROD/
     - cp docker/production/livekit-egress.yaml $HOST_PROD/
-    # Stack observabilite — Prometheus config + Grafana provisioning + dashboards
-    # rm -rf puis cp -r pour eviter les fichiers obsoletes apres suppression dans le repo
-    - rm -rf $HOST_PROD/monitoring
-    - cp -r docker/production/monitoring $HOST_PROD/
+    # Stack observabilite — Prometheus config + Grafana provisioning + dashboards.
+    # rsync -a --delete au lieu de rm -rf + cp -r :
+    #   - preserve les inodes des dossiers existants = bind-mounts restent valides
+    #     dans les containers qui les consomment (grafana, loki, promtail, prometheus)
+    #   - --delete enleve les fichiers disparus du repo (equivalent cleanup de rm -rf)
+    #   - update les fichiers modifies in-place + ajoute les nouveaux
+    # Pourquoi pas rm -rf + cp -r : quand le dossier est recree, son inode change
+    # mais les containers qui l'ont bind-mounte gardent l'ancienne reference =>
+    # ils ne voient plus les nouveaux fichiers jusqu'a un force-recreate manuel.
+    # Bug rencontre 2026-04-15 apres l'ajout de loki.yml + promtail-config.yml.
+    - mkdir -p $HOST_PROD/monitoring
+    - rsync -a --delete docker/production/monitoring/ $HOST_PROD/monitoring/
     # Injecter les secrets dans la config egress
     - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_PROD/livekit-egress.yaml
     - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_PROD/livekit-egress.yaml
