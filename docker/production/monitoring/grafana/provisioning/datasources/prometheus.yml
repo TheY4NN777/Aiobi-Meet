@@ -1,0 +1,27 @@
+# Grafana datasource — Prometheus
+#
+# Chargee automatiquement au demarrage de Grafana via le volume de provisioning.
+# L'URL pointe vers le service Prometheus sur le reseau Docker `default`.
+#
+# `isDefault: true` fait de Prometheus la datasource par defaut quand on
+# edite un nouveau panel — on n'a pas a la selectionner manuellement.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    # `uid` stable et lisible — les dashboards JSON community referencent cette
+    # uid pour trouver la datasource. Sans uid explicite, Grafana en genere
+    # une aleatoire a chaque restart => dashboards cassent apres recreate.
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s
+      httpMethod: POST
+      # Query timeout — 30s suffit pour les queries dashboards normaux.
+      # Si une query aggregation complexe timeout, on peut remonter.
+      queryTimeout: 30s

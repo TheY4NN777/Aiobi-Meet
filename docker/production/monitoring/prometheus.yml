@@ -1,0 +1,124 @@
+# Prometheus config — Aïobi Meet prod
+#
+# Philosophie : 2 niveaux de monitoring
+#  1) Infra/container (CPU, RAM, réseau, disk) — couvert globalement par
+#     cAdvisor qui scrape automatiquement tous les containers via Docker socket.
+#     Pas besoin d'une ligne par container ici.
+#  2) Applicatif (req/s HTTP, tasks Celery, queries SQL, etc.) — nécessite un
+#     endpoint /metrics par service. Les jobs ci-dessous couvrent tous les
+#     services qui exposent (nativement ou via sidecar exporter) des métriques
+#     applicatives utiles.
+#
+# Scrape interval 15s = bon compromis granularité / volume stockage
+# Retention configurée côté compose.yaml via --storage.tsdb.retention.time=30d
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    environment: production
+    service: aiobi-meet
+
+scrape_configs:
+
+  # -------------------------------------------------------------------------
+  # Prometheus lui-même — toujours scraper son propre /metrics pour debug
+  # (taux de samples ingérés, duration scrape, config reload, etc.)
+  # -------------------------------------------------------------------------
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # =========================================================================
+  # NIVEAU INFRA — host + containers
+  # =========================================================================
+
+  # node-exporter — host physique : CPU load, RAM, disk, network, filesystem
+  - job_name: node
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor — CPU/RAM/réseau par container (couvre TOUS les containers
+  # automatiquement via Docker socket, y compris ceux sans /metrics natif)
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # =========================================================================
+  # NIVEAU APPLICATIF
+  # =========================================================================
+
+  # Django backend — req/s, latency P50/P95/P99, DB query time, user count
+  # Exposé par django-prometheus (installé dans INSTALLED_APPS + middleware)
+  - job_name: django
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['backend:8000']
+
+  # Summary FastAPI — req/s, latency, endpoints hit
+  # Exposé via prometheus-fastapi-instrumentator (ajouté au main.py)
+  - job_name: summary
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['summary:8000']
+
+  # Celery — tasks sent/received/started/succeeded/failed, queue depth
+  # celery-exporter écoute les events Celery via les brokers Redis
+  - job_name: celery
+    static_configs:
+      - targets: ['celery-exporter:9808']
+
+  # Redis main — commands/s, memory used, connected clients, keyspace
+  - job_name: redis-main
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          redis_instance: main
+
+  # Redis summary — idem, pour le broker Celery des workers transcribe/summarize
+  - job_name: redis-summary
+    static_configs:
+      - targets: ['redis-summary-exporter:9121']
+        labels:
+          redis_instance: summary
+
+  # PostgreSQL — queries/s, slow queries, connections, table sizes, locks
+  # postgres-exporter sidecar qui se connecte à la DB en read-only
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # MinIO — objets stockés, bytes in/out, requests S3
+  # Endpoint natif MinIO, nécessite un bearer token JWT signé
+  # (cf MinIO docs — token généré au build via mc admin)
+  - job_name: minio
+    metrics_path: /minio/v2/metrics/cluster
+    scheme: http
+    bearer_token_file: /etc/prometheus/minio-token.txt
+    static_configs:
+      - targets: ['minio:9000']
+
+  # Nginx frontend — requests/s, upstream response time, status codes
+  # nginx-exporter sidecar qui lit /stub_status du nginx frontend
+  - job_name: nginx-frontend
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+
+  # LiveKit SFU — rooms actives, participants, bitrate in/out, packet loss
+  # Expose nativement sur prometheus_port (à activer dans livekit-server.yaml)
+  - job_name: livekit
+    static_configs:
+      - targets: ['livekit:6789']
+
+  # LiveKit Egress — recordings en cours, uploads réussis/échoués, duration
+  - job_name: livekit-egress
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['livekit-egress:7980']
+
+  # NOTE : whisper-1..4 (faster-whisper-server) n'exposent pas de /metrics
+  # standard. Le monitoring de whisper se fera via :
+  #  - cAdvisor pour CPU/RAM par instance
+  #  - Celery metrics pour durée/succès/échec des tâches transcribe
+  #  - Loki (logs) pour détection de patterns (hallucinations, erreurs)

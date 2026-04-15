@@ -258,6 +258,9 @@ class Base(Configuration):
     ]
 
     MIDDLEWARE = [
+        # django-prometheus "Before" doit etre le TOUT PREMIER middleware
+        # pour capturer la latence reelle de toute la pile (y compris middlewares).
+        "django_prometheus.middleware.PrometheusBeforeMiddleware",
         "django.middleware.security.SecurityMiddleware",
         "whitenoise.middleware.WhiteNoiseMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
@@ -269,6 +272,9 @@ class Base(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "dockerflow.django.middleware.DockerflowMiddleware",
+        # django-prometheus "After" doit etre le TOUT DERNIER middleware
+        # pour observer la reponse finale apres traitement complet.
+        "django_prometheus.middleware.PrometheusAfterMiddleware",
     ]
 
     AUTHENTICATION_BACKENDS = [
@@ -285,6 +291,7 @@ class Base(Configuration):
         # Third party apps
         "corsheaders",
         "dockerflow.django",
+        "django_prometheus",
         "rest_framework",
         "parler",
         "easy_thumbnails",

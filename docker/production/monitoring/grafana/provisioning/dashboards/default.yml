@@ -1,0 +1,27 @@
+# Grafana dashboard provider — charge les .json du dossier dashboards
+#
+# Tous les fichiers JSON dans /var/lib/grafana/dashboards (monte depuis
+# docker/production/monitoring/grafana/dashboards/) seront charges au
+# demarrage et recharges automatiquement toutes les 10 secondes (updateIntervalSeconds).
+#
+# `folder: "Aïobi"` = les dashboards apparaissent groupes sous ce folder
+# dans la sidebar Grafana, pour les distinguer des futurs dashboards "Default".
+#
+# `foldersFromFilesStructure: true` = si on cree des sous-dossiers dans
+# dashboards/ (ex: infra/, applicatif/), Grafana cree les folders correspondants.
+
+apiVersion: 1
+
+providers:
+  - name: aiobi-dashboards
+    orgId: 1
+    folder: "Aïobi"
+    folderUid: aiobi
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

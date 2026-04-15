@@ -119,3 +119,18 @@ server {
         add_header Cache-Control "public, immutable";
     }
 }
+
+# -- Monitoring server (port 8084) --- internal-only, pas mappe sur le host ---
+# Ce port n'est PAS expose via Traefik (aucun label) ni binde sur le host
+# (aucun entry ports: dans compose.yaml pour 8084). Accessible uniquement
+# depuis le reseau Docker `default` par les containers qui savent le demander
+# (ici : nginx-exporter). Zero risque de fuite publique par construction.
+server {
+    listen 8084;
+    server_name localhost;
+    access_log off;
+
+    location = /stub_status {
+        stub_status;
+    }
+}

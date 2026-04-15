@@ -14,6 +14,10 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Endpoint Prometheus /metrics — scrape interne uniquement par Prometheus
+    # sur backend:8000/metrics. Bloque en public par nginx frontend (location
+    # /metrics deny all) + pas de route nginx qui mappe /metrics vers backend.
+    path("", include("django_prometheus.urls")),
     path("", include("core.urls")),
     path("", include("lasuite.oidc_resource_server.urls")),
 ]

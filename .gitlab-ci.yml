@@ -538,6 +538,10 @@ deploy-production:
     - cp docker/production/whisper-lb.conf $HOST_PROD/
     - cp docker/production/livekit-server.yaml $HOST_PROD/
     - cp docker/production/livekit-egress.yaml $HOST_PROD/
+    # Stack observabilite — Prometheus config + Grafana provisioning + dashboards
+    # rm -rf puis cp -r pour eviter les fichiers obsoletes apres suppression dans le repo
+    - rm -rf $HOST_PROD/monitoring
+    - cp -r docker/production/monitoring $HOST_PROD/
     # Injecter les secrets dans la config egress
     - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_PROD/livekit-egress.yaml
     - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_PROD/livekit-egress.yaml
@@ -618,11 +622,35 @@ deploy-production:
     # Les services statiques (postgres, redis, minio, livekit, whisper, ...)
     # restent en place -> pas de perte de sessions, pas de reload du modele
     # whisper en RAM, pas de coupure LiveKit pour les users en reunion.
-    # ATTENTION: si tu modifies un fichier bind-monte (whisper-lb.conf,
-    # livekit-egress.yaml, default.conf.template, env.d/*), fais un
-    # `docker compose restart <service>` manuel apres le deploy.
+    # NB: les fichiers bind-montes ne declenchent PAS automatiquement une recreation
+    # du container (docker compose ne regarde que la definition du service). Le bloc
+    # 4b ci-dessous detecte les changements et restart explicitement les services
+    # concernes, pour eviter d'avoir a intervenir manuellement post-deploy.
     - echo "=== Deploying app containers ==="
     - docker compose -f compose.yaml up -d
+
+    # --- 4b. Recharger les services aux fichiers bind-montes ------------------
+    # Voir NB au-dessus : on detecte les changements de configs montees dans ce
+    # commit et on restart le service concerne. Plus de risque d'oublier un
+    # `docker compose restart` manuel apres un deploy qui change ces fichiers.
+    - |
+      DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      if [ "$DIFF_BASE" = "0000000000000000000000000000000000000000" ]; then DIFF_BASE="HEAD~1"; fi
+      CHANGED=$(git diff --name-only "$DIFF_BASE" HEAD || echo "")
+      restart_if_changed() {
+        local pattern=$1
+        local service=$2
+        if echo "$CHANGED" | grep -qE "$pattern"; then
+          echo "  [deploy] $pattern changed — restarting $service"
+          docker compose -f compose.yaml restart "$service" || true
+        fi
+      }
+      restart_if_changed "docker/production/default.conf.template"       frontend
+      restart_if_changed "docker/production/livekit-server.yaml"         livekit
+      restart_if_changed "docker/production/livekit-egress.yaml"         livekit-egress
+      restart_if_changed "docker/production/whisper-lb.conf"             whisper
+      restart_if_changed "docker/production/monitoring/prometheus.yml"   prometheus
+      restart_if_changed "docker/production/monitoring/grafana/"         grafana
 
     # --- 5. Attendre le backend ----------------------------------------------
     - echo "=== Waiting for backend health check ==="

@@ -1,0 +1,332 @@
+{
+  "title": "Aïobi Overview",
+  "uid": "aiobi-overview",
+  "tags": ["aiobi", "overview"],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "description": "Vue unifiee sante + traffic + pipeline transcription + LiveKit. Questions: ca tourne? UX OK? pipeline suit? ou est la pression?",
+
+  "panels": [
+
+    {
+      "id": 1, "type": "stat",
+      "title": "CPU Host",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 90, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 - (avg(irate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)"
+        }
+      ]
+    },
+
+    {
+      "id": 2, "type": "stat",
+      "title": "RAM Host",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 70, "color": "yellow" },
+              { "value": 90, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100"
+        }
+      ]
+    },
+
+    {
+      "id": 3, "type": "stat",
+      "title": "Disk /",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 75, "color": "yellow" },
+              { "value": 90, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/host/root\",fstype!~\"tmpfs|fuse.lxcfs\"} / node_filesystem_size_bytes{mountpoint=\"/host/root\",fstype!~\"tmpfs|fuse.lxcfs\"})) * 100"
+        }
+      ]
+    },
+
+    {
+      "id": 4, "type": "stat",
+      "title": "Containers up",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 10, "color": "yellow" },
+              { "value": 20, "color": "green" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(container_last_seen{name!=\"\"})"
+        }
+      ]
+    },
+
+    {
+      "id": 10, "type": "timeseries",
+      "title": "Django req/s",
+      "gridPos": { "x": 0, "y": 4, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 20 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(django_http_requests_total_by_method_total[2m])) by (method)",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    },
+
+    {
+      "id": 11, "type": "timeseries",
+      "title": "Django latence P95 (s)",
+      "gridPos": { "x": 8, "y": 4, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_by_view_method_bucket[2m])) by (le, view))",
+          "legendFormat": "{{view}}"
+        }
+      ]
+    },
+
+    {
+      "id": 12, "type": "timeseries",
+      "title": "Django taux 5xx",
+      "gridPos": { "x": 16, "y": 4, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps", "custom": { "drawStyle": "bars", "fillOpacity": 60 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(django_http_responses_total_by_status_total{status=~\"5..\"}[2m]))",
+          "legendFormat": "5xx/s"
+        }
+      ]
+    },
+
+    {
+      "id": 20, "type": "stat",
+      "title": "Celery queue depth (transcribe)",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 3, "color": "yellow" },
+              { "value": 10, "color": "red" }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "celery_queue_length{queue_name=\"transcribe-queue\"}"
+        }
+      ]
+    },
+
+    {
+      "id": 21, "type": "timeseries",
+      "title": "Celery tasks — success vs failure",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 60 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(celery_task_succeeded_total[5m])) by (task_name)",
+          "legendFormat": "OK {{task_name}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(celery_task_failed_total[5m])) by (task_name)",
+          "legendFormat": "FAIL {{task_name}}"
+        }
+      ]
+    },
+
+    {
+      "id": 22, "type": "timeseries",
+      "title": "Celery tasks durée P95 (s)",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(celery_task_runtime_bucket[5m])) by (le, task_name))",
+          "legendFormat": "{{task_name}}"
+        }
+      ]
+    },
+
+    {
+      "id": 30, "type": "timeseries",
+      "title": "LiveKit — rooms actives",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 30 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "livekit_room_current",
+          "legendFormat": "rooms"
+        }
+      ]
+    },
+
+    {
+      "id": 31, "type": "timeseries",
+      "title": "LiveKit — participants connectés",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 30 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "livekit_participant_current",
+          "legendFormat": "participants"
+        }
+      ]
+    },
+
+    {
+      "id": 40, "type": "timeseries",
+      "title": "Top 10 containers — CPU",
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum(rate(container_cpu_usage_seconds_total{name!=\"\"}[2m])) by (name) * 100)",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+
+    {
+      "id": 41, "type": "timeseries",
+      "title": "Top 10 containers — RAM",
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, container_memory_working_set_bytes{name!=\"\"})",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    }
+
+  ]
+}
