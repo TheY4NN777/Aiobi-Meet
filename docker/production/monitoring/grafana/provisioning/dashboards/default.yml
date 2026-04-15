@@ -4,11 +4,10 @@
 # docker/production/monitoring/grafana/dashboards/) seront charges au
 # demarrage et recharges automatiquement toutes les 10 secondes (updateIntervalSeconds).
 #
-# `folder: "Aïobi"` = les dashboards apparaissent groupes sous ce folder
-# dans la sidebar Grafana, pour les distinguer des futurs dashboards "Default".
-#
-# `foldersFromFilesStructure: true` = si on cree des sous-dossiers dans
-# dashboards/ (ex: infra/, applicatif/), Grafana cree les folders correspondants.
+# Tous les dashboards sont places dans le folder "Aïobi" (folderUid=aiobi).
+# Pas d'arborescence dynamique car on a une structure plate dans dashboards/
+# (si un jour on veut des sous-folders, il faudra retirer folder+folderUid et
+# remettre foldersFromFilesStructure: true — mais les deux sont incompatibles).
 
 apiVersion: 1
 
@@ -24,4 +23,3 @@ providers:
     allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards
-      foldersFromFilesStructure: true
