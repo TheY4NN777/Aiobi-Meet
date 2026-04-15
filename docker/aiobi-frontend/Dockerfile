@@ -19,6 +19,11 @@ WORKDIR /home/frontend
 ENV VITE_APP_TITLE="Aïobi Meet"
 ENV VITE_BUILD_SOURCEMAP="true"
 
+# GlitchTip DSN — injecté au build pour que le bundle inclue l'URL d'ingestion.
+# Vide par défaut (no-op dans main.tsx) ; rempli quand la CI var est setée.
+ARG VITE_GLITCHTIP_DSN_FRONTEND=""
+ENV VITE_GLITCHTIP_DSN_FRONTEND=${VITE_GLITCHTIP_DSN_FRONTEND}
+
 RUN npm run build
 
 # Inject PostHog sourcemap metadata into the built assets

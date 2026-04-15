@@ -475,6 +475,7 @@ build-frontend-prod:
       --no-cache
       --file docker/aiobi-frontend/Dockerfile
       --target frontend-production
+      --build-arg VITE_GLITCHTIP_DSN_FRONTEND=${VITE_GLITCHTIP_DSN_FRONTEND}
       --tag $CI_REGISTRY_IMAGE/frontend:${CI_COMMIT_SHORT_SHA}
       --tag $CI_REGISTRY_IMAGE/frontend:latest
       .
@@ -560,6 +561,16 @@ deploy-production:
         echo "DJANGO_EMAIL_HOST_PASSWORD=$DJANGO_EMAIL_HOST_PASSWORD" >> $HOST_PROD/env.d/common
         echo "  Django SMTP configured from CI variables"
       fi
+    # Injecter le DSN GlitchTip pour que Django active sentry-sdk.
+    # Si la CI var GLITCHTIP_DSN_BACKEND est vide/absente, rien n'est ajoute —
+    # sentry_sdk.init skip (cf src/backend/meet/settings.py:950-958).
+    # Apres le 1er deploy tu crees le projet dans GlitchTip UI, recuperes son
+    # DSN, le mets en CI var, et le deploy suivant active le capture.
+    - |
+      if [ -n "$GLITCHTIP_DSN_BACKEND" ]; then
+        echo "DJANGO_SENTRY_DSN=$GLITCHTIP_DSN_BACKEND" >> $HOST_PROD/env.d/common
+        echo "  GlitchTip DSN configured for Django backend"
+      fi
     - mkdir -p $HOST_PROJECT/docker/auth
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
     - mkdir -p $HOST_PROJECT/docker/keycloak/themes/aiobi
@@ -596,6 +607,8 @@ deploy-production:
       SUMMARY_API_TOKEN=${SUMMARY_API_TOKEN}
       RECORDING_STORAGE_EVENT_TOKEN=${RECORDING_STORAGE_EVENT_TOKEN}
       GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      GLITCHTIP_SECRET_KEY=${GLITCHTIP_SECRET_KEY}
+      GLITCHTIP_POSTGRES_PASSWORD=${GLITCHTIP_POSTGRES_PASSWORD}
       ENVEOF
     - sed -i 's/^      //' .env
     - echo ".env generated with IMAGE_TAG=${CI_COMMIT_SHORT_SHA}"

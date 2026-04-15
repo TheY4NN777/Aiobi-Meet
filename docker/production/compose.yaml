@@ -586,6 +586,127 @@ services:
     networks:
       - default
 
+  # ===========================================================================
+  # ERROR TRACKING — GlitchTip (LOT M2 phase 2)
+  #
+  # GlitchTip = fork open-source de Sentry (MIT), compatible SDK Sentry drop-in.
+  # 4 services : web (UI + API), worker (Celery async), postgres (DB dediee),
+  # redis (cache + broker Celery).
+  #
+  # UI admin : VPN only (bind 0.0.0.0:8002, UFW allow 10.13.13.0/24)
+  # Ingestion browser : public via nginx frontend /glitchtip/api/
+  # Ingestion backend : reseau Docker interne (glitchtip-web:8000)
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # glitchtip-postgres — DB dediee a GlitchTip (pas partagee avec Aïobi Meet)
+  # Isolation totale : migrations schema GlitchTip ne peuvent pas casser
+  # celles d'Aïobi Meet.
+  # ---------------------------------------------------------------------------
+  glitchtip-postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      - POSTGRES_DB=glitchtip
+      - POSTGRES_USER=glitchtip
+      - POSTGRES_PASSWORD=${GLITCHTIP_POSTGRES_PASSWORD}
+    volumes:
+      - glitchtip-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glitchtip"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # glitchtip-redis — cache + broker Celery dediee (isolation du Redis Aïobi)
+  # ---------------------------------------------------------------------------
+  glitchtip-redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # glitchtip-migrate — oneshot qui applique les migrations Django GlitchTip
+  # Tourne a chaque deploy, exit 0 une fois migrations terminees.
+  # Le service 'web' attend que migrate ait fini (depends_on).
+  # ---------------------------------------------------------------------------
+  glitchtip-migrate:
+    image: glitchtip/glitchtip:v4.2.1
+    command: ./bin/run-migrate.sh
+    environment:
+      - DATABASE_URL=postgres://glitchtip:${GLITCHTIP_POSTGRES_PASSWORD}@glitchtip-postgres:5432/glitchtip
+      - SECRET_KEY=${GLITCHTIP_SECRET_KEY}
+    depends_on:
+      glitchtip-postgres:
+        condition: service_healthy
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # glitchtip-web — UI admin + API (ingestion + dashboard)
+  # Port 8000 dans container, bind 8002 sur host (UFW restreint 10.13.13.0/24).
+  # ---------------------------------------------------------------------------
+  glitchtip-web:
+    image: glitchtip/glitchtip:v4.2.1
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://glitchtip:${GLITCHTIP_POSTGRES_PASSWORD}@glitchtip-postgres:5432/glitchtip
+      - REDIS_URL=redis://glitchtip-redis:6379/0
+      - SECRET_KEY=${GLITCHTIP_SECRET_KEY}
+      # Domain utilise pour generer les URLs dans les emails + les DSN.
+      # Pas encore de sous-domaine glitchtip.aiobi.world — on utilise le
+      # chemin /glitchtip/ sous meet.aiobi.world.
+      - GLITCHTIP_DOMAIN=https://meet.aiobi.world/glitchtip
+      - DEFAULT_FROM_EMAIL=noreply@aiobi.world
+      # Registration ouverte initialement (tu crees le premier compte admin
+      # apres le deploy via http://10.13.13.1:8002/accounts/signup/).
+      # UFW restreint deja l'acces au subnet VPN, donc registration=true est
+      # safe. Une fois ton admin cree, tu pourras passer a false via les
+      # settings UI de GlitchTip.
+      - GLITCHTIP_ENABLE_USER_REGISTRATION=true
+      - CELERY_WORKER_AUTOSCALE=1,3
+      - CELERY_WORKER_MAX_TASKS_PER_CHILD=10000
+    ports:
+      - "8002:8000"
+    depends_on:
+      glitchtip-postgres:
+        condition: service_healthy
+      glitchtip-redis:
+        condition: service_started
+      glitchtip-migrate:
+        condition: service_completed_successfully
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # glitchtip-worker — Celery worker pour traitement async des events
+  # (deduplication, notifications email, retention, etc.)
+  # ---------------------------------------------------------------------------
+  glitchtip-worker:
+    image: glitchtip/glitchtip:v4.2.1
+    restart: always
+    command: ./bin/run-celery-with-beat.sh
+    environment:
+      - DATABASE_URL=postgres://glitchtip:${GLITCHTIP_POSTGRES_PASSWORD}@glitchtip-postgres:5432/glitchtip
+      - REDIS_URL=redis://glitchtip-redis:6379/0
+      - SECRET_KEY=${GLITCHTIP_SECRET_KEY}
+      - GLITCHTIP_DOMAIN=https://meet.aiobi.world/glitchtip
+      - CELERY_WORKER_AUTOSCALE=1,3
+      - CELERY_WORKER_MAX_TASKS_PER_CHILD=10000
+    depends_on:
+      glitchtip-postgres:
+        condition: service_healthy
+      glitchtip-redis:
+        condition: service_started
+      glitchtip-migrate:
+        condition: service_completed_successfully
+    networks:
+      - default
+
 volumes:
   whisper-models:
   whisper-uv-cache:
@@ -594,6 +715,7 @@ volumes:
   grafana-data:
   loki-data:
   promtail-positions:
+  glitchtip-pg-data:
 
 networks:
   aiobi-public:

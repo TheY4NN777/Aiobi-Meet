@@ -101,6 +101,27 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
+
+    # -- GlitchTip (error tracking) -------------------------------------------
+    # Proxy /glitchtip/ vers le container glitchtip-web:8000 pour 2 cas d'usage :
+    # 1. Ingestion des events JS depuis les navigateurs users (required public)
+    # 2. Redirect auth OIDC si un jour Keycloak est branche a GlitchTip
+    # L'UI admin reste bindee sur 10.13.13.1:8002 (VPN only), ce proxy ne sert
+    # qu'a l'ingestion HTTP — la UI n'est PAS accessible via ce chemin.
+    # Par design : le payload d'ingestion contient un public DSN key, pas
+    # secret. Meme modele que Sentry Cloud.
+    location /glitchtip/ {
+        # Retire le prefixe /glitchtip/ avant de forward vers l'upstream
+        rewrite ^/glitchtip/(.*) /$1 break;
+        proxy_pass http://glitchtip-web:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_redirect off;
+        # Taille max d'un event GlitchTip (stack traces volumineuses possibles)
+        client_max_body_size 10m;
+    }
 }
 
 # -- SPA server (port 8080) --- sert les fichiers statiques du frontend -------
