@@ -1,0 +1,71 @@
+# Loki — storage + API des logs Aïobi Meet
+#
+# Architecture choisie : "monolithic" (tout dans un seul binary) — plus simple
+# et parfait pour single-host. L'alternative "microservices" (querier, ingester,
+# distributor séparés) est utile à l'échelle multi-node, overkill ici.
+#
+# Storage : filesystem local (BoltDB pour index, filesystem pour chunks).
+# Alternative = S3 (MinIO chez nous pourrait accueillir) mais filesystem
+# est + simple à debug et plus rapide pour des volumes modérés.
+#
+# Retention : 14 jours. Plus que ça et on devra brancher S3 + retention par schema.
+# 14 jours = bon compromis pour garder "la semaine dernière" en investigation
+# post-mortem, sans exploser le disque.
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  # Retention globale : 14 jours
+  retention_period: 336h
+  # Accepte les lignes pas trop vieilles (protection contre push buggé)
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  # Taille max d'une ligne de log — 256 KB suffit pour des stack traces longues
+  max_line_size: 262144
+  # Taux max d'ingestion par stream (container) — 10 MB/s par container
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
+
+ruler:
+  alertmanager_url: http://localhost:9093

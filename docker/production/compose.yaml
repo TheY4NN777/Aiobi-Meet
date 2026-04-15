@@ -541,12 +541,59 @@ services:
     networks:
       - default
 
+  # ===========================================================================
+  # LOGS CENTRALISES — Loki + Promtail (LOT M2)
+  #
+  # Loki stocke et indexe les logs par labels (container/service/project).
+  # Promtail tail les logs Docker (/var/lib/docker/containers/*/*.log) et push.
+  # Acces via Grafana > Explore > datasource Loki. Pas d'UI separee.
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # Loki — backend storage + API logs
+  # Retention 14 jours, storage filesystem local persiste dans volume loki-data.
+  # Pas expose sur le host : queries via reseau Docker interne par Grafana.
+  # ---------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:3.2.1
+    restart: always
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    networks:
+      - default
+
+  # ---------------------------------------------------------------------------
+  # Promtail — agent qui tail les logs Docker et les push a Loki
+  # Lit les fichiers de log Docker via bind-mount /var/lib/docker/containers
+  # (read-only), et le Docker socket pour service discovery des containers.
+  # ---------------------------------------------------------------------------
+  promtail:
+    image: grafana/promtail:3.2.1
+    restart: always
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      # Docker socket — pour service discovery des containers actifs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Logs Docker — tail des fichiers json-log (1 par container)
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # Positions — fichier d'etat pour reprendre la ou on s'est arrete au restart
+      - promtail-positions:/tmp
+    depends_on:
+      - loki
+    networks:
+      - default
+
 volumes:
   whisper-models:
   whisper-uv-cache:
   redis-data:
   prometheus-data:
   grafana-data:
+  loki-data:
+  promtail-positions:
 
 networks:
   aiobi-public:

@@ -650,8 +650,10 @@ deploy-production:
       restart_if_changed "docker/production/livekit-server.yaml"         livekit
       restart_if_changed "docker/production/livekit-egress.yaml"         livekit-egress
       restart_if_changed "docker/production/whisper-lb.conf"             whisper
-      restart_if_changed "docker/production/monitoring/prometheus.yml"   prometheus
-      restart_if_changed "docker/production/monitoring/grafana/"         grafana
+      restart_if_changed "docker/production/monitoring/prometheus.yml"    prometheus
+      restart_if_changed "docker/production/monitoring/grafana/"          grafana
+      restart_if_changed "docker/production/monitoring/loki-config.yml"   loki
+      restart_if_changed "docker/production/monitoring/promtail-config.yml" promtail
 
     # --- 5. Attendre le backend ----------------------------------------------
     - echo "=== Waiting for backend health check ==="

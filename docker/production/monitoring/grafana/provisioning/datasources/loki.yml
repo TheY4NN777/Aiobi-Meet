@@ -1,0 +1,29 @@
+# Grafana datasource — Loki (logs centralises)
+#
+# Chargee automatiquement au demarrage Grafana. UID "loki" stable pour que
+# les dashboards futurs puissent la referencer sans dependre du display name.
+#
+# Acces : reseau Docker interne (Loki ne binde aucun port sur le host).
+# Queries : LogQL, syntax inspiree de PromQL, accessible via Grafana > Explore.
+
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      # Limite max de lignes retournees par query — 1000 suffit pour naviguer,
+      # au-dela faut utiliser les filtres LogQL pour raffiner la query.
+      maxLines: 1000
+      # Timeout des queries longues (agregations sur plusieurs jours)
+      timeout: 60
+      # Derived fields — permet de creer des liens cliquables dans les logs
+      # quand un pattern regex matche. Utile phase 2 pour router vers le
+      # dashboard Aiobi Meet Overview filtre sur un trace_id specifique.
+      # Pour l'instant aucun derivedField, on ajoutera quand on aura des
+      # trace IDs dans les logs Django.
+      derivedFields: []

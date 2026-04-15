@@ -1,0 +1,78 @@
+# Promtail — agent qui tail les logs Docker et les push à Loki
+#
+# Stratégie de scrape : utilisation du service discovery Docker.
+# Promtail interroge /var/run/docker.sock toutes les 5s, detecte les containers
+# actifs, tail leurs logs dans /var/lib/docker/containers/<id>/*.log, extrait
+# les labels utiles (container name, compose service, stack) et les push à Loki.
+#
+# Pourquoi docker_sd au lieu de static file-path scrape :
+# - Les containers redemarrent/sont recrees avec de nouveaux IDs — file-path
+#   devient obsolete. docker_sd re-detecte automatiquement.
+# - Les labels docker (com.docker.compose.service, project, etc.) sont
+#   directement disponibles pour enrichir les labels Loki.
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  # Fichier qui garde la position de chaque log (pour reprendre apres restart
+  # sans re-ingerer tout). Persiste dans le volume promtail-positions.
+  filename: /tmp/positions.yaml
+
+clients:
+  # URL de Loki dans le reseau Docker interne
+  - url: http://loki:3100/loki/api/v1/push
+    # Retry si Loki indisponible temporairement
+    backoff_config:
+      min_period: 500ms
+      max_period: 5m
+      max_retries: 10
+
+scrape_configs:
+  - job_name: docker
+    # Service discovery via Docker socket
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        # Tous les containers — pas de filtre
+        filters: []
+
+    relabel_configs:
+      # Extraire le nom du container depuis le label meta (ex: "/backend-1")
+      # Promtail fournit __meta_docker_container_name = "/backend-1"
+      # On enleve le "/" initial et on met dans le label Loki `container`
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+
+      # Label service (compose service name) — utile pour grouper les workers
+      # (ex: 4x celery-transcribe → meme service)
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+
+      # Label project (compose project) — sépare Meet des autres stacks
+      # sur le host (GitLab, Vault, Teleport...)
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: 'project'
+
+      # Label image — utile pour retrouver quelle version tourne
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'stream'
+
+    pipeline_stages:
+      # Parse le JSON Docker wrapper : chaque ligne du fichier /var/lib/docker/
+      # containers/<id>/<id>-json.log est un JSON {"log":"...", "stream":"stdout",
+      # "time":"..."}. On extrait le champ "log" comme contenu réel.
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            timestamp: time
+      - labels:
+          stream:
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - output:
+          source: output
