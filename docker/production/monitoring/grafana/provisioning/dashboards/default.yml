@@ -4,7 +4,9 @@
 # docker/production/monitoring/grafana/dashboards/) seront charges au
 # demarrage et recharges automatiquement toutes les 10 secondes (updateIntervalSeconds).
 #
-# Tous les dashboards sont places dans le folder "Aïobi" (folderUid=aiobi).
+# Tous les dashboards sont places dans le folder "Aïobi Meet" (folderUid=aiobi).
+# On garde l'UID ASCII stable "aiobi" pour ne pas casser les URLs existantes —
+# seul le display name change.
 # Pas d'arborescence dynamique car on a une structure plate dans dashboards/
 # (si un jour on veut des sous-folders, il faudra retirer folder+folderUid et
 # remettre foldersFromFilesStructure: true — mais les deux sont incompatibles).
@@ -14,7 +16,7 @@ apiVersion: 1
 providers:
   - name: aiobi-dashboards
     orgId: 1
-    folder: "Aïobi"
+    folder: "Aïobi Meet"
     folderUid: aiobi
     type: file
     disableDeletion: true
