@@ -223,6 +223,54 @@ class FileService:
                 os.remove(output_path)
             raise RuntimeError("Failed to extract audio.") from e
 
+    def _preprocess_audio(self, input_path: Path) -> Path:
+        """Normalize audio for whisper: highpass filter + EBU loudness normalization + 16kHz mono.
+
+        highpass=f=80 removes sub-80Hz room noise (AC hum, rumble) without touching voice.
+        loudnorm=I=-16 applies EBU R128 normalization to compensate level variance between speakers.
+        16kHz mono is whisper's native input format, avoids internal resampling inside the model.
+        """
+        logger.info("Preprocessing audio: highpass + loudnorm + 16kHz mono")
+
+        with tempfile.NamedTemporaryFile(
+            suffix=".wav", delete=False, prefix="audio_preprocessed_"
+        ) as tmp:
+            output_path = Path(tmp.name)
+
+        try:
+            command = [
+                "ffmpeg",
+                "-i",
+                str(input_path),
+                "-af",
+                "highpass=f=80,loudnorm=I=-16:LRA=11:TP=-1.5",
+                "-ar",
+                "16000",
+                "-ac",
+                "1",
+                "-y",
+                str(output_path),
+            ]
+
+            # ruff: noqa: S603
+            subprocess.run(
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            )
+
+            logger.info("Audio preprocessed successfully: %s", output_path)
+            return output_path
+
+        except FileNotFoundError as e:
+            logger.error("ffmpeg not found. Please install ffmpeg.")
+            if output_path.exists():
+                os.remove(output_path)
+            raise RuntimeError("ffmpeg is not installed or not in PATH") from e
+        except subprocess.CalledProcessError as e:
+            logger.error("Audio preprocessing failed: %s", e.stderr.decode())
+            if output_path.exists():
+                os.remove(output_path)
+            raise RuntimeError("Failed to preprocess audio.") from e
+
     @contextmanager
     def prepare_audio_file(self, remote_object_key: str):
         """Download and prepare audio file for processing.
@@ -233,6 +281,7 @@ class FileService:
         """
         downloaded_path = None
         processed_path = None
+        preprocessed_path = None
         file_handle = None
 
         try:
@@ -248,16 +297,18 @@ class FileService:
             else:
                 processed_path = downloaded_path
 
+            preprocessed_path = self._preprocess_audio(processed_path)
+
             metadata = {"duration": duration, "extension": extension}
 
-            file_handle = open(processed_path, "rb")
+            file_handle = open(preprocessed_path, "rb")
             yield file_handle, metadata
 
         finally:
             if file_handle:
                 file_handle.close()
 
-            for path in [downloaded_path, processed_path]:
+            for path in [downloaded_path, processed_path, preprocessed_path]:
                 if path is None or not os.path.exists(path):
                     continue
 
