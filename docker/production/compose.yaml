@@ -394,6 +394,7 @@ services:
       - --web.enable-lifecycle
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/minio-token.txt:/etc/prometheus/minio-token.txt:ro
       - prometheus-data:/prometheus
     # Bind 0.0.0.0 : accessible depuis le reseau WireGuard (10.13.13.0/24).
     # UFW sur le host restreint l'acces au subnet VPN via la regle :

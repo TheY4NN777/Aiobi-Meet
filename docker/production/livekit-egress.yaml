@@ -3,6 +3,7 @@ api_key: meet
 api_secret: __LIVEKIT_API_SECRET__
 ws_url: "ws://livekit:47880"
 insecure: true
+prometheus_port: 7980
 redis:
   address: redis:6379
 

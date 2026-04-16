@@ -1086,6 +1086,7 @@ class Production(Base):
         "^__heartbeat__",
         r"^api/v1\.0/rooms/webhooks-livekit/",
         r"^api/v1\.0/recordings/",
+        r"^metrics$",
     ]
 
     # Modern browsers require to have the `secure` attribute on cookies with `Samesite=none`
