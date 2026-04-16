@@ -3,7 +3,11 @@ api_key: meet
 api_secret: __LIVEKIT_API_SECRET__
 ws_url: "ws://livekit:47880"
 insecure: true
-prometheus_port: 7980
+# 7980 est utilise en interne par egress pour son serveur template HTTP
+# (cf `template_base: http://localhost:7980/` passe au handler Chrome).
+# Conflit observe le 2026-04-16 : Chrome recevait le body Prometheus au lieu
+# du HTML composite, recording silencieusement casse. Deplacement sur 7981.
+prometheus_port: 7981
 redis:
   address: redis:6379
 

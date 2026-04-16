@@ -112,10 +112,12 @@ scrape_configs:
       - targets: ['livekit:6789']
 
   # LiveKit Egress — recordings en cours, uploads réussis/échoués, duration
+  # Port 7981 (pas 7980) car 7980 est pris par le template HTTP server interne
+  # d'egress. Cf livekit-egress.yaml pour les details du conflit.
   - job_name: livekit-egress
     metrics_path: /metrics
     static_configs:
-      - targets: ['livekit-egress:7980']
+      - targets: ['livekit-egress:7981']
 
   # NOTE : whisper-1..4 (faster-whisper-server) n'exposent pas de /metrics
   # standard. Le monitoring de whisper se fera via :
