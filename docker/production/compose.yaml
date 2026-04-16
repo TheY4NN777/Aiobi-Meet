@@ -665,6 +665,17 @@ services:
       # chemin /glitchtip/ sous meet.aiobi.world.
       - GLITCHTIP_DOMAIN=https://meet.aiobi.world/glitchtip
       - DEFAULT_FROM_EMAIL=noreply@aiobi.world
+      # SMTP — meme config que le backend Django (DJANGO_EMAIL_* dans les CI vars,
+      # injectees dans .env via le script CI). GlitchTip utilise les noms Django
+      # standard (sans prefixe), d'ou le mapping via ${EMAIL_*} du .env.
+      # Indispensable pour allauth : le signup + password reset envoient des
+      # emails de verification. Sans SMTP configure, /auth/signup renvoie 500.
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS}
+      - EMAIL_USE_SSL=${EMAIL_USE_SSL}
       # Registration ouverte initialement (tu crees le premier compte admin
       # apres le deploy via http://10.13.13.1:8002/accounts/signup/).
       # UFW restreint deja l'acces au subnet VPN, donc registration=true est
@@ -698,6 +709,15 @@ services:
       - REDIS_URL=redis://glitchtip-redis:6379/0
       - SECRET_KEY=${GLITCHTIP_SECRET_KEY}
       - GLITCHTIP_DOMAIN=https://meet.aiobi.world/glitchtip
+      - DEFAULT_FROM_EMAIL=noreply@aiobi.world
+      # SMTP — le worker envoie les notifications d'alerte (nouvelle erreur,
+      # regression, etc.). Meme config que le web container.
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS}
+      - EMAIL_USE_SSL=${EMAIL_USE_SSL}
       - CELERY_WORKER_AUTOSCALE=1,3
       - CELERY_WORKER_MAX_TASKS_PER_CHILD=10000
     depends_on:
