@@ -441,7 +441,11 @@ class Base(Configuration):
     CORS_ALLOWED_ORIGIN_REGEXES = values.ListValue([])
 
     # Sentry
-    SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN")
+    # environ_prefix=None : sans ce flag, django-configurations prepend DJANGO_
+    # a environ_name (=> DJANGO_SENTRY_DSN), ce qui ne matche pas la convention
+    # Sentry/GlitchTip standard (SENTRY_DSN). Avec environ_prefix=None, la var
+    # lue depuis l'environnement est exactement "SENTRY_DSN".
+    SENTRY_DSN = values.Value(None, environ_name="SENTRY_DSN", environ_prefix=None)
 
     # Easy thumbnails
     THUMBNAIL_EXTENSION = "webp"
