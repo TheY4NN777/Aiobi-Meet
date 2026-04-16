@@ -260,6 +260,9 @@ services:
       - WHISPER__MODEL=Systran/faster-whisper-large-v3
       - WHISPER__DEVICE=cpu
       - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__VAD_FILTER=true
+      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
+      - WHISPER__VAD_THRESHOLD=0.35
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
@@ -273,6 +276,9 @@ services:
       - WHISPER__MODEL=Systran/faster-whisper-large-v3
       - WHISPER__DEVICE=cpu
       - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__VAD_FILTER=true
+      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
+      - WHISPER__VAD_THRESHOLD=0.35
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
@@ -286,6 +292,9 @@ services:
       - WHISPER__MODEL=Systran/faster-whisper-large-v3
       - WHISPER__DEVICE=cpu
       - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__VAD_FILTER=true
+      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
+      - WHISPER__VAD_THRESHOLD=0.35
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
@@ -299,6 +308,9 @@ services:
       - WHISPER__MODEL=Systran/faster-whisper-large-v3
       - WHISPER__DEVICE=cpu
       - WHISPER__COMPUTE_TYPE=int8
+      - WHISPER__VAD_FILTER=true
+      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
+      - WHISPER__VAD_THRESHOLD=0.35
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
