@@ -550,7 +550,12 @@ deploy-production:
     # ils ne voient plus les nouveaux fichiers jusqu'a un force-recreate manuel.
     # Bug rencontre 2026-04-15 apres l'ajout de loki.yml + promtail-config.yml.
     - mkdir -p $HOST_PROD/monitoring
-    - rsync -a --delete docker/production/monitoring/ $HOST_PROD/monitoring/
+    # --exclude=minio-token.txt : le token est genere par la CI a partir de la
+    # var MINIO_PROMETHEUS_TOKEN (pas dans le repo). Sans --exclude, rsync le
+    # supprimerait a chaque deploy, et le recreate ensuite produirait un
+    # nouvel inode => bind-mount du container prometheus garde l'ancien inode
+    # (zombie) et ne voit jamais les nouvelles perms/contenu. Observe 2026-04-16.
+    - rsync -a --delete --exclude='minio-token.txt' docker/production/monitoring/ $HOST_PROD/monitoring/
     # MinIO Prometheus JWT bearer token — required to scrape /minio/v2/metrics/cluster.
     # Token is generated once with `mc admin prometheus generate local` and stored
     # as masked CI variable MINIO_PROMETHEUS_TOKEN. If missing, write an empty file
