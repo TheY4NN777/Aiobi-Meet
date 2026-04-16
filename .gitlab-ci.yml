@@ -558,10 +558,14 @@ deploy-production:
     - |
       if [ -n "$MINIO_PROMETHEUS_TOKEN" ]; then
         echo "$MINIO_PROMETHEUS_TOKEN" > $HOST_PROD/monitoring/minio-token.txt
-        chmod 600 $HOST_PROD/monitoring/minio-token.txt
+        # 644 required: prom/prometheus image runs as user "nobody" (UID 65534),
+        # cannot read 600-owned-by-root file mounted read-only. Host access is
+        # already restricted to yanis, so "others read" is acceptable here.
+        chmod 644 $HOST_PROD/monitoring/minio-token.txt
         echo "  MinIO Prometheus token written"
       else
         touch $HOST_PROD/monitoring/minio-token.txt
+        chmod 644 $HOST_PROD/monitoring/minio-token.txt
         echo "  MINIO_PROMETHEUS_TOKEN not set — scrape will stay DOWN"
       fi
     # Injecter les secrets dans la config egress
@@ -669,8 +673,23 @@ deploy-production:
     # commit et on restart le service concerne. Plus de risque d'oublier un
     # `docker compose restart` manuel apres un deploy qui change ces fichiers.
     - |
-      DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      # DIFF_BASE = last *successful* deploy SHA (not CI_COMMIT_BEFORE_SHA which
+      # can skip restarts when intermediate deploys fail). The marker file is
+      # written only at the very end of a successful deploy, below.
+      LAST_DEPLOYED_FILE="$HOST_PROD/.last-deployed-sha"
+      if [ -f "$LAST_DEPLOYED_FILE" ] && [ -s "$LAST_DEPLOYED_FILE" ]; then
+        DIFF_BASE=$(cat "$LAST_DEPLOYED_FILE")
+        # Validate that the SHA still exists locally (shallow clone may have
+        # pruned it); fall back to CI_COMMIT_BEFORE_SHA otherwise.
+        if ! git cat-file -e "$DIFF_BASE^{commit}" 2>/dev/null; then
+          echo "  [deploy] last-deployed SHA $DIFF_BASE unreachable, falling back"
+          DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+        fi
+      else
+        DIFF_BASE="${CI_COMMIT_BEFORE_SHA:-HEAD~1}"
+      fi
       if [ "$DIFF_BASE" = "0000000000000000000000000000000000000000" ]; then DIFF_BASE="HEAD~1"; fi
+      echo "  [deploy] computing restart_if_changed diff from $DIFF_BASE"
       CHANGED=$(git diff --name-only "$DIFF_BASE" HEAD || echo "")
       restart_if_changed() {
         local pattern=$1
@@ -891,6 +910,12 @@ deploy-production:
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://${domain}" 2>/dev/null || echo "000")
         echo "  ${domain}: HTTP ${HTTP_CODE}"
       done
+
+    # Write marker only after ALL previous steps succeeded — used by the next
+    # deploy's restart_if_changed to compute the right diff base. If any step
+    # above failed, the file keeps the previous successful SHA, so the next
+    # deploy will catch up the orphaned restarts.
+    - echo "$CI_COMMIT_SHA" > $HOST_PROD/.last-deployed-sha
 
     - echo "=== Production deploy complete ==="
 
