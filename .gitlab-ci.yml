@@ -468,6 +468,12 @@ build-frontend-prod:
     - aiobi-prod
     - docker
   image: docker:27
+  # environment:production requis pour que les CI vars scopees `production`
+  # soient exposees a ce job (notamment VITE_GLITCHTIP_DSN_FRONTEND qui doit
+  # etre inline dans le bundle JS au build). Sans cette declaration, le
+  # `--build-arg` recevait une string vide et Vite tree-shakait Sentry.init.
+  environment:
+    name: production
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
