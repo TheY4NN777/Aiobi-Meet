@@ -479,7 +479,9 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     restart: always
     environment:
-      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresql:5432/${POSTGRES_DB}?sslmode=disable
+      - DATA_SOURCE_URI=postgresql:5432/${POSTGRES_DB}?sslmode=disable
+      - DATA_SOURCE_USER=${POSTGRES_USER}
+      - DATA_SOURCE_PASS=${POSTGRES_PASSWORD}
     depends_on:
       - postgresql
     networks:
