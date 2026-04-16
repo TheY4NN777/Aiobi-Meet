@@ -7,6 +7,8 @@ from fastapi import Depends
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from summary.core.vocabulary import build_initial_prompt
+
 
 class Settings(BaseSettings):
     """Configuration settings loaded from environment variables and .env file."""
@@ -51,6 +53,7 @@ class Settings(BaseSettings):
     # ISO 639-1 language code (e.g., "en", "fr", "es")
     whisperx_default_language: Optional[str] = None
     whisperx_allowed_languages: Set[str] = {"en", "fr", "de", "nl"}
+    whisperx_initial_prompt: str = build_initial_prompt()
     llm_base_url: Optional[str] = None
     llm_api_key: Optional[SecretStr] = None
     llm_model: Optional[str] = None

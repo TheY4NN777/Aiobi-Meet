@@ -98,6 +98,12 @@ def transcribe_audio(task_id, filename, language):
                 file=audio_file,
                 language=language,
                 response_format="verbose_json",
+                extra_body={
+                    "condition_on_previous_text": False,
+                    "initial_prompt": settings.whisperx_initial_prompt,
+                    "temperature": 0,
+                    "no_repeat_ngram_size": 3,
+                },
             )
 
             transcription_time = round(time.time() - transcription_start_time, 2)
