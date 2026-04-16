@@ -597,8 +597,14 @@ deploy-production:
     # Apres le 1er deploy tu crees le projet dans GlitchTip UI, recuperes son
     # DSN, le mets en CI var, et le deploy suivant active le capture.
     - |
+      # Cleanup des eventuelles anciennes lignes (y compris DJANGO_SENTRY_DSN
+      # ecrit avant 2026-04-16 qui etait silencieusement ignore par Django).
+      sed -i '/^SENTRY_DSN=/d; /^DJANGO_SENTRY_DSN=/d' $HOST_PROD/env.d/common || true
       if [ -n "$GLITCHTIP_DSN_BACKEND" ]; then
-        echo "DJANGO_SENTRY_DSN=$GLITCHTIP_DSN_BACKEND" >> $HOST_PROD/env.d/common
+        # settings.py:444 override `environ_name="SENTRY_DSN"` donc pas de prefix
+        # DJANGO_ (contrairement a la plupart des autres django-configurations
+        # values). Ecrire `DJANGO_SENTRY_DSN` serait silencieusement ignore.
+        echo "SENTRY_DSN=$GLITCHTIP_DSN_BACKEND" >> $HOST_PROD/env.d/common
         echo "  GlitchTip DSN configured for Django backend"
       fi
     - mkdir -p $HOST_PROJECT/docker/auth
