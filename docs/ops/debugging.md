@@ -127,7 +127,83 @@ Dans GlitchTip, chaque issue a un bouton :
 
 ---
 
-## Scenario 3 — "LiveKit déconnecte les users"
+## Scenario 3 — "Un recording n'a pas produit de transcription"
+
+Symptôme : l'utilisateur clique Record, la réunion se déroule, mais à la fin aucun email de transcription n'arrive. Vu en prod le **2026-04-16**, incident détaillé ci-dessous car le pattern est subtil.
+
+### Étape 1 — état DB du recording
+
+```bash
+# Récents recordings (24h)
+sudo docker compose exec backend python manage.py shell -c \
+  "from core.models import Recording; from datetime import timedelta; from django.utils import timezone; t=timezone.now()-timedelta(hours=24); [print(str(r.id)[:8], r.created_at.strftime('%m-%d %H:%M'), 'status:', r.status, 'TK:', r.transcription_key or 'None', 'mode:', r.mode) for r in Recording.objects.filter(created_at__gte=t).order_by('-created_at')]"
+```
+
+Cherche un recording **stuck en `status: active`** plus de 10-15 min après la fin de la réunion. C'est le signal que le cycle LiveKit Egress → webhook backend → Celery a été coupé quelque part.
+
+### Étape 2 — les logs egress pour ce recording
+
+```bash
+sudo docker compose logs livekit-egress --since=4h 2>&1 | grep -E "<RECORDING_ID_8_PREMIERS_CHARS>|<EGRESS_ID_si_connu>"
+```
+
+Pattern **sain** attendu :
+
+```
+egress    request received
+egress    request validated
+egress    chrome: START_RECORDING
+egress    pipeline playing
+egress    egress_active
+...
+egress    egress_ending
+egress    pipeline received EOS
+egress    egress_complete
+```
+
+Pattern **cassé** observé le 16 avril :
+
+```
+egress    request received
+egress    request validated
+egress    connecting to redis (handler)
+egress    WARN failed to obtain ms from handler ... handler_ipc.sock: no such file or directory
+egress    WARN failed to obtain ms from handler ... (retry)
+[silence]
+```
+
+### Étape 3 — si pattern cassé
+
+Le handler subprocess peut être **vivant** malgré le WARN (vérifie via `ps auxf`), mais Chrome ne charge pas la page composite attendue.
+
+**Cause racine documentée** : conflit de port 7980 dans `docker/production/livekit-egress.yaml`. Egress utilise 7980 en interne pour son serveur template HTTP (`template_base: http://localhost:7980/` passé au handler). Si on expose aussi Prometheus sur 7980 via `prometheus_port: 7980`, un des deux binds perd la course → Chrome reçoit le mauvais body → recording silencieux.
+
+**Fix** : `prometheus_port: 7981` (ou autre port libre). Aligner la target scrape dans `prometheus.yml` : `targets: ['livekit-egress:7981']`. Commit de référence : `1417a3f2`.
+
+### Étape 4 — vérifier le bucket MinIO
+
+Si le `.ogg` est absent du bucket pour ce recording, pas de rescue possible (aucun audio n'a été capté).
+
+```bash
+sudo docker compose exec minio mc ls local/meet-media-storage/recordings/ | tail -30
+```
+
+### Étape 5 — nettoyage DB
+
+Si le recording est définitivement perdu, le supprimer pour que l'UI user cesse d'afficher "en cours" :
+
+```bash
+sudo docker compose exec backend python manage.py shell -c \
+  "from core.models import Recording; r = Recording.objects.get(id__startswith='<ID>'); result = r.delete(); print('deleted:', result)"
+```
+
+Les `RecordingAccess` liés cascadent automatiquement (`on_delete=CASCADE` côté model).
+
+Alternativement, marquer `status='failed_to_start'` (préserve la metadata) plutôt que supprimer. Les 8 statuts valides sont : `initiated`, `active`, `stopped`, `saved`, `aborted`, `failed_to_start`, `failed_to_stop`, `notification_succeeded`.
+
+---
+
+## Scenario 4 — "LiveKit déconnecte les users"
 
 ### Étape 1 : Grafana LiveKit dashboard
 
@@ -157,7 +233,7 @@ Tu verras les events `participant_connection_aborted`, `departure timeout`, etc.
 
 ---
 
-## Scenario 4 — "Une exception Python est apparue en prod"
+## Scenario 5 — "Une exception Python est apparue en prod"
 
 ### Étape 1 : GlitchTip
 
@@ -173,7 +249,7 @@ Chaque event GlitchTip contient les **request params** sérialisés (body, query
 
 ---
 
-## Scenario 5 — "Une tâche Celery a échoué silencieusement"
+## Scenario 6 — "Une tâche Celery a échoué silencieusement"
 
 Celery catch parfois les exceptions sans les relever jusqu'à Sentry. Pour investiguer :
 

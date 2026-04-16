@@ -303,6 +303,7 @@ Dans l'ordre :
 5. `http: server gave HTTP response to HTTPS client` → `SECURE_SSL_REDIRECT` côté Django qui renvoie 301 HTTPS. Fix : ajouter `^metrics$` à `SECURE_REDIRECT_EXEMPT` dans settings.py (déjà fait pour `/metrics`)
 6. `permission denied` sur un token file → le container scrape tourne en user non-root (ex: prometheus = `nobody` UID 65534), le token doit être chmod 644 (pas 600)
 7. `dial tcp: lookup X: no such host` → service pas sur le même réseau Docker que Prometheus (réseau `default`). Vérifier la section `networks:` du service dans `compose.yaml`
+8. **Port 7980 piège LiveKit Egress** → Egress utilise 7980 en interne pour son template HTTP server (cf. `template_base` passé à Chrome). Si on configure aussi `prometheus_port: 7980`, conflit silencieux : Chrome reçoit du JSON Prometheus au lieu de la page HTML composite → recording cassé, **aucune erreur visible dans les logs**. Toujours utiliser un port différent pour Prometheus (on a choisi **7981**). Incident documenté le 2026-04-16, commit fix `1417a3f2`.
 
 ### Loki ne voit pas les logs d'un container
 
