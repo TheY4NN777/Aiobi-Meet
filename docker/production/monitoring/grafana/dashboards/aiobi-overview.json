@@ -254,8 +254,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum(rate(celery_task_runtime_bucket[5m])) by (le, task_name))",
-          "legendFormat": "{{task_name}}"
+          "expr": "histogram_quantile(0.95, sum(rate(celery_task_runtime_bucket[5m])) by (le, name))",
+          "legendFormat": "{{name}}"
         }
       ]
     },
@@ -271,7 +271,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "livekit_room_current",
+          "expr": "livekit_room_total",
           "legendFormat": "rooms"
         }
       ]
@@ -288,7 +288,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "livekit_participant_current",
+          "expr": "livekit_participant_total",
           "legendFormat": "participants"
         }
       ]
