@@ -561,6 +561,11 @@ deploy-production:
     # as masked CI variable MINIO_PROMETHEUS_TOKEN. If missing, write an empty file
     # so the bind-mount doesn't fail (scrape stays DOWN until var is populated).
     - |
+      # Hash AVANT pour detecter un vrai changement de contenu. docker compose
+      # up -d ne recree pas prometheus quand un fichier bind-monte change =>
+      # sans ce detect, on se retrouve avec le zombie inode bug qu'on a eu
+      # le 2026-04-16. Si BEFORE != AFTER => flag pour force-recreate plus bas.
+      MINIO_TOKEN_BEFORE=$(sha256sum $HOST_PROD/monitoring/minio-token.txt 2>/dev/null | awk '{print $1}' || echo "none")
       if [ -n "$MINIO_PROMETHEUS_TOKEN" ]; then
         echo "$MINIO_PROMETHEUS_TOKEN" > $HOST_PROD/monitoring/minio-token.txt
         # 644 required: prom/prometheus image runs as user "nobody" (UID 65534),
@@ -573,10 +578,19 @@ deploy-production:
         chmod 644 $HOST_PROD/monitoring/minio-token.txt
         echo "  MINIO_PROMETHEUS_TOKEN not set — scrape will stay DOWN"
       fi
+      MINIO_TOKEN_AFTER=$(sha256sum $HOST_PROD/monitoring/minio-token.txt | awk '{print $1}')
+      if [ "$MINIO_TOKEN_BEFORE" != "$MINIO_TOKEN_AFTER" ]; then
+        touch /tmp/recreate_prometheus
+        echo "  [deploy] minio-token.txt changed — prometheus scheduled for force-recreate"
+      fi
     # Injecter les secrets dans la config egress
     - sed -i "s|__LIVEKIT_API_SECRET__|${LIVEKIT_API_SECRET}|g" $HOST_PROD/livekit-egress.yaml
     - sed -i "s|__MINIO_ACCESS_KEY__|${POSTGRES_USER}|g" $HOST_PROD/livekit-egress.yaml
     - sed -i "s|__MINIO_SECRET_KEY__|${POSTGRES_PASSWORD}|g" $HOST_PROD/livekit-egress.yaml
+    # Hash AVANT les modifications env.d/common. docker compose ne detecte pas
+    # les changements du contenu d'un env_file (il track le path, pas le hash).
+    # Donc sans recreate explicite, backend/celery gardent l'ancien env.
+    - sha256sum $HOST_PROD/env.d/common 2>/dev/null > /tmp/backend_env_before_hash || echo "none" > /tmp/backend_env_before_hash
     - cp docker/production/env.d/* $HOST_PROD/env.d/
     # Injecter les variables email CI dans env.d/common (remplace mailcatcher)
     - |
@@ -606,6 +620,14 @@ deploy-production:
         # values). Ecrire `DJANGO_SENTRY_DSN` serait silencieusement ignore.
         echo "SENTRY_DSN=$GLITCHTIP_DSN_BACKEND" >> $HOST_PROD/env.d/common
         echo "  GlitchTip DSN configured for Django backend"
+      fi
+      # Hash APRES toutes les modifications env.d/common. Si changement reel,
+      # flag pour force-recreate backend + celery plus bas (bloc 4b).
+      BACKEND_ENV_AFTER=$(sha256sum $HOST_PROD/env.d/common | awk '{print $1}')
+      BACKEND_ENV_BEFORE=$(awk '{print $1}' /tmp/backend_env_before_hash 2>/dev/null || echo "none")
+      if [ "$BACKEND_ENV_BEFORE" != "$BACKEND_ENV_AFTER" ]; then
+        touch /tmp/recreate_backend_celery
+        echo "  [deploy] env.d/common changed — backend + celery scheduled for force-recreate"
       fi
     - mkdir -p $HOST_PROJECT/docker/auth
     - cp docker/auth/realm.json $HOST_PROJECT/docker/auth/realm.json
@@ -724,6 +746,21 @@ deploy-production:
       restart_if_changed "docker/production/monitoring/grafana/"          grafana
       restart_if_changed "docker/production/monitoring/loki-config.yml"   loki
       restart_if_changed "docker/production/monitoring/promtail-config.yml" promtail
+
+    # --- 4c. Force-recreate pour les fichiers non-trackes par restart_if_changed
+    # env.d/common et monitoring/minio-token.txt sont modifies pendant le CI
+    # (CI vars injectees/token genere). Ils ne sont PAS dans le diff git donc
+    # restart_if_changed ne les voit pas. Les flags /tmp/recreate_* sont setes
+    # plus haut dans le script quand un vrai changement de contenu est detecte.
+    - |
+      if [ -f /tmp/recreate_backend_celery ]; then
+        echo "  [deploy] env.d/common changed — force-recreating backend + celery"
+        docker compose -f compose.yaml up -d --force-recreate backend celery || true
+      fi
+      if [ -f /tmp/recreate_prometheus ]; then
+        echo "  [deploy] minio-token.txt changed — force-recreating prometheus"
+        docker compose -f compose.yaml up -d --force-recreate prometheus || true
+      fi
 
     # --- 5. Attendre le backend ----------------------------------------------
     - echo "=== Waiting for backend health check ==="
