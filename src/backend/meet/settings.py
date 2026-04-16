@@ -958,6 +958,13 @@ class Base(Configuration):
                 environment=cls.__name__.lower(),
                 release=get_release(),
                 integrations=[DjangoIntegration()],
+                # GlitchTip ne decompresse pas les request bodies brotli (ni
+                # nginx en amont par defaut). Le SDK Python Sentry 2.x utilise
+                # brotli par defaut si le package Brotli est installe (il
+                # l'est en transitive dep). On force gzip — toujours supporte
+                # cote GlitchTip + nginx + uwsgi. Sans ce flag: 400 "Cannot
+                # parse request body" sur tous les envelopes. Observe 2026-04-16.
+                _experiments={"transport_compression_algo": "gzip"},
             )
             sentry_sdk.set_tag("application", "backend")
 
