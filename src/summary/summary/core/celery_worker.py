@@ -10,10 +10,16 @@ import openai
 import sentry_sdk
 from celery import Celery, signals
 from celery.utils.log import get_task_logger
+from prometheus_client import Counter
 from requests import exceptions
 
 from summary.core.analytics import MetadataManager, get_analytics
 from summary.core.config import get_settings
+from summary.core.dedup import (
+    claim_transcribe_lock,
+    get_lock_holder,
+    release_transcribe_lock,
+)
 from summary.core.file_service import FileService, FileServiceException
 from summary.core.llm_service import LLMException, LLMObservability, LLMService
 from summary.core.locales import get_locale
@@ -36,6 +42,15 @@ analytics = get_analytics()
 metadata_manager = MetadataManager()
 
 logger = get_task_logger(__name__)
+
+# Prometheus counter for Layer C (Celery broker redelivery guard). Increments
+# when process_audio_transcribe_summarize_v2 aborts early because another task
+# already owns the Redis transcribe lock for the same recording.
+redelivery_skipped_counter = Counter(
+    "aiobi_celery_redelivery_skipped_total",
+    "Number of Celery task redeliveries aborted by the lock guard.",
+    labelnames=["queue"],
+)
 
 
 celery = Celery(
@@ -209,8 +224,18 @@ def _notify_backend(recording_id, transcription_key, email, sub, title):
 
 @celery.task(
     bind=True,
-    autoretry_for=[exceptions.HTTPError],
-    max_retries=settings.celery_max_retries,
+    # Retry only on transient network failures, not on every HTTPError. A generic
+    # HTTPError often means whisper is overloaded or returned a business-level
+    # error; retrying immediately just stacks another long-running transcription
+    # on top of the one already in flight (incident 2026-04-17). Connection
+    # errors and timeouts are the only cases where a retry is productive.
+    autoretry_for=[exceptions.ConnectionError, exceptions.Timeout],
+    # 10 min minimum between retries (up to 1h), with jitter, to avoid
+    # thundering-herd retries when whisper is momentarily slow.
+    retry_backoff=600,
+    retry_backoff_max=3600,
+    retry_jitter=True,
+    max_retries=1,
     queue=settings.transcribe_queue,
     # Hard kill after 5h to cap worst-case duration, regardless of whisper client
     # timeout. acks_late ensures the broker re-delivers the task if the worker
@@ -254,58 +279,96 @@ def process_audio_transcribe_summarize_v2(
         download_link: URL to download the original recording.
         context_language: ISO 639-1 language code of the meeting summary context text.
     """
-    logger.info(
-        "Notification received | Owner: %s | Room: %s",
-        owner_id,
-        room,
-    )
-
     task_id = self.request.id
-
-    transcription = transcribe_audio(task_id, filename, language)
-    if transcription is None:
-        return
-
-    content, title = format_transcript(
-        transcription,
-        context_language,
-        language,
-        room,
-        recording_date,
-        recording_time,
-        download_link,
-    )
-
     recording_id = _extract_recording_id(filename)
 
-    if settings.webhook_mode == "minio":
-        # Aiobi mode: generate docx, upload to MinIO, then notify backend
-        docx_bytes = file_service.markdown_to_docx(content, title=title)
-        transcription_key = f"{settings.transcription_output_prefix}{recording_id}.docx"
-        file_service.upload_to_minio(
-            transcription_key,
-            docx_bytes,
-            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
-        _notify_backend(recording_id, transcription_key, email, sub, title)
-    else:
-        # Legacy mode: post content to external Docs service (upstream compat)
-        submit_content(content, title, email, sub)
-
-    metadata_manager.capture(task_id, settings.posthog_event_success)
-
-    # LLM Summarization
+    # Layer C — broker redelivery guard.
+    # If another task is already holding the lock for this recording, we were
+    # redelivered by Redis (visibility_timeout expiry or lost ack) while the
+    # original execution is still running. Abort gracefully so we don't do the
+    # same work twice and race to upload the final docx. The lock value is the
+    # real task_id of the owner; anything that isn't OUR task_id is a foreign owner.
+    current_lock_holder = get_lock_holder(recording_id)
     if (
-        analytics.is_feature_enabled("summary-enabled", distinct_id=owner_id)
-        and settings.is_summary_enabled
+        current_lock_holder
+        and current_lock_holder != task_id
+        and not current_lock_holder.startswith("pending-")
     ):
-        logger.info("Queuing summary generation task.")
-        summarize_transcription.apply_async(
-            args=[owner_id, content, email, sub, title, recording_id],
-            queue=settings.summarize_queue,
+        redelivery_skipped_counter.labels(queue=settings.transcribe_queue).inc()
+        logger.warning(
+            "Task %s for recording %s aborted: lock held by task %s "
+            "(broker redelivery or duplicate dispatch that slipped past Layer A/B).",
+            task_id,
+            recording_id,
+            current_lock_holder,
         )
-    else:
-        logger.info("Summary generation not enabled for this user. Skipping.")
+        return {"status": "skipped_redelivery", "lock_holder": current_lock_holder}
+
+    # Claim the lock for this task. We overwrite a placeholder (set by the
+    # FastAPI endpoint) or re-acquire after a TTL expiry. Either way the lock
+    # is now tagged with our task_id so a subsequent redelivery can detect us.
+    claim_transcribe_lock(
+        recording_id, task_id, ttl_seconds=settings.transcribe_lock_ttl_seconds
+    )
+
+    logger.info(
+        "Notification received | Owner: %s | Room: %s | Task: %s | Recording: %s",
+        owner_id,
+        room,
+        task_id,
+        recording_id,
+    )
+
+    try:
+        transcription = transcribe_audio(task_id, filename, language)
+        if transcription is None:
+            return
+
+        content, title = format_transcript(
+            transcription,
+            context_language,
+            language,
+            room,
+            recording_date,
+            recording_time,
+            download_link,
+        )
+
+        if settings.webhook_mode == "minio":
+            # Aiobi mode: generate docx, upload to MinIO, then notify backend
+            docx_bytes = file_service.markdown_to_docx(content, title=title)
+            transcription_key = (
+                f"{settings.transcription_output_prefix}{recording_id}.docx"
+            )
+            file_service.upload_to_minio(
+                transcription_key,
+                docx_bytes,
+                content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            )
+            _notify_backend(recording_id, transcription_key, email, sub, title)
+        else:
+            # Legacy mode: post content to external Docs service (upstream compat)
+            submit_content(content, title, email, sub)
+
+        metadata_manager.capture(task_id, settings.posthog_event_success)
+
+        # LLM Summarization
+        if (
+            analytics.is_feature_enabled("summary-enabled", distinct_id=owner_id)
+            and settings.is_summary_enabled
+        ):
+            logger.info("Queuing summary generation task.")
+            summarize_transcription.apply_async(
+                args=[owner_id, content, email, sub, title, recording_id],
+                queue=settings.summarize_queue,
+            )
+        else:
+            logger.info("Summary generation not enabled for this user. Skipping.")
+    finally:
+        # Always release — on success, on exception, on early return. Uses a
+        # compare-and-delete Lua script so we never clobber a lock that was
+        # re-acquired by another task after our TTL would have expired.
+        release_transcribe_lock(recording_id, task_id)
 
 
 @signals.task_prerun.connect(sender=process_audio_transcribe_summarize_v2)

@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     transcribe_queue: str = "transcribe-queue"
     summarize_queue: str = "summarize-queue"
 
+    # Transcription idempotency lock (see summary.core.dedup).
+    # TTL must exceed the worst-case whisper compute time for a single recording
+    # plus queueing delay behind other transcriptions. 6h = whisperx_timeout, so
+    # a lock is never released by TTL while the task is still legitimately
+    # processing. A crashed task's lock expires on its own.
+    transcribe_lock_ttl_seconds: int = 6 * 3600
+
     # Minio settings
     aws_storage_bucket_name: str
     aws_s3_endpoint_url: str
