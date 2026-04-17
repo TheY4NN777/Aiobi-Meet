@@ -177,12 +177,16 @@ def test_save_recording_unknown_recording(recording_settings, mock_get_parser, c
 
 
 @pytest.mark.parametrize(
-    "status", ["failed_to_start", "aborted", "failed_to_stop", "saved", "initiated"]
+    "status", ["failed_to_start", "aborted", "failed_to_stop", "initiated"]
 )
-def test_save_recording_non_savable_recording(
+def test_save_recording_non_savable_recording_error_state(
     recording_settings, mock_get_parser, client, status
 ):
-    """Test that recordings in non-savable states cannot be saved."""
+    """Test that recordings in error or pre-active states are rejected with 403.
+
+    These states should never receive a storage-hook event under normal flow;
+    a 403 signals the caller that this is a genuine protocol violation.
+    """
 
     recording = RecordingFactory(status=status)
 
@@ -201,6 +205,95 @@ def test_save_recording_non_savable_recording(
         "detail": f"Recording with ID {recording.id} cannot be saved because it is either,"
         " in an error state or has already been saved."
     }
+
+
+@pytest.mark.parametrize("status", ["saved", "notification_succeeded"])
+def test_save_recording_already_processed_returns_200(
+    recording_settings, mock_get_parser, client, status
+):
+    """Test that storage-hook events for already-processed recordings are ignored politely.
+
+    This is the MinIO at-least-once delivery replay case. Returning 200 acknowledges
+    the duplicate webhook so MinIO stops retrying, while avoiding a second pipeline
+    dispatch (which previously caused duplicate transcription emails — incident
+    2026-04-17 recording 0e882ca2).
+    """
+
+    recording = RecordingFactory(status=status)
+
+    mock_parser = mock.Mock()
+    mock_parser.get_recording_id.return_value = recording.id
+    mock_get_parser.return_value = mock_parser
+
+    with mock.patch(
+        "core.recording.event.notification.notification_service.notify_external_services"
+    ) as mock_notify:
+        response = client.post(
+            "/api/v1.0/recordings/storage-hook/",
+            {"recording_data": "valid-data"},
+            HTTP_AUTHORIZATION="Bearer testAuthToken",
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "message": "Notification ignored (already processed)."
+        }
+        # Critical: no external call should be made for a duplicate webhook.
+        mock_notify.assert_not_called()
+
+    # Status is preserved unchanged — no side effects on the existing record.
+    recording.refresh_from_db()
+    assert recording.status == status
+
+
+@pytest.mark.parametrize("initial_status", ["active", "stopped"])
+def test_save_recording_concurrent_webhooks_only_one_processes(
+    recording_settings, mock_get_parser, client, initial_status
+):
+    """Test that only one of two sequential storage-hook calls triggers processing.
+
+    Simulates the race condition collapsed into sequential calls: the first
+    transitions status ACTIVE/STOPPED -> SAVED -> NOTIFICATION_SUCCEEDED,
+    the second observes updated=0 (status no longer in savable set) and
+    returns a 200 "already processed" without a second notify call.
+
+    The atomic UPDATE pattern guarantees this behavior even under true concurrency.
+    """
+
+    recording = RecordingFactory(status=initial_status)
+
+    mock_parser = mock.Mock()
+    mock_parser.get_recording_id.return_value = recording.id
+    mock_get_parser.return_value = mock_parser
+
+    with mock.patch(
+        "core.recording.event.notification.notification_service.notify_external_services",
+        return_value=True,
+    ) as mock_notify:
+        # First call: wins the race, processes normally.
+        response1 = client.post(
+            "/api/v1.0/recordings/storage-hook/",
+            {"recording_data": "valid-data"},
+            HTTP_AUTHORIZATION="Bearer testAuthToken",
+        )
+        # Second call: loses the race, must be a graceful 200 without side effect.
+        response2 = client.post(
+            "/api/v1.0/recordings/storage-hook/",
+            {"recording_data": "valid-data"},
+            HTTP_AUTHORIZATION="Bearer testAuthToken",
+        )
+
+    assert response1.status_code == 200
+    assert response1.json() == {"message": "Event processed."}
+
+    assert response2.status_code == 200
+    assert response2.json() == {"message": "Notification ignored (already processed)."}
+
+    # Critical: only ONE notify call across both webhooks.
+    assert mock_notify.call_count == 1
+
+    recording.refresh_from_db()
+    assert recording.status == RecordingStatusChoices.NOTIFICATION_SUCCEEDED
 
 
 @pytest.mark.parametrize("status", ["active", "stopped"])

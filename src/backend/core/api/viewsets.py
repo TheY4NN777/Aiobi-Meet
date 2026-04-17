@@ -8,6 +8,7 @@ from urllib.parse import unquote, urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.db import transaction
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from django_filters import rest_framework as django_filters
+from prometheus_client import Counter
 from rest_framework import (
     decorators,
     filters,
@@ -81,6 +83,14 @@ from .feature_flag import FeatureFlag
 # pylint: disable=too-many-ancestors
 
 logger = getLogger(__name__)
+
+# Prometheus counter for the webhook dedup Layer A. Increments every time the
+# storage-hook endpoint refuses a duplicate notification because the recording
+# was already transitioned out of the savable state by a concurrent webhook.
+duplicate_webhook_counter = Counter(
+    "aiobi_webhook_duplicate_ignored_total",
+    "Number of MinIO storage webhooks ignored due to atomic dedup (already processed).",
+)
 
 
 class NestedGenericViewSet(viewsets.GenericViewSet):
@@ -854,19 +864,58 @@ class RecordingViewSet(
                 {"message": "Notification ignored."},
             )
 
-        try:
-            recording = models.Recording.objects.get(id=recording_id)
-        except models.Recording.DoesNotExist as e:
-            raise drf_exceptions.NotFound("No recording found for this event.") from e
-
-        if not recording.is_savable():
-            raise drf_exceptions.PermissionDenied(
-                f"Recording with ID {recording_id} cannot be saved because it is either,"
-                " in an error state or has already been saved."
+        # Atomic claim: transition status savable -> SAVED in a single SQL UPDATE.
+        # Only one concurrent webhook wins the race; the loser observes updated=0.
+        # This eliminates the check-then-act window that allowed MinIO at-least-once
+        # webhook replays to dispatch the transcription pipeline multiple times.
+        with transaction.atomic():
+            savable_statuses = [
+                models.RecordingStatusChoices.ACTIVE,
+                models.RecordingStatusChoices.STOPPED,
+            ]
+            updated = models.Recording.objects.filter(
+                id=recording_id,
+                status__in=savable_statuses,
+            ).update(
+                status=models.RecordingStatusChoices.SAVED,
+                # Explicit because QuerySet.update() bypasses auto_now hooks;
+                # keeps updated_at fresh for the Pré-M3 "stuck active" alert.
+                updated_at=timezone.now(),
             )
 
-        # Attempt to notify external services about the recording
-        # This is a non-blocking operation - failures are logged but don't interrupt the flow
+            if updated == 0:
+                # We lost the race OR the recording is in a non-savable state.
+                # Distinguish "already processed" (ignore politely with 200) from
+                # "genuinely invalid state" (reject with 403 so MinIO retries nothing).
+                try:
+                    recording = models.Recording.objects.get(id=recording_id)
+                except models.Recording.DoesNotExist as e:
+                    raise drf_exceptions.NotFound(
+                        "No recording found for this event."
+                    ) from e
+
+                if recording.is_saved:
+                    duplicate_webhook_counter.inc()
+                    logger.info(
+                        "Storage webhook ignored for recording %s: already processed "
+                        "(status=%s). Likely MinIO replay or concurrent webhook.",
+                        recording_id,
+                        recording.status,
+                    )
+                    return drf_response.Response(
+                        {"message": "Notification ignored (already processed)."},
+                    )
+
+                raise drf_exceptions.PermissionDenied(
+                    f"Recording with ID {recording_id} cannot be saved because it is either,"
+                    " in an error state or has already been saved."
+                )
+
+            recording = models.Recording.objects.get(id=recording_id)
+
+        # We hold EXCLUSIVE responsibility for this recording now (status=SAVED).
+        # Attempt to notify external services about the recording.
+        # This is a non-blocking operation - failures are logged but don't interrupt the flow.
         notification_succeeded = notification_service.notify_external_services(
             recording
         )
@@ -876,7 +925,7 @@ class RecordingViewSet(
             if notification_succeeded
             else models.RecordingStatusChoices.SAVED
         )
-        recording.save()
+        recording.save(update_fields=["status", "updated_at"])
 
         return drf_response.Response(
             {"message": "Event processed."},
