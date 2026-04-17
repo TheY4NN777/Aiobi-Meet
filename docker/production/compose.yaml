@@ -21,6 +21,19 @@ services:
       -c maintenance_work_mem=512MB
     volumes:
       - ./data/databases/backend:/var/lib/postgresql/data
+    # Memory cap computed from: shared_buffers=4GB + work_mem=64MB × ~50
+    # connections peak (~3.2 GB) + maintenance_work_mem=512MB + connection
+    # overhead (~50 MB × 50 = 2.5 GB) + OS page cache slack = ~12 GB total.
+    # An 8 GB cap (earlier proposal) would have risked OOM under query bursts.
+    # Reservation 4 GB guarantees shared_buffers are always resident.
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 12G
+        reservations:
+          cpus: '0.5'
+          memory: 4G
     networks:
       - default
 
@@ -35,6 +48,13 @@ services:
       --appendfsync everysec
     volumes:
       - redis-data:/data
+    # 2G memory limit matches --maxmemory 2gb; CPU cap is generous since Redis
+    # is I/O-bound and single-threaded for command execution.
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 2G
     networks:
       - default
 
@@ -58,6 +78,11 @@ services:
       interval: 1s
       timeout: 20s
       retries: 300
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     networks:
       - default
 
@@ -92,7 +117,12 @@ services:
       - env.d/postgresql
       - env.d/hosts
     environment:
-      - GUNICORN_CMD_ARGS=--workers=6
+      # Gunicorn worker count is set authoritatively in
+      # docker/files/usr/local/etc/gunicorn/meet.py (workers = 6). We used to
+      # override here via GUNICORN_CMD_ARGS=--workers=6 which shadowed the
+      # file and created two sources of truth. Removed 2026-04-18 to keep the
+      # config declarative in a single place.
+      #
       # django-prometheus en mode multi-process (6 workers Gunicorn) necessite
       # un dossier partage pour consolider les metriques des workers. Sinon
       # chaque worker exporterait ses propres counters et /metrics renverrait
@@ -119,6 +149,20 @@ services:
         condition: service_started
       livekit:
         condition: service_started
+    # Gunicorn 6 workers @ ~200 MB RAM each (Django + DB + OIDC + LiveKit SDK)
+    # gives a ~1.2 GB working set. Cap 2 GB RAM leaves a 70% margin for the
+    # prometheus multiproc tmpfs and transient request handling. CPU cap 4
+    # lets 4 workers saturate simultaneously on a burst without starving the
+    # rest of the system. Reservation 1 CPU / 512 MB ensures Django stays
+    # responsive even while whisper/LiveKit contend for CPU.
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
     networks:
       - default
       - prod-app
@@ -139,6 +183,11 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
     networks:
       - default
 
@@ -169,6 +218,15 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    # Nginx frontend is public-facing (via Traefik). Cap matters more for DoS
+    # defense than capacity: nginx event-driven model handles thousands of
+    # conns on <1 CPU + 256M. 1 CPU / 512M gives ample headroom and prevents
+    # a log explosion or TLS handshake flood from starving other services.
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     networks:
       - aiobi-public
       - default
@@ -210,6 +268,24 @@ services:
     depends_on:
       redis:
         condition: service_started
+    # LiveKit SFU sizing — benchmark-informed (upstream "Going beyond a single
+    # core" blog + Benchmarking doc): ~100 down-tracks per CPU core. For a
+    # realistic mix (a few 10-participant rooms plus an occasional 100-person
+    # call with 3-5 active publishers), an 8 CPU cap supports ~800 down-tracks
+    # total which is the upper bound of what this 10-core host can absorb.
+    # Memory 6 GB generous for session state even with thousands of small rooms.
+    #
+    # RESERVATION 2 CPU + 2 GB — LiveKit is the critical path for live calls;
+    # this guarantee means calls never degrade even when whisper + backend
+    # saturate the rest of the box. Kernel cgroup enforces the floor.
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 6G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
     networks:
       - aiobi-public
       - default
@@ -227,6 +303,20 @@ services:
     depends_on:
       - redis
       - minio
+    # Egress official minimum per instance: 4 CPU + 4 GB (upstream docs).
+    # Room composite = full headless Chrome + FFmpeg pipeline (3x baseline
+    # CPU vs a track-only egress). One simultaneous recording uses ~2-3
+    # cores during encoding spikes.
+    # Reservation 1 CPU / 1 GB so a recording already in progress never gets
+    # starved by a concurrent whisper burst.
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
     networks:
       - default
 
@@ -243,16 +333,35 @@ services:
     depends_on:
       - whisper-1
       - whisper-2
-      - whisper-3
-      - whisper-4
+    # Internal-only LB (summary service -> whisper backends). Handful of
+    # long-lived connections, negligible footprint.
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
     networks:
       - default
 
   # ---------------------------------------------------------------------------
   # Whisper backends (faster-whisper-server — transcription ASR)
-  # 4 instances in parallel to absorb concurrent meeting loads. Volumes are
-  # shared so the IA model is downloaded once and python deps are resolved once.
+  #
+  # 2 instances (reduced from 4 on 2026-04-18 as part of the dedup hotfix).
+  # With the idempotency guards in Layers A/B/C/D the same audio is never
+  # transcribed more than once, so concurrency = 2 real streams. Shared
+  # volumes keep the IA model downloaded once and python deps resolved once.
   # ---------------------------------------------------------------------------
+  # Resource caps are benchmark-informed (2026-04-18):
+  #   - faster-whisper large-v3 int8 CPU peak RAM ~3 GB per worker (Systran
+  #     benchmark). Cap at 6 GB gives a 2x safety margin for bursts (several
+  #     concurrent requests queued inside one instance, e.g. during a retry
+  #     storm that slipped past Layer A/B/C).
+  #   - 4 logical threads (~2 physical cores on this 10-core Xeon without
+  #     AVX-512). Faster-whisper default NUM_WORKERS=1 + CPU_THREADS=4 matches
+  #     nicely. 2 instances x 4 threads = 8 threads for transcription, leaving
+  #     12 threads protected for livekit/backend/everything else.
+  #   - Reservation 1 CPU / 3 GB = the instance is never starved to below its
+  #     single-stream serving capacity.
   whisper-1:
     image: fedirz/faster-whisper-server:latest-cpu
     restart: always
@@ -266,6 +375,14 @@ services:
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 6G
+        reservations:
+          cpus: '1.0'
+          memory: 3G
     networks:
       - default
 
@@ -282,38 +399,14 @@ services:
     volumes:
       - whisper-models:/root/.cache/huggingface
       - whisper-uv-cache:/root/.cache/uv
-    networks:
-      - default
-
-  whisper-3:
-    image: fedirz/faster-whisper-server:latest-cpu
-    restart: always
-    environment:
-      - WHISPER__MODEL=Systran/faster-whisper-large-v3
-      - WHISPER__DEVICE=cpu
-      - WHISPER__COMPUTE_TYPE=int8
-      - WHISPER__VAD_FILTER=true
-      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
-      - WHISPER__VAD_THRESHOLD=0.35
-    volumes:
-      - whisper-models:/root/.cache/huggingface
-      - whisper-uv-cache:/root/.cache/uv
-    networks:
-      - default
-
-  whisper-4:
-    image: fedirz/faster-whisper-server:latest-cpu
-    restart: always
-    environment:
-      - WHISPER__MODEL=Systran/faster-whisper-large-v3
-      - WHISPER__DEVICE=cpu
-      - WHISPER__COMPUTE_TYPE=int8
-      - WHISPER__VAD_FILTER=true
-      - WHISPER__VAD_MIN_SILENCE_DURATION_MS=500
-      - WHISPER__VAD_THRESHOLD=0.35
-    volumes:
-      - whisper-models:/root/.cache/huggingface
-      - whisper-uv-cache:/root/.cache/uv
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 6G
+        reservations:
+          cpus: '1.0'
+          memory: 3G
     networks:
       - default
 
@@ -323,6 +416,13 @@ services:
   redis-summary:
     image: redis:5
     restart: always
+    # Celery broker for transcribe/summarize queues. Holds message payloads
+    # transiently (minutes), not a cache, so 1G is ample.
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
     networks:
       - default
 
@@ -340,6 +440,12 @@ services:
       - redis-summary
       - whisper
       - minio
+    # FastAPI entry point — light CPU/RAM unless under burst load from webhooks.
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     networks:
       - default
 
@@ -362,6 +468,14 @@ services:
       - redis-summary
       - whisper
       - minio
+    # Dispatcher only — all heavy CPU is delegated to whisper instances. Cap
+    # is generous enough to hold 4 prefork children + one open HTTP connection
+    # each (blocking during whisper compute).
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1G
     networks:
       - default
 
@@ -376,6 +490,13 @@ services:
     env_file:
       - .env
       - env.d/summary
+    # Solo pool + LLM disabled in prod today; minimal footprint. Will be
+    # revisited when summarization is re-enabled (external LLM API).
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -414,6 +535,13 @@ services:
     # Meme pattern que GitLab (8929), Vault (18200), Teleport (33080) sur le meme host.
     ports:
       - "9090:9090"
+    # 30-day TSDB retention on a moderate number of series; 1G covers most
+    # scenarios. Can be raised if we add high-cardinality labels later.
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
     networks:
       - default
 
@@ -442,6 +570,11 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - default
 
@@ -481,6 +614,11 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
     networks:
       - default
 
@@ -576,6 +714,11 @@ services:
     volumes:
       - ./monitoring/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki-data:/loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - default
 
@@ -598,6 +741,11 @@ services:
       - promtail-positions:/tmp
     depends_on:
       - loki
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
     networks:
       - default
 
@@ -632,6 +780,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    # Small dedicated DB, low traffic from glitchtip-web/worker only.
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - default
 
@@ -641,6 +795,11 @@ services:
   glitchtip-redis:
     image: redis:7-alpine
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
     networks:
       - default
 
@@ -705,6 +864,11 @@ services:
         condition: service_started
       glitchtip-migrate:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - default
 
@@ -739,6 +903,11 @@ services:
         condition: service_started
       glitchtip-migrate:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
     networks:
       - default
 

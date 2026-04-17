@@ -322,7 +322,7 @@ Client -> livekit (:47881/tcp) [ICE TCP fallback]
 ### backend
 
 - **Image** : GitLab Registry (`$CI_REGISTRY_IMAGE/backend:$SHA`)
-- **Workers** : 6 Gunicorn workers (via `GUNICORN_CMD_ARGS=--workers=6`)
+- **Workers** : 6 Gunicorn workers (declare dans `docker/files/usr/local/etc/gunicorn/meet.py`, source unique de verite)
 - **Timeout** : 90s (graceful shutdown)
 - **Healthcheck** : `python manage.py check` toutes les 15s
 - **Depends on** : postgresql (healthy), redis (started), livekit (started)
@@ -487,7 +487,7 @@ specifiques a Meet.
 
 | Service | Config | Valeur | Pourquoi |
 |---------|--------|--------|----------|
-| **Gunicorn** | workers | 6 | 6 requetes API en parallele (via `GUNICORN_CMD_ARGS`) |
+| **Gunicorn** | workers | 6 | 6 requetes API en parallele (declare dans `docker/files/usr/local/etc/gunicorn/meet.py`) |
 | **PostgreSQL** | shared_buffers | 4GB | Cache des donnees en RAM, reduit les lectures disque |
 | **PostgreSQL** | effective_cache_size | 12GB | Indique au planner combien de RAM est disponible |
 | **PostgreSQL** | work_mem | 64MB | Memoire par operation de tri/jointure |
@@ -504,7 +504,7 @@ net.core.rmem_max=5000000   # Buffer UDP pour LiveKit
 
 ### Scaler si necessaire
 
-1. **Backend** : augmenter `GUNICORN_CMD_ARGS=--workers=9`
+1. **Backend** : editer `docker/files/usr/local/etc/gunicorn/meet.py` (`workers = 9`)
 2. **Celery** : augmenter `--concurrency=8`
 3. **Replicas** : `docker compose up -d --scale backend=3` (Traefik load balance auto)
 4. **LiveKit** : scaler verticalement (plus de CPU/RAM)
